@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.14                                                                             #
+# Filename   : /config/prod.yaml                                                                   #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john@variancexplained.com                                                           #
+# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Friday July 19th 2024 04:22:54 am                                                   #
+# Modified   : Thursday July 25th 2024 02:04:28 am                                                 #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2024 John James                                                                 #
+# ================================================================================================ #
+#                                  PROD CONFIG FILE                                                #
+# ================================================================================================ #
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    DATABASE CONFIG                                               #
+# ------------------------------------------------------------------------------------------------ #
+database:
+  mysql:
+    start: scripts/database/start.sh
+    retries: 3
+    working: prod_appstore_stream_working_db
+    permanent: prod_appstore_stream_db
+  redis:
+    host: localhost
+    port: 6379
+    db: 3

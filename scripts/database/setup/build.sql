@@ -1,0 +1,6 @@
+CREATE DATABASE IF NOT EXISTS dev_working_db;
+CREATE DATABASE IF NOT EXISTS dev_permanent_db;
+CREATE DATABASE IF NOT EXISTS test_working_db;
+CREATE DATABASE IF NOT EXISTS test_permanent_db;
+CREATE DATABASE IF NOT EXISTS prod_working_db;
+CREATE DATABASE IF NOT EXISTS prod_permanent_db;

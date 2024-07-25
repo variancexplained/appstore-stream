@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"psi-header.variables": [
+			[
+				"projectCreationYear",
+				"2024"
+			],
+			[
+				"url",
+				"https://github.com/variancexplained/appstore-stream.git"
+			],
+			[
+				"projectname",
+				"AppStoreStream: Apple App Data and Reviews, Delivered!"
+			],
+			[
+				"version",
+				"0.1.0"
+			],
+			[
+				"pythonversion",
+				"3.10.14"
+			]
+		],
+		"psi-header.config": {},
+	}
+}

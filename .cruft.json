@@ -1,0 +1,18 @@
+{
+  "template": "https://github.com/woltapp/wolt-python-package-cookiecutter",
+  "commit": "b25684a2c63387153b83a1cc03ea332be8c8279a",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "author_name": "John James",
+      "author_email": "john@variancexplained.com",
+      "github_username": "variancexplained",
+      "project_name": "AppStoreStream",
+      "project_slug": "appstorestream",
+      "package_name": "appstorestream",
+      "project_short_description": "AppStoreStream: App Data and Reviews, Delivered!",
+      "_template": "https://github.com/woltapp/wolt-python-package-cookiecutter"
+    }
+  },
+  "directory": null
+}
