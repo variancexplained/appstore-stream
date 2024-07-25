@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 11:20:33 pm                                                #
-# Modified   : Thursday July 25th 2024 02:00:11 am                                                 #
+# Modified   : Thursday July 25th 2024 05:09:38 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,6 +25,8 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
+
+from appstorestream.core.enum import Databases
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -235,38 +237,61 @@ class DBA(ABC):
     """"Abstract base class for building databases from DDL """
 
     @abstractmethod
-    def execute_ddl(self, ddl_filepath: str) -> None:
-        """Executes a single SQL file.
+    def create_database(self, dbname: Databases) -> None:
+        """
+        Creates a MySQL database.
 
         Args:
-            sql_filepath (str): The path to the file containing the DDL to execute.
+            dbname (Databases): The name of the database to create.
         """
 
     @abstractmethod
-    def execute_all_ddl(self, ddl_directory: str) -> None:
-        """Executes all DDL in the designated directory.
+    def drop_database(self, dbname: Databases) -> None:
+        """
+        Drops a MySQL database with user confirmation, unless in safe mode.
 
         Args:
-            ddl_directory (str): Directory containing DDL in sql files.
-
+            dbname (Databases): The name of the database to drop.
         """
 
     @abstractmethod
-    def database_exists(self, dbname: str) -> bool:
-        """Determines if the designated database exists.
+    def database_exists(self, dbname: Databases) -> bool:
+        """
+        Checks if the specified database exists.
 
         Args:
-            dbname (str): The database name. The environment will be
-                prepended to the name.
+            dbname (Databases): The database name to check for existence.
+
+        Returns:
+            bool: True if the database exists, False otherwise.
         """
 
     @abstractmethod
-    def table_exists(self, dbname: str, table_name: str) -> bool:
+    def create_table(self, dbname: Databases, ddl_filepath: str) -> None:
+        """
+        Creates a table from a DDL file.
+
+        Args:
+            dbname (Databases): The name of the database.
+            ddl_filepath (str): The path to the DDL file.
+        """
+
+    @abstractmethod
+    def create_tables(self, dbname: Databases, ddl_directory: str) -> None:
+        """
+        Creates tables from all DDL files in a directory.
+
+        Args:
+            dbname (Databases): The name of the database.
+            ddl_directory (str): The directory containing DDL files.
+        """
+    @abstractmethod
+    def table_exists(self, dbname: Databases, table_name: str) -> bool:
         """
         Checks if a specific table exists in the specified database.
 
         Args:
-            dbname (str): The name of the database to check within.
+            dbname (Databases): The name of the database to check.
             table_name (str): The name of the table to check for existence.
 
         Returns:

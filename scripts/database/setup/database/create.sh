@@ -1,25 +1,19 @@
-#!/usr/bin/env python3
+#!/usr/bin/bash
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/__main__.py                                                         #
+# Filename   : /scripts/database/setup/database/create.sh                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday July 19th 2024 10:59:26 am                                                   #
-# Modified   : Thursday July 25th 2024 02:43:43 pm                                                 #
+# Created    : Thursday July 25th 2024 03:27:27 am                                                 #
+# Modified   : Thursday July 25th 2024 02:37:29 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from appstorestream.infra.config.config import Config
-from appstorestream.container import AppStoreStreamContainer
-# ------------------------------------------------------------------------------------------------ #
-if __name__ == "__main__":
-    container = AppStoreStreamContainer()
-    container.config.from_dict(Config().load_config())
-    container.init_resources()
+sudo mysql -h localhost -u root -p < scripts/database/setup/database/create.sql

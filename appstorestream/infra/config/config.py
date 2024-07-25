@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/config.py                                                     #
+# Filename   : /appstorestream/infra/config/config.py                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Thursday July 25th 2024 01:44:15 am                                                 #
+# Modified   : Thursday July 25th 2024 03:03:47 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -56,6 +56,14 @@ class Config:
         self._namespace_mode = namespace_mode
         self._config = self.load_config()
 
+    #  ------------------------------------------------------------------------------------------- #
+    @property
+    def setup(self) -> Union[dict, NestedNamespace]:
+        """
+        Returns parameters for app setup
+        """
+        config = self._config["setup"]
+        return self.to_namespace(config) if self._namespace_mode else config
     #  ------------------------------------------------------------------------------------------- #
     @property
     def appdata(self) -> Union[dict, NestedNamespace]:

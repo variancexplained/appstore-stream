@@ -1,19 +1,19 @@
-#!/usr/bin/bash
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /scripts/database/setup/database.sh                                                 #
+# Filename   : /scripts/app/start.sh                                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday July 25th 2024 03:27:27 am                                                 #
-# Modified   : Thursday July 25th 2024 03:28:32 am                                                 #
+# Created    : Thursday July 25th 2024 02:30:28 pm                                                 #
+# Modified   : Thursday July 25th 2024 02:30:53 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-sudo mysql -h localhost -u root -p < scripts/database/setup/databases.sql
+python -m appstorestream

@@ -4,22 +4,15 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/__main__.py                                                         #
+# Filename   : /appstorestream/infra/config/__init__.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday July 19th 2024 10:59:26 am                                                   #
-# Modified   : Thursday July 25th 2024 02:43:43 pm                                                 #
+# Created    : Thursday July 25th 2024 02:46:33 pm                                                 #
+# Modified   : Thursday July 25th 2024 02:46:37 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from appstorestream.infra.config.config import Config
-from appstorestream.container import AppStoreStreamContainer
-# ------------------------------------------------------------------------------------------------ #
-if __name__ == "__main__":
-    container = AppStoreStreamContainer()
-    container.config.from_dict(Config().load_config())
-    container.init_resources()

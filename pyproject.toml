@@ -88,6 +88,10 @@ addopts = """\
     --cov-report term-missing \
     --no-cov-on-fail \
 """
+filterwarnings = [
+    "ignore::pytest.PytestCollectionWarning",
+    "ignore::pytest.PytestUnknownMarkWarning",
+    ]
 
 [tool.coverage.report]
 fail_under = 100
