@@ -1,9 +1,9 @@
-CREATE TABLE review (
+CREATE TABLE IF NOT EXISTS review (
     id VARCHAR(32) NOT NULL UNIQUE,
     reviewer_id VARCHAR(64) NOT NULL,
     app_id BIGINT NOT NULL,
     app_name VARCHAR(255) NOT NULL,
-    category_id INTEGER NOT NULL,    
+    category_id INTEGER NOT NULL,
     title VARCHAR(255),
     content TEXT NOT NULL,
     rating INTEGER NOT NULL,

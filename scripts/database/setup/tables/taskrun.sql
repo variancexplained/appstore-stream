@@ -1,4 +1,4 @@
-CREATE TABLE TaskRun (
+CREATE TABLE IF NOT EXISTS taskRun (
     id VARCHAR(64) NOT NULL PRIMARY KEY UNIQUE,        -- Unique identifier for each task run
     task_id VARCHAR(64) NOT NULL,                       -- Foreign key to Task
     task_type VARCHAR(32) NOT NULL,                     -- Type of task (e.g., AppData, Review)

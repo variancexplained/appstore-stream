@@ -1,4 +1,4 @@
-CREATE TABLE config (
+CREATE TABLE IF NOT EXISTS  config (
     id VARCHAR(64) NOT NULL PRIMARY KEY UNIQUE,   -- Unique identifier for the configuration
     name VARCHAR(128) NOT NULL,                   -- Name of the configuration
     description TEXT,                             -- Description of the configuration

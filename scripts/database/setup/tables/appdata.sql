@@ -1,4 +1,4 @@
-CREATE TABLE appdata (
+CREATE TABLE IF NOT EXISTS appdata (
     app_id BIGINT NOT NULL PRIMARY KEY,
     app_name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
