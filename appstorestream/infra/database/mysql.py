@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Thursday July 25th 2024 05:20:30 pm                                                 #
+# Modified   : Thursday July 25th 2024 06:10:53 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -119,7 +119,7 @@ class MySQLDBA(DBA):
         _run_bash_script(script_filepath: str) -> None: Runs a bash script with sudo privileges.
     """
 
-    def __init__(self, config_cls: Type[Config] = Config, safe_mode: bool = False) -> None:
+    def __init__(self, config_cls: Type[Config] = Config, safe_mode: bool = True) -> None:
         self._config = config_cls()
         self._mysql_credentials = self._config.mysql
         self._env = self._config.get_environment()

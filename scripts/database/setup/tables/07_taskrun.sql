@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS taskRun (
+CREATE TABLE IF NOT EXISTS taskrun (
     id VARCHAR(64) NOT NULL PRIMARY KEY UNIQUE,        -- Unique identifier for each task run
     task_id VARCHAR(64) NOT NULL,                       -- Foreign key to Task
     task_type VARCHAR(32) NOT NULL,                     -- Type of task (e.g., AppData, Review)
@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS taskRun (
     server_errors INTEGER,                             -- Number of server errors
     retries INTEGER,                                   -- Number of retries
     timeouts INTEGER,                                  -- Number of timeouts
-    config_id VARCHAR(64) NOT NULL,                     -- Foreign key to Configuration
-    force TINYINT(1) NOT NULL DEFAULT 0,                -- Flag indicating force execution
+    config_id VARCHAR(64),                             -- Foreign key to Configuration
+    force_restart TINYINT(1) NOT NULL DEFAULT 0,       -- Flag indicating whether to restart rather than resume from prior run.
     status ENUM('PENDING', 'IN-PROGRESS', 'COMPLETE', 'FAILED', 'CANCELED') NOT NULL,
     INDEX idx_task_id (task_id),                        -- Index for task_id for quick lookups
     INDEX idx_task_type (task_type),                    -- Index for task_type to filter by type

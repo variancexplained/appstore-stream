@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS backup (
+CREATE TABLE IF NOT EXISTS backups (
     id VARCHAR(64) NOT NULL PRIMARY KEY UNIQUE,
     database_name VARCHAR(128) NOT NULL,
     backup_type ENUM('hourly', 'daily', 'weekly', 'monthly', 'annual', 'on-demand') NOT NULL,

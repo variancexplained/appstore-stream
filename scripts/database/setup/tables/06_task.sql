@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS task (
     id VARCHAR(64) NOT NULL UNIQUE,
     task_type ENUM('AppData', 'Review') NOT NULL,
     task_name VARCHAR(255),
-    category_id VARCHAR(4),
+    category_id INTEGER,
     created DATETIME,
     PRIMARY KEY (id),
     INDEX idx_category_id (category_id),
