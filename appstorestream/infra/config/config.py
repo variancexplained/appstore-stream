@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Thursday July 25th 2024 03:03:47 pm                                                 #
+# Modified   : Friday July 26th 2024 08:57:02 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -58,77 +58,36 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def setup(self) -> Union[dict, NestedNamespace]:
-        """
-        Returns parameters for app setup
-        """
-        config = self._config["setup"]
-        return self.to_namespace(config) if self._namespace_mode else config
-    #  ------------------------------------------------------------------------------------------- #
-    @property
-    def appdata(self) -> Union[dict, NestedNamespace]:
-        """
-        Returns parameters for the app data request
-        """
-        config = self._config["appdata"]
-        return self.to_namespace(config) if self._namespace_mode else config
+    def config(self) ->  Union[dict, NestedNamespace]:
+        return self.to_namespace(self._config) if self._namespace_mode else self._config
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def review(self) -> Union[dict, NestedNamespace]:
+    def mysql(self) -> Union[dict, NestedNamespace]:
         """
-        Returns parameters for the review request
+        Returns MySQL database name, backup location, and related parameters.
         """
-        config = self._config["review"]
+        config = {}
+        # Get config from .env file.
+        config["username"] = os.getenv("MYSQL_USERNAME")
+        config["password"] = os.getenv("MYSQL_PWD")
+        config["port"] = os.getenv("MYSQL_PORT")
+        config["host"] = os.getenv("MYSQL_HOST")
+        config["startup"] = os.getenv("MYSQL_STARTUP")
         return self.to_namespace(config) if self._namespace_mode else config
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def get_categories(self) -> pd.DataFrame:
+    def proxy(self) -> Union[dict, NestedNamespace]:
         """
-        Returns category data as a dataframe.
+        Returns proxy server configuration.
         """
-        config = self.read_config()
-        return pd.DataFrame(config["category"]).T
-
-    #  ------------------------------------------------------------------------------------------- #
-    def get_category(self, category_id: str) -> Union[dict, NestedNamespace]:
-        """
-        Returns category data given a category id.
-        """
-
-        try:
-            category = self._config["category"][category_id]
-            return self.to_namespace(category) if self._namespace_mode else category
-        except KeyError:
-            print(f"Category id {category_id} was not found.")
-
-    #  ------------------------------------------------------------------------------------------- #
-    @property
-    def logging(self) -> Union[dict, NestedNamespace]:
-        """
-        Logging configuration
-        """
-        config = self._config["logging"]
-        return self.to_namespace(config) if self._namespace_mode else config
-
-    #  ------------------------------------------------------------------------------------------- #
-    @property
-    def cloud(self) -> Union[dict, NestedNamespace]:
-        """
-        Returns parameters for the app data request
-        """
-        config = self._config["cloud"]
-        return self.to_namespace(config) if self._namespace_mode else config
-
-    #  ------------------------------------------------------------------------------------------- #
-    @property
-    def monitor(self) -> Union[dict, NestedNamespace]:
-        """
-        Returns parameters for the app data request
-        """
-        config = self._config["monitor"]
-        return self.to_namespace(config) if self._namespace_mode else config
+        # Get config from .env file.
+        dns = os.getenv("WEBSHARE_DNS")
+        username = os.getenv("WEBSHARE_USER")
+        pwd = os.getenv("WEBSHARE_PWD")
+        port = os.getenv("WEBSHARE_PORT")
+        return f"http://{username}:{pwd}@{dns}:{port}"
 
     #  ------------------------------------------------------------------------------------------- #
     @property
@@ -173,29 +132,6 @@ class Config:
         """
         load_dotenv(self._env_file, override=True)
 
-    #  ------------------------------------------------------------------------------------------- #
-    @property
-    def mysql(self) -> Union[dict, NestedNamespace]:
-        """
-        Returns MySQL database name, backup location, and related parameters.
-        """
-        config = {}
-        # Get config from .env file.
-        config["username"] = os.getenv("MYSQL_USERNAME")
-        config["password"] = os.getenv("MYSQL_PWD")
-        config["port"] = os.getenv("MYSQL_PORT")
-        config["host"] = os.getenv("MYSQL_HOST")
-        config["startup"] = os.getenv("MYSQL_STARTUP")
-        return self.to_namespace(config) if self._namespace_mode else config
-
-    #  ------------------------------------------------------------------------------------------- #
-    @property
-    def redis(self) -> Union[dict, NestedNamespace]:
-        """
-        Returns Redis in-memory database config.
-        """
-        config = self._config["database"]["redis"]
-        return self.to_namespace(config) if self._namespace_mode else config
 
     #  ------------------------------------------------------------------------------------------- #
     def load_config(self) -> dict:

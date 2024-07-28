@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Thursday July 25th 2024 06:10:53 pm                                                 #
+# Modified   : Thursday July 25th 2024 11:06:14 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,7 +30,7 @@ import sqlalchemy
 from dotenv import load_dotenv
 from sqlalchemy.exc import SQLAlchemyError
 
-from appstorestream.core.enum import Databases
+from appstorestream.core.enum import DatabaseSet
 from appstorestream.infra.config.config import Config
 from appstorestream.infra.database.base import DBA, Database
 
@@ -44,53 +44,70 @@ load_dotenv()
 class MySQLDatabase(Database):
     """MySQL Database Class
     Args:
-        dbname (Enum[]): Name of database.
-        config_cls (type[Config]): System configuration class.
+        dbset (DatabaseSet): Indicates a permanent or working database
+        config_cls (Type[Config]): System configuration class.
     """
 
-    def __init__(self, dbname: Databases, config_cls: type[Config] = Config) -> None:
+    def __init__(self, dbset: DatabaseSet, config_cls: Type[Config] = Config) -> None:
         super().__init__()
         self._config = config_cls()
-        self._dbname = f"{self._config.get_environment()}_{dbname.value}"
+        self._dbset = dbset
+        self._dbname = f"{self._config.get_environment()}_{dbset.value}"
         self._mysql_credentials = self._config.mysql
         self._connection_string = self._get_connection_string()
+        self._engine = None
+        self._connection = None
+        self._is_connected = False
+
+    @property
+    def dbset(self) -> DatabaseSet:
+        return self._dbset
 
     def connect(self, autocommit: bool = False) -> None:
         attempts = 0
-        database_started = False
         while attempts < self._config.database.mysql.retries:
             attempts += 1
             try:
-                self._engine = sqlalchemy.create_engine(self._connection_string)
-                self._connection = self._engine.connect()
-                if autocommit is True:
+                if self._engine is None:
+                    self._engine = sqlalchemy.create_engine(self._connection_string)
+                if self._connection is None:
+                    self._connection = self._engine.connect()
+
+                if autocommit:
                     self._connection.execution_options(isolation_level="AUTOCOMMIT")
                 else:
                     self._connection.execution_options(isolation_level="READ COMMITTED")
-                self._is_connected = True
-                database_started = True
 
-            except SQLAlchemyError as e:  # pragma: no cover
+                self._is_connected = True
+                return self
+
+            except SQLAlchemyError as e:
                 self._is_connected = False
-                if not database_started:
-                    msg = "Database is not started. Starting database..."
-                    self._logger.info(msg)
+                if attempts < self._config.database.mysql.retries:
+                    self._logger.info("Database connection failed. Attempting to start database...")
                     self._start_db()
-                    database_started = True
                     sleep(3)
                 else:
-                    msg = f"Database connection failed.\nException type: {type[e]}\n{e}"
+                    msg = f"Database connection failed after {attempts} attempts.\nException type: {type(e)}\n{e}"
                     self._logger.exception(msg)
                     raise
-            else:
-                return self
 
     def _get_connection_string(self) -> str:
         """Returns the connection string for the named database."""
         return f"mysql+pymysql://{self._mysql_credentials.username}:{self._mysql_credentials.password}@localhost/{self._dbname}"
 
-    def _start_db(self) -> None:  # pragma: no cover
+    def _start_db(self) -> None:
+        """Starts the MySQL database."""
         subprocess.run([self._config.database.mysql.start], shell=True)
+
+    def close(self) -> None:
+        """Closes the database connection."""
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
+        if self._engine is not None:
+            self._engine.dispose()
+            self._engine = None
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -110,12 +127,12 @@ class MySQLDBA(DBA):
         safe_mode (bool): If True, prevents dropping databases in 'prod' environment.
 
     Methods:
-        create_database(dbname: Databases) -> None: Creates a MySQL database.
-        drop_database(dbname: Databases) -> None: Drops a MySQL database with user confirmation, unless in safe mode.
-        database_exists(dbname: Databases) -> bool: Checks if the specified database exists.
-        table_exists(dbname: Databases, table_name: str) -> bool: Checks if a specific table exists in the specified database.
-        create_table(dbname: Databases, ddl_filepath: str) -> None: Creates a table from a DDL file.
-        create_tables(dbname: Databases, ddl_directory: str) -> None: Creates tables from all DDL files in a directory.
+        create_database(dbname: DatabaseSet) -> None: Creates a MySQL database.
+        drop_database(dbname: DatabaseSet) -> None: Drops a MySQL database with user confirmation, unless in safe mode.
+        database_exists(dbname: DatabaseSet) -> bool: Checks if the specified database exists.
+        table_exists(dbname: DatabaseSet, table_name: str) -> bool: Checks if a specific table exists in the specified database.
+        create_table(dbname: DatabaseSet, ddl_filepath: str) -> None: Creates a table from a DDL file.
+        create_tables(dbname: DatabaseSet, ddl_directory: str) -> None: Creates tables from all DDL files in a directory.
         _run_bash_script(script_filepath: str) -> None: Runs a bash script with sudo privileges.
     """
 
@@ -126,24 +143,24 @@ class MySQLDBA(DBA):
         self._safe_mode = safe_mode
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    def create_database(self, dbname: Databases) -> None:
+    def create_database(self, dbname: DatabaseSet) -> None:
         """
         Creates a MySQL database.
 
         Args:
-            dbname (Databases): The name of the database to create.
+            dbname (DatabaseSet): The name of the database to create.
         """
         dbname = f"{self._env}_{dbname.value}"
         query = f"CREATE DATABASE IF NOT EXISTS `{dbname}`;"
         command = self._build_mysql_command(query)
         self._execute_command(command, f"Creating database {dbname}")
 
-    def drop_database(self, dbname: Databases) -> None:
+    def drop_database(self, dbname: DatabaseSet) -> None:
         """
         Drops a MySQL database with user confirmation, unless in safe mode.
 
         Args:
-            dbname (Databases): The name of the database to drop.
+            dbname (DatabaseSet): The name of the database to drop.
         """
         if self._safe_mode and self._env == 'prod':
             self._logger.error("Dropping databases is not permitted in safe mode in the 'prod' environment.")
@@ -162,12 +179,12 @@ class MySQLDBA(DBA):
         else:
             self._logger.error(f"Database name '{full_dbname}' does not match expected '{dbname}'.")
 
-    def database_exists(self, dbname: Databases) -> bool:
+    def database_exists(self, dbname: DatabaseSet) -> bool:
         """
         Checks if the specified database exists.
 
         Args:
-            dbname (Databases): The database name to check for existence.
+            dbname (DatabaseSet): The database name to check for existence.
 
         Returns:
             bool: True if the database exists, False otherwise.
@@ -183,23 +200,23 @@ class MySQLDBA(DBA):
             self._logger.exception(f"Command to check database existence failed with error: {e}")
             return False
 
-    def create_table(self, dbname: Databases, ddl_filepath: str) -> None:
+    def create_table(self, dbname: DatabaseSet, ddl_filepath: str) -> None:
         """
         Creates a table from a DDL file.
 
         Args:
-            dbname (Databases): The name of the database.
+            dbname (DatabaseSet): The name of the database.
             ddl_filepath (str): The path to the DDL file.
         """
         dbname = f"{self._env}_{dbname.value}"
         self._execute_ddl(dbname, ddl_filepath)
 
-    def create_tables(self, dbname: Databases, ddl_directory: str) -> None:
+    def create_tables(self, dbname: DatabaseSet, ddl_directory: str) -> None:
         """
         Creates tables from all DDL files in a directory.
 
         Args:
-            dbname (Databases): The name of the database.
+            dbname (DatabaseSet): The name of the database.
             ddl_directory (str): The directory containing DDL files.
         """
         try:
@@ -215,12 +232,12 @@ class MySQLDBA(DBA):
             self._logger.error(f"An unknown error occurred.\n{e}")
             raise
 
-    def table_exists(self, dbname: Databases, table_name: str) -> bool:
+    def table_exists(self, dbname: DatabaseSet, table_name: str) -> bool:
         """
         Checks if a specific table exists in the specified database.
 
         Args:
-            dbname (Databases): The name of the database to check.
+            dbname (DatabaseSet): The name of the database to check.
             table_name (str): The name of the table to check for existence.
 
         Returns:

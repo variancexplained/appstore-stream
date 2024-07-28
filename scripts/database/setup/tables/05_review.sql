@@ -1,20 +1,21 @@
 CREATE TABLE IF NOT EXISTS review (
-    id VARCHAR(32) NOT NULL UNIQUE,
+    review_id VARCHAR(32) NOT NULL UNIQUE,
     reviewer_id VARCHAR(64) NOT NULL,
     app_id BIGINT NOT NULL,
     app_name VARCHAR(255) NOT NULL,
     category_id INTEGER NOT NULL,
+    category VARCHAR(64) NOT NULL,
     title VARCHAR(255),
     content TEXT NOT NULL,
+    review_length INTEGER NOT NULL,
     rating INTEGER NOT NULL,
     vote_count INTEGER NOT NULL,
+    vote_count_per_day DECIMAL(8,2) NOT NULL,
     vote_sum INTEGER NOT NULL,
-    date DATETIME NOT NULL,
-    date_extracted DATETIME NOT NULL,
-    PRIMARY KEY (id),
+    vote_avg DECIMAL (5,2)
+    review_date DATETIME NOT NULL,
+    extract_date DATETIME NOT NULL,
+    PRIMARY KEY (review_id),
     INDEX idx_app_id (app_id),
     INDEX idx_category_id (category_id),
-    FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (app_id) REFERENCES appdata (id) ON DELETE CASCADE ON UPDATE CASCADE
-
 );

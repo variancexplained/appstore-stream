@@ -1,38 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoC: AppStore Voice of the Customer                                              #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/core/enum.py                                                        #
+# Filename   : /appvoc/infrastructure/web/base.py                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvoc                                          #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday July 22nd 2024 10:19:32 pm                                                   #
-# Modified   : Friday July 26th 2024 07:58:54 pm                                                   #
+# Created    : Friday July 19th 2024 04:43:24 am                                                   #
+# Modified   : Monday July 22nd 2024 04:45:25 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from enum import Enum
+"""Web Infrastructure Base Module"""
+from __future__ import annotations
+
+import logging
+from abc import ABC, abstractmethod
 
 
 # ------------------------------------------------------------------------------------------------ #
-class JobStatus(Enum):
-    CREATED = "CREATED"
-    SCHEDULED = "SCHEDULED"
-    IN_PROGRESS = "IN PROGRESS"
-    COMPLETE = "COMPLETE"
-    FAILED = "FAILED"
-    CANCELLED = "CANCELLED"
+class Throttle(ABC):
+    """Base class for HTTP request rate limiters"""
 
-class Stage(Enum):
-    EXTRACT="EXTRACT"
-    TRANSFORM = "TRANSFORM"
-    LOAD = "LOAD"
+    def __init__(self) -> None:
+        self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
-class Dataset(Enum):
-    APPDATA="APPDATA"
-    REVIEW="REVIEW"
+    @abstractmethod
+    def delay(self, *args, **kwargs) -> int:
+        """Returns a delay time in milliseconds"""

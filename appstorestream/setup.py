@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Thursday July 25th 2024 06:22:35 pm                                                 #
+# Modified   : Friday July 26th 2024 02:55:46 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,7 +19,7 @@
 """Application Setup Module"""
 import logging
 
-from appstorestream.core.enum import Databases
+from appstorestream.core.enum import DatabaseSet
 from appstorestream.infra.config.config import Config
 from appstorestream.infra.database.mysql import MySQLDBA
 
@@ -27,12 +27,12 @@ from appstorestream.infra.database.mysql import MySQLDBA
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def setup_database(dbname: Databases, config: Config) -> None:
+def setup_database(dbname: DatabaseSet, config: Config) -> None:
     """
     Sets up a database by creating it and then creating tables from the provided DDL files.
 
     Args:
-        dbname (Databases): The enum value representing the database to set up.
+        dbname (DatabaseSet): The enum value representing the database to set up.
         ddl_directory (str): The directory where DDL .sql files are located.
 
     Raises:
@@ -71,8 +71,8 @@ def setup_databases(config: Config) -> None:
         Exception: If setting up any database fails.
     """
     try:
-        setup_database(dbname=Databases.WORKING, config=config)
-        setup_database(dbname=Databases.PERMANENT, config=config)
+        setup_database(dbname=DatabaseSet.WORKING, config=config)
+        setup_database(dbname=DatabaseSet.PERMANENT, config=config)
     except Exception as e:
         logger.error(f"Failed to set up databases: {e}")
         raise
@@ -84,6 +84,7 @@ def main() -> None:
     config = Config()
     try:
         setup_databases(config=config)
+
     except Exception as e:
         logger.error(f"Error in main execution: {e}")
         raise

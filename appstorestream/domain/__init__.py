@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/__init__.py                                                   #
+# Filename   : /appstorestream/domain/__init__.py                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Wednesday July 24th 2024 11:08:04 pm                                                #
-# Modified   : Thursday July 25th 2024 10:23:16 pm                                                 #
+# Created    : Thursday July 25th 2024 10:28:59 pm                                                 #
+# Modified   : Thursday July 25th 2024 10:29:02 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #

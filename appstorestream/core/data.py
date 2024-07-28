@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoC: AppStore Voice of the Customer                                              #
-# Version    : 0.2.0                                                                               #
+# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
+# Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvoc/core/data.py                                                                #
+# Filename   : /appstorestream/core/data.py                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appvoc                                          #
+# URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 21st 2024 07:45:11 pm                                                   #
-# Modified   : Tuesday July 23rd 2024 01:58:19 am                                                  #
+# Modified   : Friday July 26th 2024 02:57:05 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -120,6 +120,7 @@ class DataClass(ABC):  # noqa
         """Returns the project in DataFrame format"""
         d = self.as_dict()
         return pd.DataFrame(data=d, index=[0])
+
 
 
 # ------------------------------------------------------------------------------------------------ #

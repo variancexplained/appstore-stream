@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:25:19 pm                                                 #
-# Modified   : Thursday July 25th 2024 05:21:41 pm                                                 #
+# Modified   : Thursday July 25th 2024 11:04:49 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from appstorestream.core.enum import Databases
+from appstorestream.core.enum import DatabaseSet
 from appstorestream.infra.database.mysql import MySQLDBA
 
 # ------------------------------------------------------------------------------------------------ #
@@ -51,8 +51,8 @@ class TestDBA:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dba = MySQLDBA()
-        dba.drop_database(dbname=Databases.WORKING)
-        assert not dba.database_exists(dbname=Databases.WORKING)
+        dba.drop_database(dbname=DatabaseSet.WORKING)
+        assert not dba.database_exists(dbname=DatabaseSet.WORKING)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -70,8 +70,8 @@ class TestDBA:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dba = MySQLDBA()
-        dba.create_database(dbname=Databases.WORKING)
-        assert dba.database_exists(dbname=Databases.WORKING)
+        dba.create_database(dbname=DatabaseSet.WORKING)
+        assert dba.database_exists(dbname=DatabaseSet.WORKING)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -89,8 +89,8 @@ class TestDBA:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dba = MySQLDBA()
-        dba.create_table(dbname=Databases.WORKING, ddl_filepath=DDL_FILEPATH)
-        assert dba.table_exists(dbname=Databases.WORKING, table_name=TABLENAME)
+        dba.create_table(dbname=DatabaseSet.WORKING, ddl_filepath=DDL_FILEPATH)
+        assert dba.table_exists(dbname=DatabaseSet.WORKING, table_name=TABLENAME)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

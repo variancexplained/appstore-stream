@@ -4,46 +4,56 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/container.py                                                        #
+# Filename   : /appstorestream/application/appdata/extract/repo.py                                 #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Saturday July 27th 2024 02:26:47 am                                                 #
+# Created    : Friday July 26th 2024 09:14:08 am                                                   #
+# Modified   : Friday July 26th 2024 04:49:10 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Framework Dependency Container"""
-import logging
-import logging.config  # pragma: no cover
+import json
+from dataclasses import dataclass
+from typing import TypeVar
 
-from dependency_injector import containers, providers
+from appstorestream.application.base.repo import AppLayerRepo
+from appstorestream.application.base.service import ServiceConfig
+from appstorestream.core.enum import DatabaseSet
+
+# ------------------------------------------------------------------------------------------------ #
+T = TypeVar('T')
+# ------------------------------------------------------------------------------------------------ #
+#                               APP DATA JOB REPO CONFIG                                           #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class AppDataJobRepoConfig(ServiceConfig):
+    dbset: DatabaseSet = DatabaseSet.CONTROL
+
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        LOGGING                                                   #
+#                                   APP DATA JOB REPO                                              #
 # ------------------------------------------------------------------------------------------------ #
-class LoggingContainer(containers.DeclarativeContainer):
-    config = providers.Configuration()
+class AppDataJobRepo(AppLayerRepo[T]):
+    """Repository for managing AppData jobs."""
 
-    logging = providers.Resource(
-        logging.config.dictConfig,
-        config=config.logging,
-    )
+    def add(self, job: T) -> None:
+        job_data = json.dumps(job.__dict__)
+        self.redis_client.set(f"appdata_job:{job.id}", job_data)
 
-# ------------------------------------------------------------------------------------------------ #
-#                                      PERSISTENCE                                                 #
-# ------------------------------------------------------------------------------------------------ #
-class PersistenceContainer(containers.DeclarativeContainer):
-    config = providers.Configuration()
-# ------------------------------------------------------------------------------------------------ #
-#                                       FRAMEWORK                                                  #
-# ------------------------------------------------------------------------------------------------ #
-class AppStoreStreamContainer(containers.DeclarativeContainer):
+    def get(self, job_id: str) -> T:
+        job_data = self.redis_client.get(f"appdata_job:{job_id}")
+        if job_data is None:
+            return None
+        return json.loads(job_data)
 
-    config = providers.Configuration()
+    def update(self, job: T) -> None:
+        job_data = json.dumps(job.__dict__)
+        self.redis_client.set(f"appdata_job:{job.id}", job_data)
 
-    logs = providers.Container(LoggingContainer, config=config)
+    def delete(self, job_id: str) -> None:
+        self.redis_client.delete(f"appdata_job:{job_id}")
