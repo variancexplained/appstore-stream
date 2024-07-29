@@ -11,83 +11,113 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Friday July 26th 2024 02:55:46 am                                                   #
+# Modified   : Monday July 29th 2024 03:46:18 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Application Setup Module"""
 import logging
+import os
+from datetime import datetime
 
-from appstorestream.core.enum import DatabaseSet
+import click
+import numpy as np
+import pandas as pd
+from dependency_injector.wiring import Provide, inject
+
+from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.config.config import Config
 from appstorestream.infra.database.mysql import MySQLDBA
+from appstorestream.infra.repo.project import ProjectRepo
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-def setup_database(dbname: DatabaseSet, config: Config) -> None:
+# ------------------------------------------------------------------------------------------------ #
+def setup_dependencies():
+    container = AppStoreStreamContainer()
+    container.init_resources()
+    container.wire(
+        modules=[
+            "appstorestream.application.base.control",
+            __name__,
+        ]
+    )
+    # Set up logging explicitly if needed
+    logging.getLogger(__name__).info("Logging is set up.")
+
+
+@inject
+def setup_environment(
+    env: str,
+    config: Config,
+    repo: ProjectRepo = Provide[AppStoreStreamContainer.data.project_repo],
+) -> None:
     """
-    Sets up a database by creating it and then creating tables from the provided DDL files.
+    Sets up the environment based on the given environment name.
 
     Args:
-        dbname (DatabaseSet): The enum value representing the database to set up.
-        ddl_directory (str): The directory where DDL .sql files are located.
+        env (str): The environment name (e.g., 'prod', 'dev', 'test').
+        config (Config): A Configuration object.
 
     Raises:
-        Exception: If database creation or table setup fails.
+        ValueError: If the provided environment name is not valid.
     """
-    dba = MySQLDBA()
-    if dba.database_exists(dbname=dbname):
-        # Prompt the user for action
-        response = input(f"Database '{dbname.value}' already exists in {config.current_environment}. Do you want to drop and recreate it? Type 'YES' to confirm: ").strip().upper()
-        if response == 'YES':
-            try:
-                dba.drop_database(dbname=dbname)
-                dba.create_database(dbname=dbname)
-                dba.create_tables(dbname=dbname, ddl_directory=config.setup.database.ddl_directory)
-            except Exception as e:
-                logger.error(f"Failed to set up database {dbname.value}: {e}")
-                raise
-        else:
-            print(f"Skipping creation of database '{dbname}' in {config.current_environment} environment.")
-            return
-    else:
-        logger.info(f"Setting up database {dbname.value}...")
-        dba.create_database(dbname=dbname)
-        dba.create_tables(dbname=dbname, ddl_directory=config.setup.database.ddl_directory)
-        logger.info(f"Database {dbname.value} in {config.current_environment} environment setup completed successfully.")
+    if env not in ["prod", "dev", "test"]:
+        raise ValueError(
+            f"Invalid environment: {env}. Choose from 'prod', 'dev', 'test'."
+        )
+
+    # Change the environment.
+    config.change_environment(new_value=env)
+
+    # Setup the database for the environment
+    dba = MySQLDBA(config_cls=Config)
+    dba.create_database(dbname=config.setup.database.name)
+    logging.info("Database created.")
+
+    # Setup Tables
+    dba.create_tables(
+        dbname=config.setup.database.dbname,
+        ddl_directory=config.setup.database.ddl_directory,
+    )
+    logging.info("Tables created.")
+    # Load project table
+    dtypes = {
+        "project_id": np.int32,
+        "dataset": str,
+        "category_id": np.int32,
+        "category": str,
+        "project_priority": np.int32,
+        "bookmark": np.int32,
+        "n_jobs": np.int32,
+        "last_job_id": str,
+        "last_job_ended": datetime,
+        "last_job_status": str,
+        "project_status": str,
+    }
+    df = pd.read_csv(config.setup.database.project_data_filepath, index_col=None)
+    repo.add(projects=df, dtype=dtypes)
+    n_projects = len(repo)
+    logging.info(f"{n_projects} loaded into the project repository.")
 
 
-def setup_databases(config: Config) -> None:
+@click.command()
+@click.argument("env")
+def main(env):
     """
-    Sets up multiple databases by calling setup_database for each database.
+    Setup script for different environments.
 
-    Args:
-        ddl_directory (str): The directory where DDL .sql files are located.
-
-    Raises:
-        Exception: If setting up any database fails.
-    """
-    try:
-        setup_database(dbname=DatabaseSet.WORKING, config=config)
-        setup_database(dbname=DatabaseSet.PERMANENT, config=config)
-    except Exception as e:
-        logger.error(f"Failed to set up databases: {e}")
-        raise
-
-def main() -> None:
-    """
-    Main function to initialize configuration and set up databases.
+    ENV: The environment to set up ('prod', 'dev', 'test').
     """
     config = Config()
     try:
-        setup_databases(config=config)
+        setup_dependencies()
+        setup_environment(env=env, config=config)
+        print("Environment setup complete.")
+    except ValueError as e:
+        print(e)
+        click.get_current_context().exit(1)
 
-    except Exception as e:
-        logger.error(f"Error in main execution: {e}")
-        raise
 
 if __name__ == "__main__":
     main()

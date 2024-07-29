@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 11:20:33 pm                                                #
-# Modified   : Thursday July 25th 2024 11:04:49 pm                                                 #
+# Modified   : Monday July 29th 2024 03:20:16 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,8 +26,6 @@ import pandas as pd
 import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
 
-from appstorestream.core.enum import DatabaseSet
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                                     DATABASE                                                     #
@@ -41,7 +39,7 @@ class Database(ABC):
         self._transaction = None
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
-    def __enter__(self) -> 'Database':
+    def __enter__(self) -> "Database":
         """Enters a transaction block allowing multiple database operations to be performed as a unit."""
         self.begin()
         return self
@@ -52,9 +50,13 @@ class Database(ABC):
             try:
                 self.rollback()
             except SQLAlchemyError as e:
-                self._logger.exception(f"Exception occurred during rollback.\nException type: {type(e)}\n{e}")
+                self._logger.exception(
+                    f"Exception occurred during rollback.\nException type: {type(e)}\n{e}"
+                )
                 raise
-            self._logger.exception(f"Exception occurred.\nException type: {exc_type}\n{exc_value}\n{traceback}")
+            self._logger.exception(
+                f"Exception occurred.\nException type: {exc_type}\n{exc_value}\n{traceback}"
+            )
             raise
         else:
             self.commit()
@@ -89,7 +91,9 @@ class Database(ABC):
             if self._transaction:
                 self._transaction.commit()
         except SQLAlchemyError as e:
-            self._logger.exception(f"Exception occurred during commit.\nException type: {type(e)}\n{e}")
+            self._logger.exception(
+                f"Exception occurred during commit.\nException type: {type(e)}\n{e}"
+            )
             raise
 
     def rollback(self) -> None:
@@ -98,7 +102,9 @@ class Database(ABC):
             if self._transaction:
                 self._transaction.rollback()
         except SQLAlchemyError as e:
-            self._logger.exception(f"Exception occurred during rollback.\nException type: {type(e)}\n{e}")
+            self._logger.exception(
+                f"Exception occurred during rollback.\nException type: {type(e)}\n{e}"
+            )
             raise
 
     def close(self) -> None:
@@ -107,7 +113,9 @@ class Database(ABC):
             if self._connection:
                 self._connection.close()
         except SQLAlchemyError as e:
-            self._logger.exception(f"Exception occurred during connection close.\nException type: {type(e)}\n{e}")
+            self._logger.exception(
+                f"Exception occurred during connection close.\nException type: {type(e)}\n{e}"
+            )
             raise
 
     def dispose(self) -> None:
@@ -116,7 +124,9 @@ class Database(ABC):
             if self._engine:
                 self._engine.dispose()
         except SQLAlchemyError as e:
-            self._logger.exception(f"Exception occurred during engine disposal.\nException type: {type(e)}\n{e}")
+            self._logger.exception(
+                f"Exception occurred during engine disposal.\nException type: {type(e)}\n{e}"
+            )
             raise
 
     def insert(
@@ -146,7 +156,9 @@ class Database(ABC):
                 index=False,
             )
         except SQLAlchemyError as e:
-            self._logger.exception(f"Exception occurred during insert.\nException type: {type(e)}\n{e}")
+            self._logger.exception(
+                f"Exception occurred during insert.\nException type: {type(e)}\n{e}"
+            )
             raise
 
     def query(
@@ -189,68 +201,70 @@ class Database(ABC):
             statement=sqlalchemy.text(query), parameters=params
         )
 
+
 # ------------------------------------------------------------------------------------------------ #
 #                                DATABASE ADMIN                                                    #
 # ------------------------------------------------------------------------------------------------ #
 class DBA(ABC):
-    """"Abstract base class for building databases from DDL """
+    """ "Abstract base class for building databases from DDL"""
 
     @abstractmethod
-    def create_database(self, dbname: DatabaseSet) -> None:
+    def create_database(self, dbname: str) -> None:
         """
         Creates a MySQL database.
 
         Args:
-            dbname (DatabaseSet): The name of the database to create.
+            dbname (str): The name of the database to create.
         """
 
     @abstractmethod
-    def drop_database(self, dbname: DatabaseSet) -> None:
+    def drop_database(self, dbname: str) -> None:
         """
         Drops a MySQL database with user confirmation, unless in safe mode.
 
         Args:
-            dbname (DatabaseSet): The name of the database to drop.
+            dbname (str): The name of the database to drop.
         """
 
     @abstractmethod
-    def database_exists(self, dbname: DatabaseSet) -> bool:
+    def database_exists(self, dbname: str) -> bool:
         """
         Checks if the specified database exists.
 
         Args:
-            dbname (DatabaseSet): The database name to check for existence.
+            dbname (str): The database name to check for existence.
 
         Returns:
             bool: True if the database exists, False otherwise.
         """
 
     @abstractmethod
-    def create_table(self, dbname: DatabaseSet, ddl_filepath: str) -> None:
+    def create_table(self, dbname: str, ddl_filepath: str) -> None:
         """
         Creates a table from a DDL file.
 
         Args:
-            dbname (DatabaseSet): The name of the database.
+            dbname (str): The name of the database.
             ddl_filepath (str): The path to the DDL file.
         """
 
     @abstractmethod
-    def create_tables(self, dbname: DatabaseSet, ddl_directory: str) -> None:
+    def create_tables(self, dbname: str, ddl_directory: str) -> None:
         """
         Creates tables from all DDL files in a directory.
 
         Args:
-            dbname (DatabaseSet): The name of the database.
+            dbname (str): The name of the database.
             ddl_directory (str): The directory containing DDL files.
         """
+
     @abstractmethod
-    def table_exists(self, dbname: DatabaseSet, table_name: str) -> bool:
+    def table_exists(self, dbname: str, table_name: str) -> bool:
         """
         Checks if a specific table exists in the specified database.
 
         Args:
-            dbname (DatabaseSet): The name of the database to check.
+            dbname (str): The name of the database to check.
             table_name (str): The name of the table to check for existence.
 
         Returns:

@@ -11,13 +11,12 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 01:28:02 am                                                   #
-# Modified   : Monday July 29th 2024 12:49:26 am                                                   #
+# Modified   : Monday July 29th 2024 02:13:03 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from abc import ABC, abstractmethod
-
+"""Job Repository Module"""
 import pandas as pd
 
 from appstorestream.application.appdata.job import AppDataJob
@@ -29,6 +28,7 @@ from appstorestream.infra.database.mysql import MySQLDatabase
 # ------------------------------------------------------------------------------------------------ #
 #                                    JOB REPO                                                      #
 # ------------------------------------------------------------------------------------------------ #
+
 
 class JobRepo(AppLayerRepo):
     """Repository class for handling operations on the 'job' table.
@@ -270,7 +270,7 @@ class JobRepo(AppLayerRepo):
         DELETE FROM job
         WHERE job_id = :job_id;
         """
-        params = {'job_id': id}
+        params = {"job_id": id}
 
         # Use the database connection to execute the delete query
         with self._database as conn:

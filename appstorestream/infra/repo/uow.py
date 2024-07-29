@@ -11,22 +11,24 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 08:58:35 pm                                                   #
-# Modified   : Sunday July 28th 2024 09:12:22 pm                                                   #
+# Modified   : Monday July 29th 2024 03:33:04 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 import logging
 
-from appstorestream.application.base.repo import AppLayerRepo
-from appstorestream.domain.repo import DomainLayerRepo, UnitOfWork
 from appstorestream.infra.database.base import Database
+from appstorestream.infra.repo.appdata import AppDataRepo
+from appstorestream.infra.repo.job import JobRepo
+from appstorestream.infra.repo.project import ProjectRepo
+from appstorestream.infra.repo.review import ReviewRepo
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                       UNIT OF WORK CLASS                                         #
 # ------------------------------------------------------------------------------------------------ #
-class UoW(UnitOfWork):
+class UoW:
     """Unit of Work class encapsulating the repositories used in project objects and manages database transactions.
 
     This class provides a unified interface for interacting with multiple repositories and managing transactions.
@@ -36,10 +38,10 @@ class UoW(UnitOfWork):
     def __init__(
         self,
         database: Database,
-        appdata_repo: DomainLayerRepo,
-        review_repo: DomainLayerRepo,
-        project_repo: AppLayerRepo,
-        job_repo: AppLayerRepo,
+        appdata_repo: AppDataRepo,
+        review_repo: ReviewRepo,
+        project_repo: ProjectRepo,
+        job_repo: JobRepo,
     ) -> None:
         """
         Initializes the Unit of Work with the specified repositories and database connection.
@@ -70,7 +72,7 @@ class UoW(UnitOfWork):
         return self._database
 
     @property
-    def appdata_repo(self) -> DomainLayerRepo:
+    def appdata_repo(self) -> AppDataRepo:
         """
         Returns the repository for handling app data, initialized with the database instance.
 
@@ -80,7 +82,7 @@ class UoW(UnitOfWork):
         return self._appdata_repo(database=self._database)
 
     @property
-    def review_repo(self) -> DomainLayerRepo:
+    def review_repo(self) -> ReviewRepo:
         """
         Returns the repository for handling reviews, initialized with the database instance.
 
@@ -90,7 +92,7 @@ class UoW(UnitOfWork):
         return self._review_repo(database=self._database)
 
     @property
-    def project_repo(self) -> AppLayerRepo:
+    def project_repo(self) -> ProjectRepo:
         """
         Returns the repository for handling projects, initialized with the database instance.
 
@@ -100,7 +102,7 @@ class UoW(UnitOfWork):
         return self._project_repo(database=self._database)
 
     @property
-    def job_repo(self) -> AppLayerRepo:
+    def job_repo(self) -> JobRepo:
         """
         Returns the repository for handling jobs, initialized with the database instance.
 

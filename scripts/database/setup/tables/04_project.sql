@@ -6,9 +6,9 @@ CREATE TABLE project (
     project_priority INTEGER NOT NULL DEFAULT 3,
     bookmark INTEGER NOT NULL DEFAULT 0,
     n_jobs INTEGER NOT NULL DEFAULT 0,
-    last_job_id INTEGER NOT NULL,
+    last_job_id INTEGER,
     last_job_ended DATETIME,
-    last_job_status ENUM("CREATED", "SCHEDULED", "IN_PROGRESS", "COMPLETE", "TERMINATED", "CANCELLED") NOT NULL DEFAULT "CREATED",
+    last_job_status ENUM("CREATED", "SCHEDULED", "IN_PROGRESS", "COMPLETE", "TERMINATED", "CANCELLED"),
     project_status ENUM('NOT_STARTED', 'ACTIVE', 'INACTIVE', 'PAUSED', 'CANCELLED') NOT NULL "NOT STARTED",
     INDEX idx_dataset (dataset)
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Sunday July 28th 2024 11:21:27 am                                                   #
+# Modified   : Monday July 29th 2024 03:19:06 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,7 +30,6 @@ import sqlalchemy
 from dotenv import load_dotenv
 from sqlalchemy.exc import SQLAlchemyError
 
-from appstorestream.core.enum import DatabaseSet
 from appstorestream.infra.config.config import Config
 from appstorestream.infra.database.base import DBA, Database
 
@@ -44,11 +43,11 @@ load_dotenv()
 class MySQLDatabase(Database):
     """MySQL Database Class
     Args:
-        dbset (DatabaseSet): Indicates a permanent or working database
+        dbset (str): Indicates a permanent or working database
         config_cls (Type[Config]): System configuration class.
     """
 
-    __dbname = 'appstorestream'
+    __dbname = "appstorestream"
 
     def __init__(self, config_cls: Type[Config] = Config) -> None:
         super().__init__()
@@ -62,7 +61,7 @@ class MySQLDatabase(Database):
         self._is_connected = False
 
     @property
-    def dbset(self) -> DatabaseSet:
+    def dbset(self) -> str:
         return self._dbset
 
     def connect(self, autocommit: bool = False) -> None:
@@ -86,7 +85,9 @@ class MySQLDatabase(Database):
             except SQLAlchemyError as e:
                 self._is_connected = False
                 if attempts < self._config.database.mysql.retries:
-                    self._logger.info("Database connection failed. Attempting to start database...")
+                    self._logger.info(
+                        "Database connection failed. Attempting to start database..."
+                    )
                     self._start_db()
                     sleep(3)
                 else:
@@ -129,69 +130,83 @@ class MySQLDBA(DBA):
         safe_mode (bool): If True, prevents dropping databases in 'prod' environment.
 
     Methods:
-        create_database(dbname: DatabaseSet) -> None: Creates a MySQL database.
-        drop_database(dbname: DatabaseSet) -> None: Drops a MySQL database with user confirmation, unless in safe mode.
-        database_exists(dbname: DatabaseSet) -> bool: Checks if the specified database exists.
-        table_exists(dbname: DatabaseSet, table_name: str) -> bool: Checks if a specific table exists in the specified database.
-        create_table(dbname: DatabaseSet, ddl_filepath: str) -> None: Creates a table from a DDL file.
-        create_tables(dbname: DatabaseSet, ddl_directory: str) -> None: Creates tables from all DDL files in a directory.
+        create_database(dbname: str) -> None: Creates a MySQL database.
+        drop_database(dbname: str) -> None: Drops a MySQL database with user confirmation, unless in safe mode.
+        database_exists(dbname: str) -> bool: Checks if the specified database exists.
+        table_exists(dbname: str, table_name: str) -> bool: Checks if a specific table exists in the specified database.
+        create_table(dbname: str, ddl_filepath: str) -> None: Creates a table from a DDL file.
+        create_tables(dbname: str, ddl_directory: str) -> None: Creates tables from all DDL files in a directory.
         _run_bash_script(script_filepath: str) -> None: Runs a bash script with sudo privileges.
     """
 
-    def __init__(self, config_cls: Type[Config] = Config, safe_mode: bool = True) -> None:
+    def __init__(
+        self, config_cls: Type[Config] = Config, safe_mode: bool = True
+    ) -> None:
         self._config = config_cls()
         self._mysql_credentials = self._config.mysql
         self._env = self._config.get_environment()
         self._safe_mode = safe_mode
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    def create_database(self, dbname: DatabaseSet) -> None:
+    def create_database(self, dbname: str) -> None:
         """
         Creates a MySQL database.
 
         Args:
-            dbname (DatabaseSet): The name of the database to create.
+            dbname (str): The name of the database to create.
         """
-        dbname = f"{self._env}_{dbname.value}"
+        dbname = self._format_dbname(dbname)
         query = f"CREATE DATABASE IF NOT EXISTS `{dbname}`;"
         command = self._build_mysql_command(query)
         self._execute_command(command, f"Creating database {dbname}")
 
-    def drop_database(self, dbname: DatabaseSet) -> None:
+    def drop_database(self, dbname: str) -> None:
         """
         Drops a MySQL database with user confirmation, unless in safe mode.
 
         Args:
-            dbname (DatabaseSet): The name of the database to drop.
+            dbname (str): The name of the database to drop.
         """
-        if self._safe_mode and self._env == 'prod':
-            self._logger.error("Dropping databases is not permitted in safe mode in the 'prod' environment.")
+        if self._safe_mode and self._env == "prod":
+            self._logger.error(
+                "Dropping databases is not permitted in safe mode in the 'prod' environment."
+            )
             return
 
-        dbname = f"{self._env}_{dbname.value}"
-        full_dbname = input(f"Please enter the full name of the database to drop (e.g., '{dbname}'): ").strip()
+        dbname = self._format_dbname(dbname)
+        full_dbname = input(
+            f"Please enter the full name of the database to drop (e.g., '{dbname}'): "
+        ).strip()
         if full_dbname == dbname:
-            confirm = input(f"Are you sure you want to drop the database '{dbname}'? Type 'YES' to confirm: ").strip().upper()
-            if confirm == 'YES':
+            confirm = (
+                input(
+                    f"Are you sure you want to drop the database '{dbname}'? Type 'YES' to confirm: "
+                )
+                .strip()
+                .upper()
+            )
+            if confirm == "YES":
                 query = f"DROP DATABASE IF EXISTS `{dbname}`;"
                 command = self._build_mysql_command(query)
                 self._execute_command(command, f"Dropping database {dbname}")
             else:
                 self._logger.info("Operation cancelled by user.")
         else:
-            self._logger.error(f"Database name '{full_dbname}' does not match expected '{dbname}'.")
+            self._logger.error(
+                f"Database name '{full_dbname}' does not match expected '{dbname}'."
+            )
 
-    def database_exists(self, dbname: DatabaseSet) -> bool:
+    def database_exists(self, dbname: str) -> bool:
         """
         Checks if the specified database exists.
 
         Args:
-            dbname (DatabaseSet): The database name to check for existence.
+            dbname (str): The database name to check for existence.
 
         Returns:
             bool: True if the database exists, False otherwise.
         """
-        dbname = f"{self._env}_{dbname.value}"
+        dbname = self._format_dbname(dbname)
         query = f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{dbname}';"
         command = self._build_mysql_command(query)
 
@@ -199,31 +214,33 @@ class MySQLDBA(DBA):
             result = subprocess.run(command, check=True, text=True, capture_output=True)
             return dbname in result.stdout
         except subprocess.CalledProcessError as e:
-            self._logger.exception(f"Command to check database existence failed with error: {e}")
+            self._logger.exception(
+                f"Command to check database existence failed with error: {e}"
+            )
             return False
 
-    def create_table(self, dbname: DatabaseSet, ddl_filepath: str) -> None:
+    def create_table(self, dbname: str, ddl_filepath: str) -> None:
         """
         Creates a table from a DDL file.
 
         Args:
-            dbname (DatabaseSet): The name of the database.
+            dbname (str): The name of the database.
             ddl_filepath (str): The path to the DDL file.
         """
-        dbname = f"{self._env}_{dbname.value}"
+        dbname = self._format_dbname(dbname)
         self._execute_ddl(dbname, ddl_filepath)
 
-    def create_tables(self, dbname: DatabaseSet, ddl_directory: str) -> None:
+    def create_tables(self, dbname: str, ddl_directory: str) -> None:
         """
         Creates tables from all DDL files in a directory.
 
         Args:
-            dbname (DatabaseSet): The name of the database.
+            dbname (str): The name of the database.
             ddl_directory (str): The directory containing DDL files.
         """
         try:
             for file_name in sorted(os.listdir(ddl_directory)):
-                if file_name.endswith('.sql'):
+                if file_name.endswith(".sql"):
                     file_path = os.path.join(ddl_directory, file_name)
                     self._logger.info(f"Executing {file_path}...")
                     self.create_table(dbname, file_path)
@@ -234,18 +251,18 @@ class MySQLDBA(DBA):
             self._logger.error(f"An unknown error occurred.\n{e}")
             raise
 
-    def table_exists(self, dbname: DatabaseSet, table_name: str) -> bool:
+    def table_exists(self, dbname: str, table_name: str) -> bool:
         """
         Checks if a specific table exists in the specified database.
 
         Args:
-            dbname (DatabaseSet): The name of the database to check.
+            dbname (str): The name of the database to check.
             table_name (str): The name of the table to check for existence.
 
         Returns:
             bool: True if the table exists, False otherwise.
         """
-        dbname = f"{self._env}_{dbname.value}"
+        dbname = self._format_dbname(dbname)
         query = f"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{dbname}' AND TABLE_NAME = '{table_name}';"
         command = self._build_mysql_command(query)
 
@@ -253,7 +270,9 @@ class MySQLDBA(DBA):
             result = subprocess.run(command, check=True, text=True, capture_output=True)
             return table_name in result.stdout
         except subprocess.CalledProcessError as e:
-            self._logger.exception(f"Command to check table existence failed with error: {e}")
+            self._logger.exception(
+                f"Command to check table existence failed with error: {e}"
+            )
             return False
 
     def _build_mysql_command(self, query: str) -> list[str]:
@@ -267,10 +286,13 @@ class MySQLDBA(DBA):
             list[str]: The command and arguments to execute.
         """
         command = [
-            'mysql',
-            '-h', self._mysql_credentials.host,
-            '-u', self._mysql_credentials.username,
-            '-e', query
+            "mysql",
+            "-h",
+            self._mysql_credentials.host,
+            "-u",
+            self._mysql_credentials.username,
+            "-e",
+            query,
         ]
         if self._mysql_credentials.password:
             command.insert(3, f"-p{self._mysql_credentials.password}")
@@ -303,7 +325,7 @@ class MySQLDBA(DBA):
             ddl_filepath (str): The path to the DDL file.
         """
         try:
-            with open(ddl_filepath, 'r') as ddl_file:
+            with open(ddl_filepath, "r") as ddl_file:
                 sql_commands = ddl_file.read()
 
             use_command = f"USE {dbname};"
@@ -319,7 +341,9 @@ class MySQLDBA(DBA):
         except FileNotFoundError as e:
             self._logger.error(f"SQL file {ddl_filepath} not found.\n{e}")
         except Exception as e:
-            self._logger.error(f"An unknown error occurred while executing {ddl_filepath}.\n{e}")
+            self._logger.error(
+                f"An unknown error occurred while executing {ddl_filepath}.\n{e}"
+            )
 
     def _run_bash_script(self, script_filepath: str) -> None:
         """
@@ -334,3 +358,6 @@ class MySQLDBA(DBA):
             subprocess.run(command, shell=True, check=True)
         except subprocess.CalledProcessError as e:
             self._logger.error(f"Script execution failed with error: {e}")
+
+    def _format_dbname(self, dbname: str) -> str:
+        return f"{dbname}_{self._env}"

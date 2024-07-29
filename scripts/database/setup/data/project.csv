@@ -1,51 +1,51 @@
-project_id,dataset,category_id,category,project_priority,bookmark,n_jobs,last_job_id,dt_last_job,project_status
-1,AppData,6000,Business,1,0,0,,,NOT_STARTED
-2,AppData,6001,Weather,5,0,0,,,NOT_STARTED
-3,AppData,6002,Utilities,1,0,0,,,NOT_STARTED
-4,AppData,6003,Travel,3,0,0,,,NOT_STARTED
-5,AppData,6004,Sports,3,0,0,,,NOT_STARTED
-6,AppData,6005,Social Networking,3,0,0,,,NOT_STARTED
-7,AppData,6006,Reference,4,0,0,,,NOT_STARTED
-8,AppData,6007,Productivity,2,0,0,,,NOT_STARTED
-9,AppData,6008,Photo & Video,4,0,0,,,NOT_STARTED
-10,AppData,6009,News,4,0,0,,,NOT_STARTED
-11,AppData,6010,Navigation,4,0,0,,,NOT_STARTED
-12,AppData,6011,Music,3,0,0,,,NOT_STARTED
-13,AppData,6012,Lifestyle,1,0,0,,,NOT_STARTED
-14,AppData,6013,Health & Fitness,2,0,0,,,NOT_STARTED
-15,AppData,6015,Finance,2,0,0,,,NOT_STARTED
-16,AppData,6016,Entertainment,2,0,0,,,NOT_STARTED
-17,AppData,6017,Education,1,0,0,,,NOT_STARTED
-18,AppData,6018,Books,5,0,0,,,NOT_STARTED
-19,AppData,6020,Medical,3,0,0,,,NOT_STARTED
-20,AppData,6021,Newsstand,5,0,0,,,NOT_STARTED
-21,AppData,6022,Catalogs,5,0,0,,,NOT_STARTED
-22,AppData,6023,Food & Drink,1,0,0,,,NOT_STARTED
-23,AppData,6024,Shopping,2,0,0,,,NOT_STARTED
-24,AppData,6026,Developer Tools,5,0,0,,,NOT_STARTED
-25,AppData,6027,Graphics & Design,5,0,0,,,NOT_STARTED
-26,Review,6000,Business,1,0,0,,,NOT_STARTED
-27,Review,6001,Weather,5,0,0,,,NOT_STARTED
-28,Review,6002,Utilities,1,0,0,,,NOT_STARTED
-29,Review,6003,Travel,3,0,0,,,NOT_STARTED
-30,Review,6004,Sports,3,0,0,,,NOT_STARTED
-31,Review,6005,Social Networking,3,0,0,,,NOT_STARTED
-32,Review,6006,Reference,4,0,0,,,NOT_STARTED
-33,Review,6007,Productivity,2,0,0,,,NOT_STARTED
-34,Review,6008,Photo & Video,4,0,0,,,NOT_STARTED
-35,Review,6009,News,4,0,0,,,NOT_STARTED
-36,Review,6010,Navigation,4,0,0,,,NOT_STARTED
-37,Review,6011,Music,3,0,0,,,NOT_STARTED
-38,Review,6012,Lifestyle,1,0,0,,,NOT_STARTED
-39,Review,6013,Health & Fitness,2,0,0,,,NOT_STARTED
-40,Review,6015,Finance,2,0,0,,,NOT_STARTED
-41,Review,6016,Entertainment,2,0,0,,,NOT_STARTED
-42,Review,6017,Education,1,0,0,,,NOT_STARTED
-43,Review,6018,Books,5,0,0,,,NOT_STARTED
-44,Review,6020,Medical,3,0,0,,,NOT_STARTED
-45,Review,6021,Newsstand,5,0,0,,,NOT_STARTED
-46,Review,6022,Catalogs,5,0,0,,,NOT_STARTED
-47,Review,6023,Food & Drink,1,0,0,,,NOT_STARTED
-48,Review,6024,Shopping,2,0,0,,,NOT_STARTED
-49,Review,6026,Developer Tools,5,0,0,,,NOT_STARTED
-50,Review,6027,Graphics & Design,5,0,0,,,NOT_STARTED
+project_id,dataset,category_id,category,project_priority,bookmark,n_jobs,last_job_id,last_job_ended,last_job_status,project_status
+1,AppData,6000,Business,1,0,0,,,,NOT_STARTED
+2,AppData,6001,Weather,5,0,0,,,,NOT_STARTED
+3,AppData,6002,Utilities,1,0,0,,,,NOT_STARTED
+4,AppData,6003,Travel,3,0,0,,,,NOT_STARTED
+5,AppData,6004,Sports,3,0,0,,,,NOT_STARTED
+6,AppData,6005,Social Networking,3,0,0,,,,NOT_STARTED
+7,AppData,6006,Reference,4,0,0,,,,NOT_STARTED
+8,AppData,6007,Productivity,2,0,0,,,,NOT_STARTED
+9,AppData,6008,Photo & Video,4,0,0,,,,NOT_STARTED
+10,AppData,6009,News,4,0,0,,,,NOT_STARTED
+11,AppData,6010,Navigation,4,0,0,,,,NOT_STARTED
+12,AppData,6011,Music,3,0,0,,,,NOT_STARTED
+13,AppData,6012,Lifestyle,1,0,0,,,,NOT_STARTED
+14,AppData,6013,Health & Fitness,2,0,0,,,,NOT_STARTED
+15,AppData,6015,Finance,2,0,0,,,,NOT_STARTED
+16,AppData,6016,Entertainment,2,0,0,,,,NOT_STARTED
+17,AppData,6017,Education,1,0,0,,,,NOT_STARTED
+18,AppData,6018,Books,5,0,0,,,,NOT_STARTED
+19,AppData,6020,Medical,3,0,0,,,,NOT_STARTED
+20,AppData,6021,Newsstand,5,0,0,,,,NOT_STARTED
+21,AppData,6022,Catalogs,5,0,0,,,,NOT_STARTED
+22,AppData,6023,Food & Drink,1,0,0,,,,NOT_STARTED
+23,AppData,6024,Shopping,2,0,0,,,,NOT_STARTED
+24,AppData,6026,Developer Tools,5,0,0,,,,NOT_STARTED
+25,AppData,6027,Graphics & Design,5,0,0,,,,NOT_STARTED
+26,Review,6000,Business,1,0,0,,,,NOT_STARTED
+27,Review,6001,Weather,5,0,0,,,,NOT_STARTED
+28,Review,6002,Utilities,1,0,0,,,,NOT_STARTED
+29,Review,6003,Travel,3,0,0,,,,NOT_STARTED
+30,Review,6004,Sports,3,0,0,,,,NOT_STARTED
+31,Review,6005,Social Networking,3,0,0,,,,NOT_STARTED
+32,Review,6006,Reference,4,0,0,,,,NOT_STARTED
+33,Review,6007,Productivity,2,0,0,,,,NOT_STARTED
+34,Review,6008,Photo & Video,4,0,0,,,,NOT_STARTED
+35,Review,6009,News,4,0,0,,,,NOT_STARTED
+36,Review,6010,Navigation,4,0,0,,,,NOT_STARTED
+37,Review,6011,Music,3,0,0,,,,NOT_STARTED
+38,Review,6012,Lifestyle,1,0,0,,,,NOT_STARTED
+39,Review,6013,Health & Fitness,2,0,0,,,,NOT_STARTED
+40,Review,6015,Finance,2,0,0,,,,NOT_STARTED
+41,Review,6016,Entertainment,2,0,0,,,,NOT_STARTED
+42,Review,6017,Education,1,0,0,,,,NOT_STARTED
+43,Review,6018,Books,5,0,0,,,,NOT_STARTED
+44,Review,6020,Medical,3,0,0,,,,NOT_STARTED
+45,Review,6021,Newsstand,5,0,0,,,,NOT_STARTED
+46,Review,6022,Catalogs,5,0,0,,,,NOT_STARTED
+47,Review,6023,Food & Drink,1,0,0,,,,NOT_STARTED
+48,Review,6024,Shopping,2,0,0,,,,NOT_STARTED
+49,Review,6026,Developer Tools,5,0,0,,,,NOT_STARTED
+50,Review,6027,Graphics & Design,5,0,0,,,,NOT_STARTED

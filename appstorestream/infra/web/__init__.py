@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoC: AppStore Voice of the Customer                                              #
-# Version    : 0.2.0                                                                               #
+# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
+# Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvoc/infrastructure/web/__init__.py                                              #
+# Filename   : /appstorestream/infra/web/__init__.py                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appvoc                                          #
+# URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday July 19th 2024 04:41:56 am                                                   #
-# Modified   : Friday July 19th 2024 04:42:00 am                                                   #
+# Created    : Friday July 26th 2024 08:20:44 am                                                   #
+# Modified   : Monday July 29th 2024 03:37:48 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #

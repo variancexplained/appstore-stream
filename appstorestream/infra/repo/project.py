@@ -11,12 +11,14 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 12:53:41 pm                                                   #
-# Modified   : Monday July 29th 2024 01:50:36 am                                                   #
+# Modified   : Monday July 29th 2024 03:15:04 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from __future__ import annotations
+
+from typing import Optional
 
 import pandas as pd
 from sqlalchemy import text
@@ -47,16 +49,22 @@ class ProjectRepo(AppLayerRepo):
         super().__init__()
         self._database = database
 
-    def add(self, project: Project) -> None:
+    def __len__(self) -> int:
+        return len(self.getall())
+
+    def add(self, projects: pd.DataFrame, dtype: Optional[dict] = None) -> None:
         """
-        Adds Project objects to the repository.
+        Adds projects to teh Project repository
 
         Args:
-            project (Project): Project entity
+            projects (pd.DataFrame): DAtaFrame containing project data.
+            dtype (dict):Mapping of columns to datatypes.
         """
 
         with self._database as db:
-            db.insert(data=project.as_df(), tablename=self.__tablename)
+            db.insert(
+                data=projects, tablename=self.__tablename, dtype=dtype, if_exists="fail"
+            )
 
     def get(self, id: int) -> Project:
         """

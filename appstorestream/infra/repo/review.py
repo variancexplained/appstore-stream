@@ -4,23 +4,21 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/repo/review_repo.py                                           #
+# Filename   : /appstorestream/infra/repo/review.py                                                #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Monday July 29th 2024 01:12:33 am                                                   #
+# Modified   : Monday July 29th 2024 03:22:50 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from dataclasses import dataclass
-
+"""Review Repo Module"""
 import pandas as pd
 
-from appstorestream.core.enum import DatabaseSet
 from appstorestream.domain.repo import DomainLayerRepo
 from appstorestream.infra.database.mysql import MySQLDatabase
 
@@ -43,7 +41,6 @@ class ReviewRepo(DomainLayerRepo):
         super().__init__()
         self._database = database
 
-
     def get(self, category_id: int) -> pd.DataFrame:
         """
         Fetches data from the 'review' table based on the category_id.
@@ -59,7 +56,7 @@ class ReviewRepo(DomainLayerRepo):
         SELECT * FROM review
         WHERE category_id = :category_id
         """
-        params = {'category_id': category_id}
+        params = {"category_id": category_id}
 
         # Use the database connection to execute the query and return the result as a DataFrame
         with self._database as conn:
@@ -76,7 +73,7 @@ class ReviewRepo(DomainLayerRepo):
             int: Number of rows affected by the upsert operation.
         """
         # Convert DataFrame to a list of dictionaries for upsert operation
-        data_dict = data.to_dict(orient='records')
+        data_dict = data.to_dict(orient="records")
 
         # Construct the upsert SQL query
         upsert_query = """

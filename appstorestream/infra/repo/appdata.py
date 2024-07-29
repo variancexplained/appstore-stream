@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Monday July 29th 2024 01:15:47 am                                                   #
+# Modified   : Monday July 29th 2024 03:21:00 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,7 +20,6 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from appstorestream.core.enum import DatabaseSet
 from appstorestream.domain.repo import DomainLayerRepo
 from appstorestream.infra.database.mysql import MySQLDatabase
 
@@ -43,7 +42,6 @@ class AppDataRepo(DomainLayerRepo):
         super().__init__()
         self._database = database
 
-
     def get(self, category_id: int) -> pd.DataFrame:
         """
         Fetches data from the 'appdata' table based on the category_id.
@@ -59,7 +57,7 @@ class AppDataRepo(DomainLayerRepo):
         SELECT * FROM appdata
         WHERE category_id = :category_id
         """
-        params = {'category_id': category_id}
+        params = {"category_id": category_id}
 
         # Use the database connection to execute the query and return the result as a DataFrame
         with self._database as conn:
@@ -76,7 +74,7 @@ class AppDataRepo(DomainLayerRepo):
             int: Number of rows affected by the upsert operation.
         """
         # Convert DataFrame to a list of dictionaries for upsert operation
-        data_dict = data.to_dict(orient='records')
+        data_dict = data.to_dict(orient="records")
 
         # Construct the upsert SQL query
         upsert_query = """

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday July 20th 2024 03:02:29 am                                                 #
-# Modified   : Monday July 29th 2024 02:10:21 am                                                   #
+# Modified   : Monday July 29th 2024 03:36:58 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from appstorestream.application import AsyncRequest, AsyncRequestGen
+from appstorestream.application.base.request import AsyncRequest, AsyncRequestGen
 from appstorestream.core.data import DataClass
 from appstorestream.infra.web.header import BrowserHeader
 
