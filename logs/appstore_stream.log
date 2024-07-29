@@ -1,0 +1,491 @@
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:29:28 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql...
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql...
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql...
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql...
+[07/29/2024 04:29:28 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:29:28 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:31:34 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql...
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql...
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql...
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql...
+[07/29/2024 04:31:34 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:31:34 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:43:11 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql...
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql...
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql...
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql...
+[07/29/2024 04:43:11 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:43:11 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:48:49 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql...
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql...
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql...
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql...
+[07/29/2024 04:48:49 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:48:49 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:50:56 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql..
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql..
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql..
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql..
+[07/29/2024 04:50:56 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:50:56 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:52:21 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql..
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql..
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql..
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql..
+[07/29/2024 04:52:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:52:21 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:54:05 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql..
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql..
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql..
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql..
+[07/29/2024 04:54:05 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:54:05 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:54:05 AM] [ERROR] [MySQLDatabase] [base] [__exit__] : Exception occurred.
+Exception type: <class 'ValueError'>
+The type of project_id is not a SQLAlchemy type
+<traceback object at 0x7fc3170b15c0>
+Traceback (most recent call last):
+  File "/home/john/projects/appstorestream/appstorestream/infra/repo/project.py", line 65, in add
+    db.insert(
+  File "/home/john/projects/appstorestream/appstorestream/infra/database/base.py", line 151, in insert
+    return data.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/core/generic.py", line 3087, in to_sql
+    return sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 842, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 2008, in to_sql
+    table = self.prep_table(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 1900, in prep_table
+    raise ValueError(f"The type of {col} is not a SQLAlchemy type")
+ValueError: The type of project_id is not a SQLAlchemy type
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:56:30 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql..
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql..
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql..
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql..
+[07/29/2024 04:56:30 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:56:30 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:56:30 AM] [ERROR] [MySQLDatabase] [base] [__exit__] : Exception occurred.
+Exception type: <class 'ValueError'>
+The type of project_id is not a SQLAlchemy type
+<traceback object at 0x7fcf2ca1a840>
+Traceback (most recent call last):
+  File "/home/john/projects/appstorestream/appstorestream/infra/repo/project.py", line 65, in add
+    db.insert(
+  File "/home/john/projects/appstorestream/appstorestream/infra/database/base.py", line 151, in insert
+    return data.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/core/generic.py", line 3087, in to_sql
+    return sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 842, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 2008, in to_sql
+    table = self.prep_table(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 1900, in prep_table
+    raise ValueError(f"The type of {col} is not a SQLAlchemy type")
+ValueError: The type of project_id is not a SQLAlchemy type
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_command] : Successfully completed Creating database appstorestream_dev
+[07/29/2024 04:59:21 AM] [INFO] [root] [setup] [setup_environment] : Database created.
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/01_appdata.sql..
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/01_appdata.sql
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/02_review.sql..
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/02_review.sql
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/03_project.sql..
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/03_project.sql
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [create_tables] : Executing scripts/database/setup/tables/04_job.sql..
+[07/29/2024 04:59:21 AM] [INFO] [appstorestream.infra.database.mysql.MySQLDBA] [mysql] [_execute_ddl] : Successfully executed scripts/database/setup/tables/04_job.sql
+[07/29/2024 04:59:21 AM] [INFO] [root] [setup] [setup_environment] : Tables created.
+[07/29/2024 04:59:21 AM] [ERROR] [MySQLDatabase] [base] [__exit__] : Exception occurred.
+Exception type: <class 'ValueError'>
+Table 'project' already exists.
+<traceback object at 0x7f4588d601c0>
+Traceback (most recent call last):
+  File "/home/john/projects/appstorestream/appstorestream/infra/repo/project.py", line 65, in add
+    db.insert(
+  File "/home/john/projects/appstorestream/appstorestream/infra/database/base.py", line 151, in insert
+    return data.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/core/generic.py", line 3087, in to_sql
+    return sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 842, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 2008, in to_sql
+    table = self.prep_table(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 1912, in prep_table
+    table.create()
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 986, in create
+    raise ValueError(f"Table '{self.name}' already exists.")
+ValueError: Table 'project' already exists.
+[07/29/2024 05:22:29 AM] [ERROR] [MySQLDatabase] [base] [__exit__] : Exception occurred.
+Exception type: <class 'ValueError'>
+Table 'project' already exists.
+<traceback object at 0x7fea5e02b140>
+Traceback (most recent call last):
+  File "/home/john/projects/appstorestream/appstorestream/infra/repo/project.py", line 65, in add
+    db.insert(
+  File "/home/john/projects/appstorestream/appstorestream/infra/database/base.py", line 151, in insert
+    return data.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/core/generic.py", line 3087, in to_sql
+    return sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 842, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 2008, in to_sql
+    table = self.prep_table(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 1912, in prep_table
+    table.create()
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 986, in create
+    raise ValueError(f"Table '{self.name}' already exists.")
+ValueError: Table 'project' already exists.
+[07/29/2024 05:23:53 AM] [ERROR] [MySQLDatabase] [base] [__exit__] : Exception occurred.
+Exception type: <class 'ValueError'>
+Table 'project' already exists.
+<traceback object at 0x7f982a85b840>
+Traceback (most recent call last):
+  File "/home/john/projects/appstorestream/appstorestream/infra/repo/project.py", line 65, in add
+    db.insert(
+  File "/home/john/projects/appstorestream/appstorestream/infra/database/base.py", line 151, in insert
+    return data.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/core/generic.py", line 3087, in to_sql
+    return sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 842, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 2008, in to_sql
+    table = self.prep_table(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 1912, in prep_table
+    table.create()
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 986, in create
+    raise ValueError(f"Table '{self.name}' already exists.")
+ValueError: Table 'project' already exists.
+[07/29/2024 05:25:25 AM] [ERROR] [MySQLDatabase] [base] [__exit__] : Exception occurred.
+Exception type: <class 'ValueError'>
+Table 'project' already exists.
+<traceback object at 0x7fc29e406080>
+Traceback (most recent call last):
+  File "/home/john/projects/appstorestream/appstorestream/infra/repo/project.py", line 65, in add
+    db.insert(
+  File "/home/john/projects/appstorestream/appstorestream/infra/database/base.py", line 151, in insert
+    return data.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/core/generic.py", line 3087, in to_sql
+    return sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 842, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 2008, in to_sql
+    table = self.prep_table(
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 1912, in prep_table
+    table.create()
+  File "/home/john/miniconda3/envs/appstorestream/lib/python3.10/site-packages/pandas/io/sql.py", line 986, in create
+    raise ValueError(f"Table '{self.name}' already exists.")
+ValueError: Table 'project' already exists.
+[07/29/2024 07:10:23 AM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+
+Started TestAppDataResponse test_request_response at 07:10:23 AM on 07/29/2024
+[07/29/2024 07:10:23 AM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+====================================================================================================
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:10:25 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:52 AM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+
+Started TestAppDataResponse test_request_response at 07:13:52 AM on 07/29/2024
+[07/29/2024 07:13:52 AM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+====================================================================================================
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:13:54 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'results'
+[07/29/2024 07:18:05 AM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+
+Started TestAppDataResponse test_request_response at 07:18:05 AM on 07/29/2024
+[07/29/2024 07:18:05 AM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+====================================================================================================
+[07/29/2024 07:18:07 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'str' object has no attribute 'keys'
+[07/29/2024 07:18:07 AM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'str' object has no attribute 'keys'
+[07/29/2024 12:13:20 PM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+
+Started TestAppDataResponse test_request_response at 12:13:20 PM on 07/29/2024
+[07/29/2024 12:13:20 PM] [INFO] [test_appdata_response] [test_appdata_response] [test_request_response] : 
+====================================================================================================
+[07/29/2024 12:13:22 PM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'str' object has no attribute 'keys'
+[07/29/2024 12:13:22 PM] [WARNING] [appstorestream.application.base.response.AppDataAsyncResponse] [response] [parse_results] : Unknown exception occurred:\'str' object has no attribute 'keys'
+[07/29/2024 12:45:45 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 12:45:45 PM on 07/29/2024
+[07/29/2024 12:45:45 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 12:47:03 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 12:47:02 PM on 07/29/2024
+[07/29/2024 12:47:03 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 12:48:20 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 12:48:20 PM on 07/29/2024
+[07/29/2024 12:48:20 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 12:50:03 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 12:50:03 PM on 07/29/2024
+[07/29/2024 12:50:03 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 12:54:17 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 12:54:17 PM on 07/29/2024
+[07/29/2024 12:54:17 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 12:59:06 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 12:59:06 PM on 07/29/2024
+[07/29/2024 12:59:06 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 12:59:06 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Completed TestAppDataRequestGen test_request_gen in 0.1 seconds at 12:59:06 PM on 07/29/2024
+[07/29/2024 12:59:06 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+----------------------------------------------------------------------------------------------------
+[07/29/2024 01:00:43 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 01:00:43 PM on 07/29/2024
+[07/29/2024 01:00:43 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 0}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 200}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 400}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 600}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 800}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1000}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1200}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1400}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1600}
+[07/29/2024 01:00:43 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1800}
+[07/29/2024 01:00:43 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Completed TestAppDataRequestGen test_request_gen in 0.1 seconds at 01:00:43 PM on 07/29/2024
+[07/29/2024 01:00:43 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+----------------------------------------------------------------------------------------------------
+[07/29/2024 01:02:26 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 01:02:26 PM on 07/29/2024
+[07/29/2024 01:02:26 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+Generating Batch: 1 -  Page: 0
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 0}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 200}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+Generating Batch: 2 -  Page: 2
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 400}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 600}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+Generating Batch: 3 -  Page: 4
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 800}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1000}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+Generating Batch: 4 -  Page: 6
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1200}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1400}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+Generating Batch: 5 -  Page: 8
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1600}
+[07/29/2024 01:02:26 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1800}
+[07/29/2024 01:02:26 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Completed TestAppDataRequestGen test_request_gen in 0.1 seconds at 01:02:26 PM on 07/29/2024
+[07/29/2024 01:02:26 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+----------------------------------------------------------------------------------------------------
+[07/29/2024 01:03:39 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 01:03:39 PM on 07/29/2024
+[07/29/2024 01:03:39 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 1
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 0
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 0}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 1
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 200}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 2
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 2
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 400}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 3
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 600}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 3
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 4
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 800}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 5
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1000}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 4
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 6
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1200}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 7
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1400}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 5
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 8
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1600}
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 9
+[07/29/2024 01:03:39 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1800}
+[07/29/2024 01:03:39 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Completed TestAppDataRequestGen test_request_gen in 0.1 seconds at 01:03:39 PM on 07/29/2024
+[07/29/2024 01:03:39 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+----------------------------------------------------------------------------------------------------
+[07/29/2024 01:05:23 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 01:05:23 PM on 07/29/2024
+[07/29/2024 01:05:23 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 01:05:54 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 01:05:54 PM on 07/29/2024
+[07/29/2024 01:05:54 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 1
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 0
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 0}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 1
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 200}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 2
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 2
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 400}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 3
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 600}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 3
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 4
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 800}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 5
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1000}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 4
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 6
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1200}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 7
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1400}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 5
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 8
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1600}
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 9
+[07/29/2024 01:05:54 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1800}
+[07/29/2024 01:06:32 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Started TestAppDataRequestGen test_request_gen at 01:06:32 PM on 07/29/2024
+[07/29/2024 01:06:32 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+====================================================================================================
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 1
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 0
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 0}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 1
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 200}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 2
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 2
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 400}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 3
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 600}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 3
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 4
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 800}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 5
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1000}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 4
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 6
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1200}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 7
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1400}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Generating Batch: 5
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 8
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1600}
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : Printing Page: 9
+[07/29/2024 01:06:32 PM] [DEBUG] [test_request_gen] [test_request_gen] [test_request_gen] : {'media': 'software', 'genreId': 6018, 'term': 'app', 'country': 'us', 'lang': 'en-us', 'explicit': 'yes', 'limit': 200, 'offset': 1800}
+[07/29/2024 01:06:32 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+
+Completed TestAppDataRequestGen test_request_gen in 0.1 seconds at 01:06:32 PM on 07/29/2024
+[07/29/2024 01:06:32 PM] [INFO] [test_request_gen] [test_request_gen] [test_request_gen] : 
+----------------------------------------------------------------------------------------------------

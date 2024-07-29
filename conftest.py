@@ -11,18 +11,19 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Thursday July 25th 2024 04:15:33 pm                                                 #
+# Modified   : Monday July 29th 2024 07:01:22 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-import os
-from datetime import datetime
+import json
 
-import dotenv
+import pandas as pd
 import pytest
 
+from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.config.config import Config
+
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [""]
 
@@ -37,3 +38,29 @@ def mode():
     config.change_environment(new_value="test")
     yield
     config.change_environment(new_value=prior_mode)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                              DEPENDENCY INJECTION                                                #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function", autouse=True)
+def container():
+    container = AppStoreStreamContainer()
+    container.init_resources()
+    container.wire(
+        packages=[
+            "appstorestream.application.appdata.job",
+        ]
+    )
+
+    return container
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                       APPDATA                                                    #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function", autouse=False)
+def appdata_json():
+    FP = "tests/data/appdata.json"
+    with open(FP, "r") as file:
+        return json.load(file)

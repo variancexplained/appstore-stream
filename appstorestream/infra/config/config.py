@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Friday July 26th 2024 08:57:02 am                                                   #
+# Modified   : Monday July 29th 2024 04:48:41 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -58,8 +58,21 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def config(self) ->  Union[dict, NestedNamespace]:
-        return self.to_namespace(self._config) if self._namespace_mode else self._config
+    def database(self) -> Union[dict, NestedNamespace]:
+        return (
+            self.to_namespace(self._config["database"])
+            if self._namespace_mode
+            else self._config["database"]
+        )
+
+    #  ------------------------------------------------------------------------------------------- #
+    @property
+    def job(self) -> Union[dict, NestedNamespace]:
+        return (
+            self.to_namespace(self._config["job"])
+            if self._namespace_mode
+            else self._config["job"]
+        )
 
     #  ------------------------------------------------------------------------------------------- #
     @property
@@ -132,7 +145,6 @@ class Config:
         """
         load_dotenv(self._env_file, override=True)
 
-
     #  ------------------------------------------------------------------------------------------- #
     def load_config(self) -> dict:
         """
@@ -141,19 +153,13 @@ class Config:
         """
         env = os.getenv("ENV", "dev")
         # Get the base config filename
-        base_config_filepath = os.path.join(
+        config_filepath = os.path.join(
             os.getenv("CONFIG_FOLDER", "config"), "base.yaml"
         )
-        env_config_filepath = os.path.join(os.getenv("CONFIG_FOLDER", "config"), f"{env}.yaml")
+
         # Open config files.
-        with open(base_config_filepath, "r") as base_file:
-            base_config = yaml.safe_load(base_file)
-
-        with open(env_config_filepath, "r") as env_file:
-            env_config = yaml.safe_load(env_file)
-
-        # Merge configurations, with environment-specific settings overriding base settings
-        config = {**base_config, **env_config}
+        with open(config_filepath, "r") as config_file:
+            config = yaml.safe_load(config_file)
 
         return config
 

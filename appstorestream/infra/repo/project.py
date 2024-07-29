@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 12:53:41 pm                                                   #
-# Modified   : Monday July 29th 2024 03:15:04 am                                                   #
+# Modified   : Monday July 29th 2024 05:04:34 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -63,7 +63,10 @@ class ProjectRepo(AppLayerRepo):
 
         with self._database as db:
             db.insert(
-                data=projects, tablename=self.__tablename, dtype=dtype, if_exists="fail"
+                data=projects,
+                tablename=self.__tablename,
+                dtype=dtype,
+                if_exists="fail",
             )
 
     def get(self, id: int) -> Project:

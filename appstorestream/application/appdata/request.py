@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday July 20th 2024 03:02:29 am                                                 #
-# Modified   : Monday July 29th 2024 03:36:58 am                                                   #
+# Modified   : Monday July 29th 2024 01:05:42 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -64,7 +64,10 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
     """Encapsulates an asynchronous AppData request generation.
 
     Args:
+        category_id (int): Four digit identifier for app genre or category.
         max_requests (int): Maximum number of apps to process.
+        batch_size (int): Number of requests within an async call.
+        start_page (int): Page from which to start the requests.
         request_params_cls (type[AppDataRequestParams]): The request parameters
         browser_header (BrowserHeader): Browser header iterator.
     """
@@ -83,12 +86,23 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
         self._batch_size = batch_size
         self._start_page = start_page
         self._current_page = start_page
+
         self._request_params = request_params_cls()
         self._browser_header = browser_header_cls()
+
+        self._request_count = 0
 
     @property
     def bookmark(self) -> int:
         return self._current_page
+
+    @property
+    def batchsize(self) -> int:
+        return self._batch_size
+
+    @property
+    def max_requests(self) -> int:
+        return self._max_requests
 
     def __iter__(self) -> AppDataAsyncRequestGen:
         """Returns an iterator object for the request generator.
@@ -135,7 +149,9 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
                 "offset": current_page * self._request_params.limit,
             }
             param_list.append(params)
-            self._current_page += current_batch_size
+            self._current_page += 1
+
+            self._request_count += 1
 
         # Create the Request Object
         return AppDataRequest(

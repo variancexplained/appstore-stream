@@ -11,31 +11,35 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Monday July 29th 2024 03:52:52 am                                                   #
+# Modified   : Monday July 29th 2024 05:26:25 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Application Setup Module"""
 import logging
-import os
 from datetime import datetime
 
 import click
-import numpy as np
 import pandas as pd
+from dependency_injector.wiring import Provide, inject
+from sqlalchemy.types import DATETIME, INTEGER, VARCHAR
 
+from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.config.config import Config
 from appstorestream.infra.database.mysql import MySQLDBA
+from appstorestream.infra.repo.project import ProjectRepo
 
 
 # ------------------------------------------------------------------------------------------------ #
-def setup_environment(
+@inject
+def setup_database(
     env: str,
     config: Config,
+    repo: ProjectRepo = Provide[AppStoreStreamContainer.data.project_repo],
 ) -> None:
     """
-    Sets up the environment based on the given environment name.
+    Sets up the database based on the given environment name.
 
     Args:
         env (str): The environment name (e.g., 'prod', 'dev', 'test').
@@ -54,15 +58,46 @@ def setup_environment(
 
     # Setup the database for the environment
     dba = MySQLDBA(config_cls=Config)
-    dba.create_database(dbname=config.config.setup.database.dbname)
-    logging.info("Database created.")
+    dba.create_database(dbname=config.database.dbname)
+    print("Database created.")
 
     # Setup Tables
     dba.create_tables(
-        dbname=config.config.setup.database.dbname,
-        ddl_directory=config.config.setup.database.ddl_directory,
+        dbname=config.database.dbname,
+        ddl_directory=config.database.ddl_directory,
     )
-    logging.info("Tables created.")
+    print("Tables created.")
+
+    # Load project table
+    dtypes = {
+        "project_id": INTEGER,
+        "dataset": VARCHAR,
+        "category_id": INTEGER,
+        "category": VARCHAR,
+        "project_priority": INTEGER,
+        "bookmark": INTEGER,
+        "n_jobs": INTEGER,
+        "last_job_id": VARCHAR,
+        "last_job_ended": DATETIME,
+        "last_job_status": VARCHAR,
+        "project_status": VARCHAR,
+    }
+    try:
+        df = pd.read_csv(config.database.project_data_filepath, index_col=None)
+        repo.add(projects=df, dtype=dtypes)
+        n_projects = len(repo)
+        print(f"{n_projects} loaded into the project repository.")
+    except ValueError:
+        print(f"Project table already exists.")
+    except Exception:
+        print(f"Project table already exists.")
+
+
+def setup_dependencies():
+    container = AppStoreStreamContainer()
+    container.init_resources()
+    container.wire(modules=[__name__])
+    print("Dependency Container Created and Wired")
 
 
 @click.command()
@@ -73,9 +108,11 @@ def main(env):
 
     ENV: The environment to set up ('prod', 'dev', 'test').
     """
+
     config = Config()
     try:
-        setup_environment(env=env, config=config)
+        setup_dependencies()
+        setup_database(env=env, config=config)
         print("Environment setup complete.")
     except ValueError as e:
         print(e)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 01:28:02 am                                                   #
-# Modified   : Monday July 29th 2024 02:13:03 am                                                   #
+# Modified   : Monday July 29th 2024 04:07:36 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,8 +19,7 @@
 """Job Repository Module"""
 import pandas as pd
 
-from appstorestream.application.appdata.job import AppDataJob
-from appstorestream.application.base.job import Job, JobMeta
+from appstorestream.application.base.job import Job
 from appstorestream.application.base.repo import AppLayerRepo
 from appstorestream.core.enum import Dataset
 from appstorestream.infra.database.mysql import MySQLDatabase

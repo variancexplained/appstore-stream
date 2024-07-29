@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Monday July 29th 2024 03:19:06 am                                                   #
+# Modified   : Monday July 29th 2024 05:19:57 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -66,7 +66,7 @@ class MySQLDatabase(Database):
 
     def connect(self, autocommit: bool = False) -> None:
         attempts = 0
-        while attempts < self._config.database.mysql.retries:
+        while attempts < self._config.database.retries:
             attempts += 1
             try:
                 if self._engine is None:
@@ -84,10 +84,8 @@ class MySQLDatabase(Database):
 
             except SQLAlchemyError as e:
                 self._is_connected = False
-                if attempts < self._config.database.mysql.retries:
-                    self._logger.info(
-                        "Database connection failed. Attempting to start database..."
-                    )
+                if attempts < self._config.database.retries:
+                    print("Database connection failed. Attempting to start database..")
                     self._start_db()
                     sleep(3)
                 else:
@@ -101,7 +99,7 @@ class MySQLDatabase(Database):
 
     def _start_db(self) -> None:
         """Starts the MySQL database."""
-        subprocess.run([self._config.database.mysql.start], shell=True)
+        subprocess.run([self._config.database.start], shell=True)
 
     def close(self) -> None:
         """Closes the database connection."""
@@ -168,7 +166,7 @@ class MySQLDBA(DBA):
             dbname (str): The name of the database to drop.
         """
         if self._safe_mode and self._env == "prod":
-            self._logger.error(
+            print(
                 "Dropping databases is not permitted in safe mode in the 'prod' environment."
             )
             return
@@ -190,11 +188,9 @@ class MySQLDBA(DBA):
                 command = self._build_mysql_command(query)
                 self._execute_command(command, f"Dropping database {dbname}")
             else:
-                self._logger.info("Operation cancelled by user.")
+                print("Operation cancelled by user.")
         else:
-            self._logger.error(
-                f"Database name '{full_dbname}' does not match expected '{dbname}'."
-            )
+            print(f"Database name '{full_dbname}' does not match expected '{dbname}'.")
 
     def database_exists(self, dbname: str) -> bool:
         """
@@ -242,13 +238,13 @@ class MySQLDBA(DBA):
             for file_name in sorted(os.listdir(ddl_directory)):
                 if file_name.endswith(".sql"):
                     file_path = os.path.join(ddl_directory, file_name)
-                    self._logger.info(f"Executing {file_path}...")
+                    print(f"Executing {file_path}..")
                     self.create_table(dbname, file_path)
         except FileNotFoundError as e:
-            self._logger.error(f"Directory {ddl_directory} not found.\n{e}")
+            self._logger.exception(f"Directory {ddl_directory} not found.\n{e}")
             raise
         except Exception as e:
-            self._logger.error(f"An unknown error occurred.\n{e}")
+            self._logger.exception(f"An unknown error occurred.\n{e}")
             raise
 
     def table_exists(self, dbname: str, table_name: str) -> bool:
@@ -310,9 +306,9 @@ class MySQLDBA(DBA):
         try:
             result = subprocess.run(command, text=True, capture_output=True)
             if result.returncode != 0:
-                self._logger.error(f"Error {action}: {result.stderr}")
+                self._logger.exception(f"Error {action}: {result.stderr}")
             else:
-                self._logger.info(f"Successfully completed {action}")
+                print(f"Successfully completed {action}")
         except subprocess.CalledProcessError as e:
             self._logger.exception(f"Command {action} failed with error: {e}")
 
@@ -334,14 +330,16 @@ class MySQLDBA(DBA):
             result = subprocess.run(command, text=True, capture_output=True)
 
             if result.returncode != 0:
-                self._logger.error(f"Error executing {ddl_filepath}: {result.stderr}")
+                self._logger.exception(
+                    f"Error executing {ddl_filepath}: {result.stderr}"
+                )
             else:
-                self._logger.info(f"Successfully executed {ddl_filepath}")
+                print(f"Successfully executed {ddl_filepath}")
 
         except FileNotFoundError as e:
-            self._logger.error(f"SQL file {ddl_filepath} not found.\n{e}")
+            self._logger.exception(f"SQL file {ddl_filepath} not found.\n{e}")
         except Exception as e:
-            self._logger.error(
+            self._logger.exception(
                 f"An unknown error occurred while executing {ddl_filepath}.\n{e}"
             )
 
@@ -356,8 +354,9 @@ class MySQLDBA(DBA):
             sudo_password = getpass.getpass(prompt="Enter your sudo password: ")
             command = f"echo {sudo_password} | sudo -S bash {script_filepath}"
             subprocess.run(command, shell=True, check=True)
+            print(f"Successfully executed {script_filepath}")
         except subprocess.CalledProcessError as e:
-            self._logger.error(f"Script execution failed with error: {e}")
+            self._logger.exception(f"Script execution failed with error: {e}")
 
     def _format_dbname(self, dbname: str) -> str:
         return f"{dbname}_{self._env}"

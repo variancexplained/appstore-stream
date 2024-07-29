@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Sunday July 28th 2024 05:23:00 pm                                                   #
+# Modified   : Monday July 29th 2024 04:14:59 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,17 +19,14 @@
 import asyncio
 import logging
 import os
-import random
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Dict, Optional
 
 import aiohttp
 
 from appstorestream.application.appdata.response import AppDataAsyncResponse
-from appstorestream.application.base.response import (AsyncRequest,
-                                                      AsyncResponse,
-                                                      ResponseError)
+from appstorestream.application.base.request import AsyncRequest
+from appstorestream.application.base.response import AsyncResponse, ResponseError
 from appstorestream.infra.web.throttle import AThrottle
 
 
@@ -72,7 +69,12 @@ class ASession(ABC):
         """
 
     def as_dict(self) -> dict:
-        return {"throttle": self._throttle.as_dict(), "max_concurrency": self._max_concurrency, "retries": self._retries, "timeout": self._timeout}
+        return {
+            "throttle": self._throttle.as_dict(),
+            "max_concurrency": self._max_concurrency,
+            "retries": self._retries,
+            "timeout": self._timeout,
+        }
 
     async def make_request(
         self,
@@ -126,14 +128,10 @@ class ASession(ABC):
                         )
 
                 except aiohttp.ClientError as e:
-                    self._logger.warning(
-                        f"ClientError: {e}. Retry #{retries}."
-                    )
+                    self._logger.warning(f"ClientError: {e}. Retry #{retries}.")
 
                 except Exception as e:
-                    self._logger.warning(
-                        f"Unknown Error: {e}. Retry #{retries}."
-                    )
+                    self._logger.warning(f"Unknown Error: {e}. Retry #{retries}.")
 
                 retries += 1
                 await asyncio.sleep(2**retries)  # Exponential backoff
@@ -163,7 +161,7 @@ class ASessionAppData(ASession):
         headers (dict): Header dictionary. Optional
     """
 
-    async def get(self, request: AsyncRequest) -> AsyncResponse:
+    async def get(self, request: AsyncRequest) -> AppDataAsyncResponse:
         """Formats and executes asynchronous get commands.
 
         Args:
@@ -199,6 +197,7 @@ class ASessionAppData(ASession):
             response.request_count = len(tasks)
             return response
 
+
 # ------------------------------------------------------------------------------------------------ #
 #                                      ASESSION REVIEW                                             #
 # ------------------------------------------------------------------------------------------------ #
@@ -233,4 +232,3 @@ class ASessionReview(ASession):
             response.recv(results=results)
             response.request_count = len(tasks)
             return response
-

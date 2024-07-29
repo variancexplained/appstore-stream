@@ -11,15 +11,16 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 10:59:26 am                                                   #
-# Modified   : Thursday July 25th 2024 02:43:43 pm                                                 #
+# Modified   : Monday July 29th 2024 04:40:33 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from appstorestream.infra.config.config import Config
 from appstorestream.container import AppStoreStreamContainer
+from appstorestream.infra.config.config import Config
+
 # ------------------------------------------------------------------------------------------------ #
 if __name__ == "__main__":
     container = AppStoreStreamContainer()
-    container.config.from_dict(Config().load_config())
     container.init_resources()
+    container.wire(modules=[__name__])

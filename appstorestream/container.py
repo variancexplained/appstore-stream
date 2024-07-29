@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Monday July 29th 2024 03:13:49 am                                                   #
+# Modified   : Monday July 29th 2024 04:29:20 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -59,7 +59,7 @@ class PersistenceContainer(containers.DeclarativeContainer):
 
     job_repo = providers.Singleton(JobRepo, database=database)
 
-    project_repo = providers.Singleton(ProjectRepo)
+    project_repo = providers.Singleton(ProjectRepo, database=database)
 
     uow = providers.Singleton(
         UoW,
@@ -78,7 +78,7 @@ class JobContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    job_config = providers.Singleton(JobConfig, **config.job)
+    job_config = providers.Singleton(JobConfig, config.job)
 
 
 # ------------------------------------------------------------------------------------------------ #

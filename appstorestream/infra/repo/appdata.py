@@ -11,17 +11,49 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Monday July 29th 2024 03:21:00 am                                                   #
+# Modified   : Monday July 29th 2024 06:54:53 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from dataclasses import dataclass
-
 import pandas as pd
+from sqlalchemy.types import BIGINT, DATETIME, DECIMAL, INTEGER, JSON, TEXT, VARCHAR
 
 from appstorestream.domain.repo import DomainLayerRepo
 from appstorestream.infra.database.mysql import MySQLDatabase
+
+# ------------------------------------------------------------------------------------------------ #
+DTYPE = {
+    "app_id": BIGINT,
+    "app_name": VARCHAR,
+    "app_description": TEXT,
+    "category_id": INTEGER,
+    "category": VARCHAR,
+    "developer_id": BIGINT,
+    "developer": VARCHAR,
+    "developer_url": VARCHAR,
+    "seller_name": VARCHAR,
+    "seller_url": VARCHAR,
+    "price": DECIMAL,
+    "rating_average": DECIMAL,
+    "rating_average_current_version": DECIMAL,
+    "rating_average_current_version_change": DECIMAL,
+    "rating_average_current_version_pct_change": DECIMAL,
+    "rating_count": BIGINT,
+    "rating_count_current_version": BIGINT,
+    "rating_count_per_day": DECIMAL,
+    "rating_count_per_day_current_version": DECIMAL,
+    "rating_count_per_day_current_version_pct_change": DECIMAL,
+    "app_url": VARCHAR,
+    "screenshot_urls": JSON,
+    "release_date": DATETIME,
+    "release_date_current_version": DATETIME,
+    "app_version": VARCHAR,
+    "software_lifecycle_duration": INTEGER,
+    "days_since_release": INTEGER,
+    "days_since_current_version": INTEGER,
+    "extract_date": DATETIME,
+}
 
 
 # ------------------------------------------------------------------------------------------------ #
