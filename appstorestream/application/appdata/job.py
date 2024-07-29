@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Monday July 29th 2024 02:16:01 am                                                   #
+# Modified   : Monday July 29th 2024 02:38:23 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,19 +19,18 @@
 from __future__ import annotations
 
 from datetime import datetime
+from types import SimpleNamespace
 
 from dependency_injector.wiring import Provide, inject
 
-from appstorestream.application.appdata.request import (
-    AppDataAsyncRequestGen,
-    AppDataRequest,
-)
-from appstorestream.application.appdata.response import AppDataAsyncResponse
-from appstorestream.application.base.job import Job, JobConfig, JobMeta
+from appstorestream.application.base.job import Job, JobMeta
 from appstorestream.application.base.project import Project
-from appstorestream.application.base.state import CircuitBreaker
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.core.enum import JobStatus
+from appstorestream.core.service import NestedNamespace
+from appstorestream.domain.appdata.request import AppDataAsyncRequestGen, AppDataRequest
+from appstorestream.domain.appdata.response import AppDataAsyncResponse
+from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.web.asession import ASessionAppData
 
@@ -70,7 +69,6 @@ class AppDataJob(Job):
         self,
         project: Project,
         request_gen_cls: type[AppDataAsyncRequestGen] = AppDataAsyncRequestGen,
-        job_config: JobConfig = Provide[AppStoreStreamContainer.job.job_config],
         appdata_repo: AppDataRepo = Provide[AppStoreStreamContainer.data.appdata_repo],
         asession: ASessionAppData = Provide[
             AppStoreStreamContainer.web.asession_appdata
@@ -84,7 +82,6 @@ class AppDataJob(Job):
         """
         self._project = project
         self._request_gen_cls = request_gen_cls
-        self._job_config = job_config
         self._appdata_repo = appdata_repo
         self._asession = asession
         self._circuit_breaker = circuit_breaker
@@ -181,3 +178,19 @@ class AppDataJob(Job):
         self, request: AppDataRequest, response: AppDataAsyncResponse
     ) -> None:
         self._jobmeta.update(request=request, response=response)
+
+    def as_dict(self) -> dict:
+        """Obtain attributes from sub components into flattened dictionary."""
+        jobmeta = self._jobmeta.as_dict()
+        rgen = self._request_gen.as_dict()
+        asession = self._asession.as_dict()
+        circuit = self._circuit_breaker.as_dict()
+        jobmeta["request_generator"] = rgen
+        jobmeta["asession"] = asession
+        jobmeta["circuit_breaker"] = circuit
+
+        return jobmeta
+
+    def as_namespace(self) -> SimpleNamespace:
+        """Convert dictionary representation into a simple namespace."""
+        return NestedNamespace(self.as_dict())

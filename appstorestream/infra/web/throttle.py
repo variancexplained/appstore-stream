@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Sunday July 28th 2024 11:02:33 am                                                   #
+# Modified   : Monday July 29th 2024 02:43:43 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,8 +22,12 @@ import random
 import time
 from collections import deque
 
+from appstorestream.infra.base.service import InfraService
 
-class AThrottle:
+# ------------------------------------------------------------------------------------------------ #
+
+
+class AThrottle(InfraService):
     """
     Throttling mechanism to control request rate based on latency.
 
@@ -56,7 +60,15 @@ class AThrottle:
         await throttle.delay()
     """
 
-    def __init__(self, min_rate: float, base_rate: float, max_rate: float, temperature: float = 0.5, window_size: int = 10, burn_in: int = 10) -> None:
+    def __init__(
+        self,
+        min_rate: float,
+        base_rate: float,
+        max_rate: float,
+        temperature: float = 0.5,
+        window_size: int = 10,
+        burn_in: int = 10,
+    ) -> None:
         self.min_rate = min_rate
         self.base_rate = base_rate
         self.max_rate = max_rate

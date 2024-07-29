@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Monday July 29th 2024 07:01:22 am                                                   #
+# Modified   : Monday July 29th 2024 02:51:26 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,7 +22,7 @@ import pandas as pd
 import pytest
 
 from appstorestream.container import AppStoreStreamContainer
-from appstorestream.infra.config.config import Config
+from appstorestream.infra.base.config import Config
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [""]

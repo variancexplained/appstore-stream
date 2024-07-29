@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Monday July 29th 2024 05:19:57 am                                                   #
+# Modified   : Monday July 29th 2024 02:46:19 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,7 +30,7 @@ import sqlalchemy
 from dotenv import load_dotenv
 from sqlalchemy.exc import SQLAlchemyError
 
-from appstorestream.infra.config.config import Config
+from appstorestream.infra.base.config import Config
 from appstorestream.infra.database.base import DBA, Database
 
 # ------------------------------------------------------------------------------------------------ #

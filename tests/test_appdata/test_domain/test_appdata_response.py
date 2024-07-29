@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 06:56:32 am                                                   #
-# Modified   : Monday July 29th 2024 12:32:34 pm                                                   #
+# Modified   : Monday July 29th 2024 02:52:22 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,7 +24,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from appstorestream.application.appdata.response import AppDataAsyncResponse
+from appstorestream.domain.appdata.response import AppDataAsyncResponse
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long

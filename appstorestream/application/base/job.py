@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Monday July 29th 2024 02:17:09 am                                                   #
+# Modified   : Monday July 29th 2024 02:50:39 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,65 +24,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 
-from appstorestream.application.base.request import AsyncRequest
-from appstorestream.application.base.response import AsyncResponse
+from appstorestream.application.base.service import AppService
 from appstorestream.core.data import DataClass
 from appstorestream.core.enum import JobStatus
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                      JOB CONFIG                                                  #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class JobConfig(DataClass):
-    """
-    A configuration class for Job settings.
-
-    Attributes:
-        circuit_breaker_closed_burnin_period (int): Burn-in period for closed circuit breaker.
-        circuit_breaker_closed_failure_rate_threshold (float): Failure rate threshold for closed circuit breaker.
-        circuit_breaker_closed_window_size (int): Window size for closed circuit breaker.
-        circuit_breaker_half_open_delay (int): Delay for half-open circuit breaker.
-        circuit_breaker_half_open_failure_rate_threshold (float): Failure rate threshold for half-open circuit breaker.
-        circuit_breaker_half_open_window_size (int): Window size for half-open circuit breaker.
-        circuit_breaker_open_cooldown_period (int): Cooldown period for open circuit breaker.
-        circuit_breaker_short_circuit_404s_failure_rate_threshold (float): Failure rate threshold for 404 errors.
-        circuit_breaker_short_circuit_404s_window_size (int): Window size for 404 errors.
-        circuit_breaker_short_circuit_errors_failure_rate_threshold (float): Failure rate threshold for errors.
-        circuit_breaker_short_circuit_errors_window_size (int): Window size for errors.
-        request_asession_max_concurrency (int): Maximum concurrency for asynchronous session.
-        request_asession_retries (int): Number of retries for asynchronous session.
-        request_asession_timeout (int): Timeout for asynchronous session.
-        request_athrottle_base_rate (int): Base rate for asynchronous throttle.
-        request_athrottle_burn_in (int): Burn-in period for asynchronous throttle.
-        request_athrottle_max_rate (int): Maximum rate for asynchronous throttle.
-        request_athrottle_min_rate (int): Minimum rate for asynchronous throttle.
-        request_athrottle_temperature (float): Temperature for asynchronous throttle.
-        request_athrottle_window_size (int): Window size for asynchronous throttle.
-        request_generator_batch_size (int): Batch size for request generator.
-    """
-
-    circuit_breaker_closed_burnin_period: int = 300
-    circuit_breaker_closed_failure_rate_threshold: float = 0.5
-    circuit_breaker_closed_window_size: int = 300
-    circuit_breaker_half_open_delay: int = 2
-    circuit_breaker_half_open_failure_rate_threshold: float = 0.3
-    circuit_breaker_half_open_window_size: int = 600
-    circuit_breaker_open_cooldown_period: int = 300
-    circuit_breaker_short_circuit_404s_failure_rate_threshold: float = 0.7
-    circuit_breaker_short_circuit_404s_window_size: int = 180
-    circuit_breaker_short_circuit_errors_failure_rate_threshold: float = 0.9
-    circuit_breaker_short_circuit_errors_window_size: int = 180
-    request_asession_max_concurrency: int = 100
-    request_asession_retries: int = 3
-    request_asession_timeout: int = 30
-    request_athrottle_base_rate: int = 5
-    request_athrottle_burn_in: int = 10
-    request_athrottle_max_rate: int = 100
-    request_athrottle_min_rate: int = 1
-    request_athrottle_temperature: float = 0.5
-    request_athrottle_window_size: int = 10
-    request_generator_batch_size: int = 100
+from appstorestream.domain.base.request import AsyncRequest
+from appstorestream.domain.base.response import AsyncResponse
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -98,7 +44,6 @@ class JobMeta(DataClass):
         dataset (str): The name of the dataset.
         category_id (int): The ID of the category.
         category (str): The name of the category.
-        job_config (JobConfig): Configuration settings for the job.
         job_id (int, optional): The ID of the job. Defaults to None.
         job_name (str, optional): The name of the job. Defaults to None.
         dt_created (datetime, optional): The creation datetime. Defaults to None.
@@ -137,7 +82,6 @@ class JobMeta(DataClass):
     dataset: str
     category_id: int
     category: str
-    job_config: JobConfig
     job_id: int = None
     job_name: str = None
     dt_created: datetime = None
@@ -255,7 +199,7 @@ class JobMeta(DataClass):
 # ------------------------------------------------------------------------------------------------ #
 #                                          JOB                                                     #
 # ------------------------------------------------------------------------------------------------ #
-class Job(ABC):
+class Job(AppService):
     """
     An abstract base class for Jobs.
 

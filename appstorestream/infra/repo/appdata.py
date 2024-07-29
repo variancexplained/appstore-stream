@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Monday July 29th 2024 06:54:53 am                                                   #
+# Modified   : Monday July 29th 2024 01:55:21 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,7 +19,7 @@
 import pandas as pd
 from sqlalchemy.types import BIGINT, DATETIME, DECIMAL, INTEGER, JSON, TEXT, VARCHAR
 
-from appstorestream.domain.repo import DomainLayerRepo
+from appstorestream.domain.base.repo import DomainLayerRepo
 from appstorestream.infra.database.mysql import MySQLDatabase
 
 # ------------------------------------------------------------------------------------------------ #

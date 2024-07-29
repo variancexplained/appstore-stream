@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Monday July 29th 2024 05:26:25 am                                                   #
+# Modified   : Monday July 29th 2024 02:46:27 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,7 +26,7 @@ from dependency_injector.wiring import Provide, inject
 from sqlalchemy.types import DATETIME, INTEGER, VARCHAR
 
 from appstorestream.container import AppStoreStreamContainer
-from appstorestream.infra.config.config import Config
+from appstorestream.infra.base.config import Config
 from appstorestream.infra.database.mysql import MySQLDBA
 from appstorestream.infra.repo.project import ProjectRepo
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 12:32:14 pm                                                   #
-# Modified   : Monday July 29th 2024 01:06:13 pm                                                   #
+# Modified   : Monday July 29th 2024 02:52:38 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from appstorestream.application.appdata.request import AppDataAsyncRequestGen
+from appstorestream.domain.appdata.request import AppDataAsyncRequestGen
 
 CATEGORY = 6018
 MAX_REQUESTS = 10

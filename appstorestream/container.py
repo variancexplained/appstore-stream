@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Monday July 29th 2024 04:29:20 am                                                   #
+# Modified   : Monday July 29th 2024 02:51:45 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,8 +22,7 @@ import logging.config  # pragma: no cover
 
 from dependency_injector import containers, providers
 
-from appstorestream.application.base.job import JobConfig
-from appstorestream.application.base.state import CircuitBreaker
+from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.database.mysql import MySQLDatabase
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.repo.job import JobRepo
@@ -72,16 +71,6 @@ class PersistenceContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                          JOB                                                     #
-# ------------------------------------------------------------------------------------------------ #
-class JobContainer(containers.DeclarativeContainer):
-
-    config = providers.Configuration()
-
-    job_config = providers.Singleton(JobConfig, config.job)
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                                         STATE                                                    #
 # ------------------------------------------------------------------------------------------------ #
 class StateContainer(containers.DeclarativeContainer):
@@ -89,17 +78,17 @@ class StateContainer(containers.DeclarativeContainer):
 
     circuit_breaker = providers.Singleton(
         CircuitBreaker,
-        closed_window_size=config.circuit_breaker.closed.window_size,
-        closed_burnin_period=config.circuit_breaker.closed.burnin_period,
-        closed_failure_rate_threshold=config.circuit_breaker.closed.failure_rate_threshold,
-        half_open_window_size=config.circuit_breaker.half_open.window_size,
-        half_open_failure_rate_threshold=config.circuit_breaker.half_open.failure_rate_threshold,
-        half_open_delay=config.circuit_breaker.half_open.delay,
-        short_circuit_errors_window_size=config.circuit_breaker.short_circuit_errors.window_size,
-        short_circuit_errors_failure_rate_threshold=config.circuit_breaker.short_circuit_errors.failure_rate_threshold,
-        short_circuit_404s_window_size=config.circuit_breaker.short_circuit_404s.window_size,
-        short_circuit_404s_failure_rate_threshold=config.circuit_breaker.short_circuit_404s.failure_rate_threshold,
-        open_cooldown_period=config.circuit_breaker.open.cooldown_period,
+        closed_window_size=config.circuit_breaker.closed_window_size,
+        closed_burnin_period=config.circuit_breaker.closed_burnin_period,
+        closed_failure_rate_threshold=config.circuit_breaker.closed_failure_rate_threshold,
+        half_open_window_size=config.circuit_breaker.half_open_window_size,
+        half_open_failure_rate_threshold=config.circuit_breaker.half_open_failure_rate_threshold,
+        half_open_delay=config.circuit_breaker.half_open_delay,
+        short_circuit_errors_window_size=config.circuit_breaker.short_circuit_errors_window_size,
+        short_circuit_errors_failure_rate_threshold=config.circuit_breaker.short_circuit_errors_failure_rate_threshold,
+        short_circuit_404s_window_size=config.circuit_breaker.short_circuit_404s_window_size,
+        short_circuit_404s_failure_rate_threshold=config.circuit_breaker.short_circuit_404s_failure_rate_threshold,
+        open_cooldown_period=config.circuit_breaker.open_cooldown_period,
     )
 
 
@@ -111,27 +100,27 @@ class WebContainer(containers.DeclarativeContainer):
 
     athrottle = providers.Singleton(
         AThrottle,
-        min_rate=config.request.athrottle.min_rate,
-        base_rate=config.request.athrottle.base_rate,
-        max_rate=config.request.athrottle.max_rate,
-        temperature=config.request.athrottle.temperature,
-        window_size=config.request.athrottle.window_size,
-        burn_in=config.request.athrottle.burn_in,
+        min_rate=config.athrottle.min_rate,
+        base_rate=config.athrottle.base_rate,
+        max_rate=config.athrottle.max_rate,
+        temperature=config.athrottle.temperature,
+        window_size=config.athrottle.window_size,
+        burn_in=config.athrottle.burn_in,
     )
     asession_appdata = providers.Singleton(
         ASessionAppData,
         throttle=athrottle,
-        max_concurrency=config.request.asession.max_concurrency,
-        retries=config.request.asession.retries,
-        timeout=config.request.asession.timeout,
+        max_concurrency=config.asession.max_concurrency,
+        retries=config.asession.retries,
+        timeout=config.asession.timeout,
     )
 
     asession_review = providers.Singleton(
         ASessionReview,
         throttle=athrottle,
-        max_concurrency=config.request.asession.max_concurrency,
-        retries=config.request.asession.retries,
-        timeout=config.request.asession.timeout,
+        max_concurrency=config.asession.max_concurrency,
+        retries=config.asession.retries,
+        timeout=config.asession.timeout,
     )
 
 
@@ -147,7 +136,5 @@ class AppStoreStreamContainer(containers.DeclarativeContainer):
     data = providers.Container(PersistenceContainer)
 
     state = providers.Container(StateContainer, config=config)
-
-    job = providers.Container(JobContainer, config=config)
 
     web = providers.Container(WebContainer, config=config)

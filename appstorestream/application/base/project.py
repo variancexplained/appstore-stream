@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 12:54:32 pm                                                   #
-# Modified   : Monday July 29th 2024 01:59:08 am                                                   #
+# Modified   : Monday July 29th 2024 02:51:01 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from appstorestream.application.base.job import Job, JobConfig, JobMeta, JobStatus
+from appstorestream.application.base.job import JobStatus
 from appstorestream.core.data import DataClass
 from appstorestream.core.enum import Dataset, ProjectStatus
 

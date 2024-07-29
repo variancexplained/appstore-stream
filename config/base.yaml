@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Monday July 29th 2024 04:50:21 am                                                   #
+# Modified   : Monday July 29th 2024 01:42:03 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,30 +30,37 @@ database:
   retries: 3
 
 # ------------------------------------------------------------------------------------------------ #
-#                                     JOB CONFIG SECTION                                           #
+#                              CIRCUIT BREAKER CONFIG SECTION                                      #
 # ------------------------------------------------------------------------------------------------ #
-job:
-  circuit_breaker_closed_burnin_period: 300
-  circuit_breaker_closed_failure_rate_threshold: 0.5
-  circuit_breaker_closed_window_size: 300
-  circuit_breaker_half_open_delay: 2
-  circuit_breaker_half_open_failure_rate_threshold: 0.3
-  circuit_breaker_half_open_window_size: 600
-  circuit_breaker_open_cooldown_period: 300
-  circuit_breaker_short_circuit_404s_failure_rate_threshold: 0.7
-  circuit_breaker_short_circuit_404s_window_size: 180
-  circuit_breaker_short_circuit_errors_failure_rate_threshold: 0.9
-  circuit_breaker_short_circuit_errors_window_size: 180
-  request_asession_max_concurrency: 100
-  request_asession_retries: 3
-  request_asession_timeout: 30
-  request_athrottle_base_rate: 5
-  request_athrottle_burn_in: 10
-  request_athrottle_max_rate: 100
-  request_athrottle_min_rate: 1
-  request_athrottle_temperature: 0.5
-  request_athrottle_window_size: 10
-  request_generator_batch_size: 100
+circuit_breaker:
+  closed_burnin_period: 300
+  closed_failure_rate_threshold: 0.5
+  closed_window_size: 300
+  half_open_delay: 2
+  half_open_failure_rate_threshold: 0.3
+  half_open_window_size: 600
+  open_cooldown_period: 300
+  short_circuit_404s_failure_rate_threshold: 0.7
+  short_circuit_404s_window_size: 180
+  short_circuit_errors_failure_rate_threshold: 0.9
+  short_circuit_errors_window_size: 180
+# ------------------------------------------------------------------------------------------------ #
+#                        ASYNCHRONOUS SESSION CONFIG SECTION                                       #
+# ------------------------------------------------------------------------------------------------ #
+asession:
+  max_concurrency: 100
+  retries: 3
+  timeout: 30
+# ------------------------------------------------------------------------------------------------ #
+#                    ASYNCHRONOUS HTTTP REQUEST THROTTLE CONFIG SECTION                            #
+# ------------------------------------------------------------------------------------------------ #
+athrottle:
+  base_rate: 5
+  burn_in: 10
+  max_rate: 100
+  min_rate: 1
+  temperature: 0.5
+  window_size: 10
 
 # ------------------------------------------------------------------------------------------------ #
 #                                     LOGGING                                                      #
