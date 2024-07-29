@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS job (
     dt_scheduled DATETIME,                        -- When the jobrun was scheduled
     dt_started DATETIME,                        -- When the jobrun was started
     dt_ended DATETIME,
-    max_requests: BIGINT NOT NULL UNSIGNED DEFAULT 9223372036854775807,
-    bookmark: BIGINT NOT NULL DEFAULT 0,
+    max_requests  BIGINT,
+    bookmark  BIGINT NOT NULL DEFAULT 0,
     runtime INTEGER NOT NULL NOT NULL DEFAULT 0,                           -- Total runtime of the jobrun
     request_count INTEGER NOT NULL DEFAULT 0,
     record_count INTEGER NOT NULL DEFAULT 0,
@@ -54,7 +54,5 @@ CREATE TABLE IF NOT EXISTS job (
     job_status ENUM('CREATED', 'IN-PROGRESS', 'COMPLETE', 'FAILED', 'CANCELLED') NOT NULL,
     INDEX idx_category_id (category_id),                        -- Index for job_id for quick lookups
     INDEX idx_dataset (dataset),
-    INDEX idx_job_status (job_status),                          -- Index for status to filter by job run status
-    FOREIGN KEY (project_id) REFERENCES project(project_id)
-
+    INDEX idx_job_status (job_status)                        -- Index for status to filter by job run status
 );

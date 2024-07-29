@@ -1,5 +1,5 @@
-CREATE TABLE project (
-    project_id INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS project(
+    project_id INTEGER NOT NULL PRIMARY KEY,
     dataset ENUM('AppData', 'Review') NOT NULL,
     category_id INTEGER NOT NULL,
     category VARCHAR(128) NOT NULL,
@@ -9,7 +9,6 @@ CREATE TABLE project (
     last_job_id INTEGER,
     last_job_ended DATETIME,
     last_job_status ENUM("CREATED", "SCHEDULED", "IN_PROGRESS", "COMPLETE", "TERMINATED", "CANCELLED"),
-    project_status ENUM('NOT_STARTED', 'ACTIVE', 'INACTIVE', 'PAUSED', 'CANCELLED') NOT NULL "NOT STARTED",
+    project_status ENUM('NOT_STARTED', 'ACTIVE', 'INACTIVE', 'PAUSED', 'CANCELLED'),
     INDEX idx_dataset (dataset)
-
 );

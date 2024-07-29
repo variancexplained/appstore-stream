@@ -24,10 +24,9 @@ CREATE TABLE IF NOT EXISTS appdata (
     release_date DATETIME NOT NULL,
     release_date_current_version DATETIME NOT NULL,
     app_version VARCHAR(8) NOT NULL,
-    software_lifecycle_duration INTEGER
+    software_lifecycle_duration INTEGER,
     days_since_release INTEGER,
     days_since_current_version INTEGER,
     extract_date DATETIME NOT NULL,
-    INDEX idx_category_id (category_id),
-
+    INDEX idx_category_id (category_id)
 );

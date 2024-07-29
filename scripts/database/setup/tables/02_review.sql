@@ -20,5 +20,5 @@ CREATE TABLE IF NOT EXISTS review (
     PRIMARY KEY (review_id),
     INDEX idx_app_id (app_id),
     INDEX idx_reviewer_id (review_id),
-    INDEX idx_category_id (category_id),
+    INDEX idx_category_id (category_id)
 );
