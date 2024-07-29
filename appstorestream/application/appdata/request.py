@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday July 20th 2024 03:02:29 am                                                 #
-# Modified   : Sunday July 28th 2024 02:20:11 pm                                                   #
+# Modified   : Sunday July 28th 2024 11:39:39 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -81,6 +81,10 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
         self._current_page = start_page
         self._request_params = request_params_cls()
         self._browser_header = browser_header_cls()
+
+    @property
+    def bookmark(self) -> int:
+        return self._current_page
 
     def __iter__(self) -> AppDataAsyncRequestGen:
         """Returns an iterator object for the request generator.

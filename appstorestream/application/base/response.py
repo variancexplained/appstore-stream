@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 03:50:26 am                                                   #
-# Modified   : Sunday July 28th 2024 05:20:37 pm                                                   #
+# Modified   : Monday July 29th 2024 12:40:39 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -58,7 +58,9 @@ class AsyncResponse(DataClass):
     request_count: int = 0
     response_count: int = 0
     record_count: int = 0
-    throughput: float = 0
+    request_throughput: float = 0.0
+    response_throughput: float = 0.0
+    record_throughput: float = 0.0
     total_errors: int = 0
     redirect_errors: int = 0
     client_errors: int = 0
@@ -66,6 +68,14 @@ class AsyncResponse(DataClass):
     data_errors: int = 0
     unknown_errors: int = 0
     page_not_found_errors: int = 0
+    total_error_rate	: float = 0.0
+    redirect_error_rate	: float = 0.0
+    client_error_rate	: float = 0.0
+    server_error_rate	: float = 0.0
+    data_error_rate	: float = 0.0
+    unknown_error_rate	: float = 0.0
+    page_not_found_error_rate	: float = 0.0
+    ok: bool = False
 
 
     def get_content(self) -> pd.DataFrame:
@@ -79,7 +89,20 @@ class AsyncResponse(DataClass):
         self.time_recv = datetime.now()
         self.concurrent_requests_duration = (self.time_recv-self.time_sent).total_seconds()
         self.parse_results(results=results)
-        self.throughput = self.record_count / self.concurrent_requests_duration
+
+        self.request_throughput = self.request_count / self.concurrent_requests_duration
+        self.response_throughput = self.response_count / self.concurrent_requests_duration
+        self.record_throughput = self.record_count / self.concurrent_requests_duration
+
+        self.total_error_rate = self.total_errors / self.request_count
+        self.redirect_error_rate = self.redirect_errors / self.request_count
+        self.client_error_rate = self.client_errors / self.request_count
+        self.server_error_rate = self.server_errors / self.request_count
+        self.data_error_rate = self.data_errors / self.request_count
+        self.unknown_error_rate = self.unknown_errors / self.request_count
+        self.page_not_found_error_rate = self.page_not_found_errors / self.request_count
+
+        self.ok = len(self.content) > 0
 
     def log_error(self, error: ResponseError) -> None:
         self.total_errors += 1

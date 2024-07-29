@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 03:50:26 am                                                   #
-# Modified   : Sunday July 28th 2024 10:55:40 am                                                   #
+# Modified   : Sunday July 28th 2024 11:58:24 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,11 +26,11 @@ from appstorestream.core.data import DataClass
 
 
 @dataclass
-class BatchRequest(DataClass):
+class AsyncRequest(DataClass):
     """Abstract base class for batch HTTP requests"""
 
 # ------------------------------------------------------------------------------------------------ #
-class BatchRequestGen(ABC):
+class AsyncRequestGen(ABC):
 
     @abstractmethod
     def __iter__(self):

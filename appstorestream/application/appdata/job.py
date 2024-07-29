@@ -11,76 +11,170 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Sunday July 28th 2024 04:04:04 pm                                                   #
+# Modified   : Monday July 29th 2024 12:53:34 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from __future__ import annotations
-import sys
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
-from dependency_injector.wiring import inject, Provide
+from datetime import datetime
 
-from appstorestream.application.appdata.request import \
-    AppDataAsyncRequestGen
-from appstorestream.application.appdata.response import \
-    AppDataAsyncResponse
-from appstorestream.core.enum import JobStatus
+from dependency_injector.wiring import Provide, inject
+
+from appstorestream.application.appdata.request import (AppDataAsyncRequestGen,
+                                                        AppDataRequest)
+from appstorestream.application.appdata.response import AppDataAsyncResponse
+from appstorestream.application.base.job import Job, JobConfig, JobMeta
 from appstorestream.application.base.project import Project
+from appstorestream.application.base.state import CircuitBreaker
+from appstorestream.container import AppStoreStreamContainer
+from appstorestream.core.enum import JobStatus, ProjectStatus
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.web.asession import ASessionAppData
-from appstorestream.application.base.job import Job, JobMeta
-from appstorestream.container import AppStoreStreamContainer
+
+
 # ------------------------------------------------------------------------------------------------ #
 #                                    APPDATA JOB                                                   #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
 class AppDataJob(Job):
+    """
+    Represents a job for handling app data collection.
 
-    def __init__(self,
-                 project: Project,
-                 max_requests: int = sys.maxsize,
-                 batch_size: int = 100,
-                 page_not_found_threshold: int = 5,
-                 request_gen_cls: type[AppDataAsyncRequestGen] = AppDataAsyncRequestGen,
-                 appdata_repo:  AppDataRepo = Provide[AppStoreStreamContainer.data.appdata_repo],
-                 project_repo:  AppDataRepo = Provide[AppStoreStreamContainer.data.project_repo],
-                 asession: ASessionAppData = Provide[AppStoreStreamContainer.web.asession_appdata],
-                 )
+    This class extends the base `Job` class to manage the specific task of collecting app data. It integrates with various
+    repositories and services to execute the job, handle requests, and update project status.
+
+    Attributes:
+        project (Project): The project associated with this job.
+        max_requests (int): Maximum number of requests to be made during the job. Defaults to `sys.maxsize`.
+        batch_size (int): Number of items to process in a single batch. Defaults to 100.
+        request_gen_cls (type[AppDataAsyncRequestGen]): Class used to generate requests asynchronously. Defaults to `AppDataAsyncRequestGen`.
+        appdata_repo (AppDataRepo): Repository for handling app data persistence. Defaults to `Provide[AppStoreStreamContainer.data.appdata_repo]`.
+        asession (ASessionAppData): Asynchronous session for making requests. Defaults to `Provide[AppStoreStreamContainer.web.asession_appdata]`.
+        circuit_breaker (CircuitBreaker): Circuit breaker for managing request failures. Defaults to `Provide[AppStoreStreamContainer.state.circuit_breaker]`.
+
+        Args:
+            project (Project): The project associated with this job.
+            max_requests (int, optional): Maximum number of requests to be made. Defaults to `sys.maxsize`.
+            batch_size (int, optional): Number of items to process in each batch. Defaults to 100.
+            request_gen_cls (type[AppDataAsyncRequestGen], optional): Class for generating asynchronous requests. Defaults to `AppDataAsyncRequestGen`.
+            appdata_repo (AppDataRepo, optional): Repository for app data persistence. Defaults to `Provide[AppStoreStreamContainer.data.appdata_repo]`.
+            asession (ASessionAppData, optional): Asynchronous session for requests. Defaults to `Provide[AppStoreStreamContainer.web.asession_appdata]`.
+            circuit_breaker (CircuitBreaker, optional): Circuit breaker for managing request failures. Defaults to `Provide[AppStoreStreamContainer.state.circuit_breaker]`.
+    """
+
+    @inject
+    def __init__(
+        self,
+        project: Project,
+        request_gen_cls: type[AppDataAsyncRequestGen] = AppDataAsyncRequestGen,
+        job_config: JobConfig = Provide[AppStoreStreamContainer.job.job_config],
+        appdata_repo: AppDataRepo = Provide[AppStoreStreamContainer.data.appdata_repo],
+        project_repo: AppDataRepo = Provide[AppStoreStreamContainer.data.project_repo],
+        asession: ASessionAppData = Provide[AppStoreStreamContainer.web.asession_appdata],
+        circuit_breaker: CircuitBreaker = Provide[AppStoreStreamContainer.state.circuit_breaker],
+    ) -> None:
+        """
+        Initializes the AppDataJob with the specified parameters.
+        """
         self._project = project
-        self._max_requests = max_requests
-        self._batch_size = batch_size
-        self._page_not_found_threshold = page_not_found_threshold
         self._request_gen_cls = request_gen_cls
+        self._job_config = job_config
         self._appdata_repo = appdata_repo
         self._project_repo = project_repo
         self._asession = asession
+        self._circuit_breaker = circuit_breaker
 
-        self._pages_not_found = 0
+        self._jobmeta = JobMeta(
+            project_id=project.project_id,
+            dataset=project.dataset,
+            category_id=project.category_id,
+            category=project.category,
+            job_config=self._job_config,
+        )
+        self._request_gen = request_gen_cls(
+            max_requests=self._job_config.max_requests,
+            batch_size=self._job_config.batch_size,
+            start_page=self._project.bookmark
+        )
 
 
-        self._jobmeta = JobMeta(project_id=project.project_id, dataset=project.dataset, category_id=project.category_id, category=project.category)
-        self._request_gen = request_gen_cls(max_requests=self._max_requests, batch_size=self._batch_size, start_page=self._project.progress+1)
+    @property
+    def job_id(self) -> int:
+        return self._jobmeta.job_id
+
+    @job_id.setter
+    def job_id(self, job_id: int) -> None:
+        self._jobmeta.job_id = job_id
+
+    @property
+    def bookmark(self) -> int:
+        """
+        The last page processed.
+        """
+        return self._jobmeta.bookmark
+
+    @property
+    def started(self) -> datetime:
+        return self._jobmeta.dt_started
+
+    @property
+    def ended(self) -> datetime:
+        return self._jobmeta.dt_ended
+
+    @property
+    def status(self) -> str:
+        return self._jobmeta.job_status
 
 
-    @abstractmethod
     async def run(self) -> None:
-        """Executes the Job."""
+        """
+        Executes the job to collect app data.
 
-        self._jobmeta.start()
+        This method starts the job, processes requests in batches, and updates the project bookmark. It continues until
+        the job status is no longer `JobStatus.IN_PROGRESS`.
 
-        while self._pages_not_found < self._page_not_found_threshold:
+        Each request is sent asynchronously, and the responses are persisted to the app data repository. The circuit
+        breaker is used to evaluate the responses and handle potential failures.
+        """
+        self._start_job()
 
+        while self._jobmeta.job_status == JobStatus.IN_PROGRESS:
             for request in self._request_gen:
-                response = self._asession.get(request=request)
-                response = AppDataAsyncResponse(response=response)
-                response.parse_response()
-                self._appdata_repo.insert(data=response.get_content())
-                self._project.progress += response.result_count
-                self._pages_not_found += response.page_not_found_errors
+                # Execute the request and get an AsyncResponse object.
+                response = await self._asession.get(request=request)
+                # Persist the response if it's ok
+                if response.ok:
+                    self._appdata_repo.insert(data=response.get_content())
+                    self._update_job(request=request, response=response)
+                    self._circuit_breaker.evaluate_response(response=response)
 
-            self._jobmeta.complete()
 
 
+    def terminate(self) -> None:
+        """
+        Terminates the job and performs cleanup.
+
+        This method sets the job metadata status to terminated and performs any necessary wrap-up operations.
+        """
+        self._jobmeta.terminate()
+
+    def complete(self) -> None:
+        """
+        Completes the job and performs wrap-up operations.
+
+        This method sets the job metadata status to completed and updates the project and job metadata accordingly.
+        """
+        self._jobmeta.complete()
+
+    def _start_job(self) -> None:
+        """
+        Starts the job and initializes the circuit breaker.
+
+        This method sets the job metadata status to started and begins monitoring with the circuit breaker.
+        """
+        self._jobmeta.start()
+        self._circuit_breaker.start(job=self)
+
+    def _update_job(self, request: AppDataRequest, response: AppDataAsyncResponse) -> None:
+        self._jobmeta.update(request=request, response=response)

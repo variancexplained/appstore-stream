@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 12:53:41 pm                                                   #
-# Modified   : Sunday July 28th 2024 02:01:34 pm                                                   #
+# Modified   : Monday July 29th 2024 01:50:36 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,6 +28,7 @@ from appstorestream.infra.database.mysql import MySQLDatabase
 # ------------------------------------------------------------------------------------------------ #
 #                                    PROEJCT REPO                                                  #
 # ------------------------------------------------------------------------------------------------ #
+
 
 class ProjectRepo(AppLayerRepo):
     """Repository class for handling operations on the 'project' table.
@@ -72,7 +73,7 @@ class ProjectRepo(AppLayerRepo):
         SELECT * FROM project
         WHERE project_id = :project_id;
         """
-        params = {'project_id': id}
+        params = {"project_id": id}
 
         # Use the database connection to execute the query and return the result as a DataFrame
         with self._database as conn:
@@ -81,7 +82,6 @@ class ProjectRepo(AppLayerRepo):
                 return Project(**project_data.iloc[0].to_dict())
             except KeyError as e:
                 raise ValueError(f"Project id: {id} was not found.")
-
 
     def getall(self) -> pd.DataFrame:
         """
@@ -101,24 +101,31 @@ class ProjectRepo(AppLayerRepo):
             return conn.query(query, params)
 
     def update(self, project: Project) -> None:
-        query = text("""
+        query = text(
+            """
         UPDATE project
         SET dataset = :dataset, category_id = :category_id, category = :category,
-            project_priority = :project_priority, progress = :progress, n_jobs = :n_jobs,
+            project_priority = :project_priority, bookmark = :bookmark, n_jobs = :n_jobs,
             last_job_id = :last_job_id, dt_last_job = :dt_last_job, project_status = :project_status
         WHERE project_id = :project_id
-        """)
+        """
+        )
         params = {
-            'dataset': project.dataset.value,
-            'category_id': project.category_id,
-            'category': project.category,
-            'project_priority': project.project_priority,
-            'progress': project.progress,
-            'n_jobs': project.n_jobs,
-            'last_job_id': project.last_job_id,
-            'dt_last_job': project.dt_last_job.strftime('%Y-%m-%d %H:%M:%S') if project.dt_last_job else None,
-            'project_status': project.project_status.value,
-            'project_id': project.project_id,
+            "dataset": project.dataset.value,
+            "category_id": project.category_id,
+            "category": project.category,
+            "project_priority": project.project_priority,
+            "bookmark": project.bookmark,
+            "n_jobs": project.n_jobs,
+            "last_job_id": project.last_job_id,
+            "last_job_ended": (
+                project.last_job_ended.strftime("%Y-%m-%d %H:%M:%S")
+                if project.last_job_ended
+                else None
+            ),
+            "last_job_status": project.last_job_status,
+            "project_status": project.project_status.value,
+            "project_id": project.project_id,
         }
-        with  self._database as conn:
+        with self._database as conn:
             conn.execute(query=query, params=params)

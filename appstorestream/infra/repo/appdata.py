@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Sunday July 28th 2024 09:27:06 am                                                   #
+# Modified   : Monday July 29th 2024 01:15:47 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -37,7 +37,7 @@ class AppDataRepo(DomainLayerRepo):
 
     def __init__(self, database: MySQLDatabase) -> None:
         """
-        Initializes the AppDataExtractRepo with a database connection.
+        Initializes the AppDataRepo with a database connection.
 
         """
         super().__init__()
@@ -81,21 +81,65 @@ class AppDataRepo(DomainLayerRepo):
         # Construct the upsert SQL query
         upsert_query = """
         INSERT INTO appdata (
-            app_id, app_name, app_description, category_id, category, developer_id, developer,
-            developer_url, seller_name, seller_url, price, rating_average, rating_average_current_version,
-            rating_average_change_current_version, rating_average_pct_change_current_version,
-            rating_count, rating_count_current_version, rating_count_per_day, rating_count_per_day_current_version,
-            rating_count_pct_change_current_version, rating_count_pct_change_per_day_current_version,
-            app_url, screenshot_urls, release_date, release_date_current_version, app_version,
-            software_lifecycle_duration, time_since_last_release, time_since_first_release, extract_date
+            app_id,
+            app_name,
+            app_description,
+            category_id,
+            category,
+            developer_id,
+            developer,
+            developer_url,
+            seller_name,
+            seller_url,
+            price,
+            rating_average,
+            rating_average_current_version,
+            rating_average_current_version_change,
+            rating_average_current_version_pct_change,
+            rating_count,
+            rating_count_current_version,
+            rating_count_per_day,
+            rating_count_per_day_current_version,
+            rating_count_per_day_current_version_pct_change,
+            app_url,
+            screenshot_urls,
+            release_date,
+            release_date_current_version,
+            app_version,
+            software_lifecycle_duration,
+            days_since_release,
+            days_since_current_version,
+            extract_date
         ) VALUES (
-            :app_id, :app_name, :app_description, :category_id, :category, :developer_id, :developer,
-            :developer_url, :seller_name, :seller_url, :price, :rating_average, :rating_average_current_version,
-            :rating_average_change_current_version, :rating_average_pct_change_current_version,
-            :rating_count, :rating_count_current_version, :rating_count_per_day, :rating_count_per_day_current_version,
-            :rating_count_pct_change_current_version, :rating_count_pct_change_per_day_current_version,
-            :app_url, :screenshot_urls, :release_date, :release_date_current_version, :app_version,
-            :software_lifecycle_duration, :time_since_last_release, :time_since_first_release, :extract_date
+            :app_id,
+            :app_name,
+            :app_description,
+            :category_id,
+            :category,
+            :developer_id,
+            :developer,
+            :developer_url,
+            :seller_name,
+            :seller_url,
+            :price,
+            :rating_average,
+            :rating_average_current_version,
+            :rating_average_current_version_change,
+            :rating_average_current_version_pct_change,
+            :rating_count,
+            :rating_count_current_version,
+            :rating_count_per_day,
+            :rating_count_per_day_current_version,
+            :rating_count_per_day_current_version_pct_change,
+            :app_url,
+            :screenshot_urls,
+            :release_date,
+            :release_date_current_version,
+            :app_version,
+            :software_lifecycle_duration,
+            :days_since_release,
+            :days_since_current_version,
+            :extract_date
         ) ON DUPLICATE KEY UPDATE
             app_name = VALUES(app_name),
             app_description = VALUES(app_description),
@@ -109,25 +153,23 @@ class AppDataRepo(DomainLayerRepo):
             price = VALUES(price),
             rating_average = VALUES(rating_average),
             rating_average_current_version = VALUES(rating_average_current_version),
-            rating_average_change_current_version = VALUES(rating_average_change_current_version),
-            rating_average_pct_change_current_version = VALUES(rating_average_pct_change_current_version),
+            rating_average_current_version_change = VALUES(rating_average_current_version_change),
+            rating_average_current_version_pct_change = VALUES(rating_average_current_version_pct_change),
             rating_count = VALUES(rating_count),
             rating_count_current_version = VALUES(rating_count_current_version),
             rating_count_per_day = VALUES(rating_count_per_day),
             rating_count_per_day_current_version = VALUES(rating_count_per_day_current_version),
-            rating_count_pct_change_current_version = VALUES(rating_count_pct_change_current_version),
-            rating_count_pct_change_per_day_current_version = VALUES(rating_count_pct_change_per_day_current_version),
+            rating_count_per_day_current_version_pct_change = VALUES(rating_count_per_day_current_version_pct_change),
             app_url = VALUES(app_url),
             screenshot_urls = VALUES(screenshot_urls),
             release_date = VALUES(release_date),
             release_date_current_version = VALUES(release_date_current_version),
             app_version = VALUES(app_version),
             software_lifecycle_duration = VALUES(software_lifecycle_duration),
-            time_since_last_release = VALUES(time_since_last_release),
-            time_since_first_release = VALUES(time_since_first_release),
+            days_since_release = VALUES(days_since_release),
+            days_since_current_version = VALUES(days_since_current_version),
             extract_date = VALUES(extract_date);
         """
-
         # Execute the upsert query for each record
         with self._database as conn:
             upsert_count = 0

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 03:55:39 pm                                                   #
-# Modified   : Sunday July 28th 2024 08:10:21 pm                                                   #
+# Modified   : Monday July 29th 2024 12:27:22 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,12 +19,11 @@
 """State Module"""
 import logging
 import time
+from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Deque
-
-import aiohttp
 
 from appstorestream.application.base.job import Job
 from appstorestream.application.base.response import AsyncResponse
@@ -32,9 +31,11 @@ from appstorestream.core.enum import CircuitBreakerStates
 
 
 # ------------------------------------------------------------------------------------------------ #
+#                                       STATE MANAGER                                              #
+# ------------------------------------------------------------------------------------------------ #
 @dataclass
-class StateManager:
-    """Manages the state of responses to determine failure rates within a specified window.
+class StateManager(ABC):
+    """Base class for state manager classes.
 
     Attributes:
         window_size (int): The time window in seconds to track responses.
@@ -58,13 +59,13 @@ class StateManager:
         Returns:
             bool: True if the failure rate exceeds the threshold, otherwise False.
         """
-        self._add_response(response=response)
+        self.add_response(response=response)
         errors = sum(errors for _, _, errors in self.responses)
         requests = sum(requests for _, requests, _ in self.responses)
         error_rate = errors / requests if requests > 0 else 0
         return error_rate > self.failure_rate_threshold
 
-    def _add_response(self, response: AsyncResponse) -> None:
+    def add_response(self, response: AsyncResponse) -> None:
         """Adds a response to the deque and cleans up old responses outside the window size.
 
         Args:
@@ -79,9 +80,36 @@ class StateManager:
         while self.responses and (datetime.now() - self.responses[0][0]).total_seconds() > self.window_size:
             self.responses.popleft()
 
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class StateManagerClosed(StateManager):
+    """State manager for closed state"""
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class StateManagerHalfOpen(StateManager):
+    """State manager for half-open state"""
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class StateManagerShortCircuitErrors(StateManager):
+    """State manager for short circuit error state"""
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class StateManagerShortCircuit404s(StateManager):
+    """State manager for short circuit 404s state"""
+
+    def add_response(self, response: AsyncResponse) -> None:
+        """Adds a response to the deque and cleans up old responses outside the window size.
+
+        Args:
+            response (AsyncResponse): The response object to be added.
+        """
+        current_time = datetime.now()
+        self.responses.append((current_time, response.request_count, response.page_not_found_errors))
+        self._clean_responses()
 
 # ------------------------------------------------------------------------------------------------ #
-
+#                                      CIRCUIT BREAKER                                             3
+# ------------------------------------------------------------------------------------------------ #
 class CircuitBreaker:
     """A circuit breaker to manage job states based on response failure rates.
 
@@ -143,10 +171,10 @@ class CircuitBreaker:
         self._starttime = None
         self._job = None
 
-        self._closed_state_manager = StateManager(window_size=self._closed_window_size, failure_rate_threshold=self._closed_failure_rate_threshold)
-        self._half_open_state_manager = StateManager(window_size=self._half_open_window_size, failure_rate_threshold=self._half_open_failure_rate_threshold)
-        self._short_circuit_error_state_manager = StateManager(window_size=self._short_circuit_errors_window_size, failure_rate_threshold=self._short_circuit_errors_failure_rate_threshold)
-        self._short_circuit_404_state_manager = StateManager(window_size=self._short_circuit_404s_window_size, failure_rate_threshold=self._short_circuit_404s_failure_rate_threshold)
+        self._closed_state_manager = StateManagerClosed(window_size=self._closed_window_size, failure_rate_threshold=self._closed_failure_rate_threshold)
+        self._half_open_state_manager = StateManagerHalfOpen(window_size=self._half_open_window_size, failure_rate_threshold=self._half_open_failure_rate_threshold)
+        self._short_circuit_error_state_manager = StateManagerShortCircuitErrors(window_size=self._short_circuit_errors_window_size, failure_rate_threshold=self._short_circuit_errors_failure_rate_threshold)
+        self._short_circuit_404_state_manager = StateManagerShortCircuit404s(window_size=self._short_circuit_404s_window_size, failure_rate_threshold=self._short_circuit_404s_failure_rate_threshold)
 
         self._state = CircuitBreakerStates.CLOSED
 

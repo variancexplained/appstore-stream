@@ -12,10 +12,13 @@ CREATE TABLE IF NOT EXISTS review (
     vote_count INTEGER NOT NULL,
     vote_count_per_day DECIMAL(8,2) NOT NULL,
     vote_sum INTEGER NOT NULL,
-    vote_avg DECIMAL (5,2)
+    vote_sum_per_day DECIMAL(8,2) NOT NULL,
+    vote_avg DECIMAL (5,2) NOT NULL,
+    review_age INTEGER NOT NULL,
     review_date DATETIME NOT NULL,
     extract_date DATETIME NOT NULL,
     PRIMARY KEY (review_id),
     INDEX idx_app_id (app_id),
+    INDEX idx_reviewer_id (review_id),
     INDEX idx_category_id (category_id),
 );

@@ -1,4 +1,4 @@
-project_id,dataset,category_id,category,project_priority,progress,n_jobs,last_job_id,dt_last_job,project_status
+project_id,dataset,category_id,category,project_priority,bookmark,n_jobs,last_job_id,dt_last_job,project_status
 1,AppData,6000,Business,1,0,0,,,NOT_STARTED
 2,AppData,6001,Weather,5,0,0,,,NOT_STARTED
 3,AppData,6002,Utilities,1,0,0,,,NOT_STARTED

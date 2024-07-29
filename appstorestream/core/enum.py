@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 22nd 2024 10:19:32 pm                                                   #
-# Modified   : Sunday July 28th 2024 07:49:55 pm                                                   #
+# Modified   : Sunday July 28th 2024 11:33:40 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from enum import Enum
 class JobStatus(Enum):
     CREATED = "CREATED"
     SCHEDULED = "SCHEDULED"
-    IN_PROGRESS = "IN PROGRESS"
+    IN_PROGRESS = "IN_PROGRESS"
     COMPLETE = "COMPLETE"
     TERMINATED = "TERMINATED"
     CANCELLED = "CANCELLED"
@@ -51,7 +51,7 @@ class ErrorType(Enum):
     SERVER="SERVER"
     DATA="DATA"
 
-class CircuitBreakerStates:
+class CircuitBreakerStates(Enum):
     CLOSED="CLOSED"
     OPEN="OPEN"
     HALF_OPEN="HALF_OPEN"

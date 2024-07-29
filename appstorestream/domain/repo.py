@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:29:30 pm                                                 #
-# Modified   : Sunday July 28th 2024 10:05:19 am                                                   #
+# Modified   : Sunday July 28th 2024 09:06:18 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,8 +22,12 @@ from typing import Any, Generic, TypeVar
 
 import pandas as pd
 
+from appstorestream.application.base.repo import AppLayerRepo
+
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar('T')  # Define a generic type variable
+# ------------------------------------------------------------------------------------------------ #
+#                                   DOMAIN LAYER REPO                                              #
 # ------------------------------------------------------------------------------------------------ #
 class DomainLayerRepo(ABC, Generic[T]):
     """Base class for domain layer repositories.
@@ -64,4 +68,26 @@ class DomainLayerRepo(ABC, Generic[T]):
             None
         """
         pass
+# ------------------------------------------------------------------------------------------------ #
+#                                   UNIT OF WORK BASE CLASS                                        #
+# ------------------------------------------------------------------------------------------------ #
+class UnitOfWork(ABC):
+    @abstractmethod
+    @property
+    def appdata_repo(self)  -> DomainLayerRepo:
+        """Returns an appdata repository"""
 
+    @abstractmethod
+    @property
+    def review_repo(self)  -> DomainLayerRepo:
+        """Returns an review repository"""
+
+    @abstractmethod
+    @property
+    def project_repo(self)  -> AppLayerRepo:
+        """Returns an project repository"""
+
+    @abstractmethod
+    @property
+    def job_repo(self)  -> AppLayerRepo:
+        """Returns an job repository"""

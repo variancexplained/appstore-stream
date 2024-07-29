@@ -1,30 +1,60 @@
 CREATE TABLE IF NOT EXISTS job (
     job_id INTEGER NOT NULL PRIMARY KEY UNIQUE AUTO_INCREMENT,        -- Unique identifier for each job
     job_name VARCHAR(255) NOT NULL,
+    project_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     category VARCHAR(64) NOT NULL,
     dataset ENUM('APPDATA', 'REVIEW') NOT NULL,
     dt_created DATETIME NOT NULL,                          -- When the jobrun was created
     dt_scheduled DATETIME,                        -- When the jobrun was scheduled
     dt_started DATETIME,                        -- When the jobrun was started
-    dt_ended DATETIME,                                -- When the jobrun ended
-    progress: BIGINT,                                  -- Bookmark for resume purposes.
-    runtime INTEGER NOT NULL,                           -- Total runtime of the jobrun
+    dt_ended DATETIME,
+    max_requests: BIGINT NOT NULL UNSIGNED DEFAULT 9223372036854775807,
+    bookmark: BIGINT NOT NULL DEFAULT 0,
+    runtime INTEGER NOT NULL NOT NULL DEFAULT 0,                           -- Total runtime of the jobrun
     request_count INTEGER NOT NULL DEFAULT 0,
-    app_count INTEGER NOT NULL  DEFAULT 0,
-    review_count INTEGER DEFAULT 0,
+    record_count INTEGER NOT NULL DEFAULT 0,
     request_throughput DECIMAL(7,2) DEFAULT 0,
-    app_throughput DECIMAL(7,2) DEFAULT 0,
-    review_throughput DECIMAL(7,2) DEFAULT 0,
+    record_throughput DECIMAL(7,2) DEFAULT 0,
     total_errors INTEGER NOT NULL DEFAULT 0,
+    redirect_errors INTEGER NOT NULL DEFAULT 0,
     client_errors INTEGER NOT NULL DEFAULT 0,
     server_errors INTEGER NOT NULL DEFAULT 0,
     data_errors INTEGER NOT NULL DEFAULT 0,
-    force_restart TINYINT(1) NOT NULL DEFAULT 0,       -- Flag indicating whether to restart rather than resume from prior run.
+    unknown_errors INTEGER NOT NULL DEFAULT 0,
+    page_not_found_errors INTEGER NOT NULL DEFAULT 0,
+    total_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    redirect_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    client_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    server_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    data_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    unknown_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    page_not_found_error_rate	DECIMAL(3,2) NOT NULL DEFAULT 0.0,
+    circuit_breaker_closed_burnin_period INTEGER NOT NULL DEFAULT 300,
+    circuit_breaker_closed_failure_rate_threshold FLOAT NOT NULL DEFAULT 0.5,
+    circuit_breaker_closed_window_size INTEGER NOT NULL DEFAULT 300,
+    circuit_breaker_half_open_delay INTEGER NOT NULL DEFAULT 2,
+    circuit_breaker_half_open_failure_rate_threshold FLOAT NOT NULL DEFAULT 0.3,
+    circuit_breaker_half_open_window_size INTEGER NOT NULL DEFAULT 600,
+    circuit_breaker_open_cooldown_period INTEGER NOT NULL DEFAULT 300,
+    circuit_breaker_short_circuit_404s_failure_rate_threshold FLOAT NOT NULL DEFAULT 0.7,
+    circuit_breaker_short_circuit_404s_window_size INTEGER NOT NULL DEFAULT 180,
+    circuit_breaker_short_circuit_errors_failure_rate_threshold FLOAT NOT NULL DEFAULT 0.9,
+    circuit_breaker_short_circuit_errors_window_size INTEGER NOT NULL DEFAULT 180,
+    request_asession_max_concurrency INTEGER NOT NULL DEFAULT 100,
+    request_asession_retries INTEGER NOT NULL DEFAULT 3,
+    request_asession_timeout INTEGER NOT NULL DEFAULT 30,
+    request_athrottle_base_rate INTEGER NOT NULL DEFAULT 5,
+    request_athrottle_burn_in INTEGER NOT NULL DEFAULT 10,
+    request_athrottle_max_rate INTEGER NOT NULL DEFAULT 100,
+    request_athrottle_min_rate INTEGER NOT NULL DEFAULT 1,
+    request_athrottle_temperature FLOAT NOT NULL DEFAULT 0.5,
+    request_athrottle_window_size INTEGER NOT NULL DEFAULT 10,
+    request_generator_batch_size INTEGER NOT NULL DEFAULT 100,
     job_status ENUM('CREATED', 'IN-PROGRESS', 'COMPLETE', 'FAILED', 'CANCELLED') NOT NULL,
     INDEX idx_category_id (category_id),                        -- Index for job_id for quick lookups
     INDEX idx_dataset (dataset),
     INDEX idx_job_status (job_status),                          -- Index for status to filter by job run status
-
+    FOREIGN KEY (project_id) REFERENCES project(project_id)
 
 );
