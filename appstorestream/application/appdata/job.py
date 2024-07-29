@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Monday July 29th 2024 12:53:34 am                                                   #
+# Modified   : Monday July 29th 2024 02:12:12 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,8 +22,10 @@ from datetime import datetime
 
 from dependency_injector.wiring import Provide, inject
 
-from appstorestream.application.appdata.request import (AppDataAsyncRequestGen,
-                                                        AppDataRequest)
+from appstorestream.application.appdata.request import (
+    AppDataAsyncRequestGen,
+    AppDataRequest,
+)
 from appstorestream.application.appdata.response import AppDataAsyncResponse
 from appstorestream.application.base.job import Job, JobConfig, JobMeta
 from appstorestream.application.base.project import Project
@@ -70,9 +72,12 @@ class AppDataJob(Job):
         request_gen_cls: type[AppDataAsyncRequestGen] = AppDataAsyncRequestGen,
         job_config: JobConfig = Provide[AppStoreStreamContainer.job.job_config],
         appdata_repo: AppDataRepo = Provide[AppStoreStreamContainer.data.appdata_repo],
-        project_repo: AppDataRepo = Provide[AppStoreStreamContainer.data.project_repo],
-        asession: ASessionAppData = Provide[AppStoreStreamContainer.web.asession_appdata],
-        circuit_breaker: CircuitBreaker = Provide[AppStoreStreamContainer.state.circuit_breaker],
+        asession: ASessionAppData = Provide[
+            AppStoreStreamContainer.web.asession_appdata
+        ],
+        circuit_breaker: CircuitBreaker = Provide[
+            AppStoreStreamContainer.state.circuit_breaker
+        ],
     ) -> None:
         """
         Initializes the AppDataJob with the specified parameters.
@@ -81,7 +86,6 @@ class AppDataJob(Job):
         self._request_gen_cls = request_gen_cls
         self._job_config = job_config
         self._appdata_repo = appdata_repo
-        self._project_repo = project_repo
         self._asession = asession
         self._circuit_breaker = circuit_breaker
 
@@ -93,11 +97,11 @@ class AppDataJob(Job):
             job_config=self._job_config,
         )
         self._request_gen = request_gen_cls(
+            category_id=self._project.category_id,
             max_requests=self._job_config.max_requests,
             batch_size=self._job_config.batch_size,
-            start_page=self._project.bookmark
+            start_page=self._project.bookmark,
         )
-
 
     @property
     def job_id(self) -> int:
@@ -126,7 +130,6 @@ class AppDataJob(Job):
     def status(self) -> str:
         return self._jobmeta.job_status
 
-
     async def run(self) -> None:
         """
         Executes the job to collect app data.
@@ -148,8 +151,6 @@ class AppDataJob(Job):
                     self._appdata_repo.insert(data=response.get_content())
                     self._update_job(request=request, response=response)
                     self._circuit_breaker.evaluate_response(response=response)
-
-
 
     def terminate(self) -> None:
         """
@@ -176,5 +177,7 @@ class AppDataJob(Job):
         self._jobmeta.start()
         self._circuit_breaker.start(job=self)
 
-    def _update_job(self, request: AppDataRequest, response: AppDataAsyncResponse) -> None:
+    def _update_job(
+        self, request: AppDataRequest, response: AppDataAsyncResponse
+    ) -> None:
         self._jobmeta.update(request=request, response=response)

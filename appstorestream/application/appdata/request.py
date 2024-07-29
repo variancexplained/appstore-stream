@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday July 20th 2024 03:02:29 am                                                 #
-# Modified   : Sunday July 28th 2024 11:39:39 pm                                                   #
+# Modified   : Monday July 29th 2024 02:10:21 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -32,15 +32,17 @@ from appstorestream.infra.web.header import BrowserHeader
 @dataclass
 class AppDataRequestParams(DataClass):
     """Encapsulates the request parameters for the app data request."""
-    scheme: str = 'https'
-    host: str = 'itunes.apple.com'
+
+    scheme: str = "https"
+    host: str = "itunes.apple.com"
     term: str = "app"
-    command: str = 'search?'
-    media: str = 'software'
-    country: str = 'us'
+    command: str = "search?"
+    media: str = "software"
+    country: str = "us"
     lang: str = "en-us"
     explicit: str = "yes"
     limit: int = 200
+
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
@@ -69,12 +71,14 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
 
     def __init__(
         self,
+        category_id: int,
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
         start_page: int = 0,
         request_params_cls: type[AppDataRequestParams] = AppDataRequestParams,
         browser_header_cls: type[BrowserHeader] = BrowserHeader,
     ) -> None:
+        self._category_id = category_id
         self._max_requests = max_requests
         self._batch_size = batch_size
         self._start_page = start_page
@@ -112,9 +116,7 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
 
         # Determine current batch size vis-a-vis remaining batches.
         requests_remaining = self._max_requests - self._request_count
-        current_batch_size = min(
-            self._batch_size, requests_remaining
-        )
+        current_batch_size = min(self._batch_size, requests_remaining)
         # Get batch start and stop indices
         batch_start_page = self._current_page
         batch_stop_page = batch_start_page + current_batch_size
@@ -124,6 +126,7 @@ class AppDataAsyncRequestGen(AsyncRequestGen):
         for current_page in range(batch_start_page, batch_stop_page):
             params = {
                 "media": self._request_params.media,
+                "genreId": self._category_id,
                 "term": self._request_params.term,
                 "country": self._request_params.country,
                 "lang": self._request_params.lang,

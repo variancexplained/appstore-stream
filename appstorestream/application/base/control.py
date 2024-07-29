@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 12:58:10 am                                                   #
-# Modified   : Monday July 29th 2024 01:56:29 am                                                   #
+# Modified   : Monday July 29th 2024 02:03:02 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 
 from dependency_injector.wiring import Provide, inject
 
-from appstorestream.application.base.job import Job, JobConfig
+from appstorestream.application.base.job import Job
 from appstorestream.application.base.project import Project
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.core.enum import ProjectStatus
@@ -34,26 +34,29 @@ class Controller(ABC):
     def __init__(
         self,
         project_id: int,
-        job_config: JobConfig = AppStoreStreamContainer[job.job_config],
         uow: UoW = Provide[AppStoreStreamContainer.data.uow],
     ) -> None:
         self._project_id = project_id
-        self._job_config = job_config
         self._uow = uow
 
     def get_project(self, project_id: int) -> Project:
         return self._uow.project_repo.get(id=project_id)
 
     @abstractmethod
-    def get_job(self, job_config: JobConfig, project: Project) -> Job:
+    def get_job(self, project: Project) -> Job:
         """Returns a configured job."""
 
     def run(self) -> None:
+        # Obtain the project from the repository
         project = self.get_project(project_id=self._project_id)
-        job = self.get_job(job_config=self._job_config, project=project)
+        # Create a job object for the Project and run it
+        job = self.get_job(project=project)
         job.run()
-        job = self._uow.job_repo.add(entity=job)
+        # Add the job to the repository
+        job = self._uow.job_repo.add(job=job)
+        # Update the project with job progress
         project = self._update_project(project=project, job=job)
+        # Commit the project to the repository
         self._uow.project_repo.update(project=project)
 
     def _update_project(self, project: Project, job: Job) -> Project:
