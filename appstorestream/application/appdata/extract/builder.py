@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Sunday July 28th 2024 08:39:01 am                                                   #
+# Modified   : Sunday July 28th 2024 11:17:05 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,9 +23,9 @@ from datetime import datetime
 from typing import Union
 from uuid import uuid4
 
-from appstorestream.application.appdata.extract.job import AppDataExtractJob
 from appstorestream.application.appdata.extract.request import (
     AppDataAsyncRequestGen, AppDataAsyncRequestGenConfig)
+from appstorestream.application.appdata.job import AppDataExtractJob
 from appstorestream.application.base.builder import JobBuilder
 from appstorestream.core.enum import JobStatus
 from appstorestream.infra.repo.appdata import (AppDataExtractRepo,

@@ -11,26 +11,25 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 01:28:02 am                                                   #
-# Modified   : Saturday July 27th 2024 02:32:08 am                                                 #
+# Modified   : Sunday July 28th 2024 02:11:32 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-
+from abc import ABC, abstractmethod
 import pandas as pd
-
-from appstorestream.application.base.job import Job
-from appstorestream.application.base.repo import ApplicationRepo
+from appstorestream.application.base.job import Job, JobMeta
+from appstorestream.application.appdata.job import AppDataJob
+from appstorestream.application.base.repo import AppLayerRepo
 from appstorestream.core.enum import Stage
+from
 from appstorestream.infra.database.mysql import MySQLDatabase
 
 # ------------------------------------------------------------------------------------------------ #
 #                                    JOB REPO                                                      #
 # ------------------------------------------------------------------------------------------------ #
 
-
-# ------------------------------------------------------------------------------------------------ #
-class JobRepo(ApplicationRepo):
+class JobRepo(AppLayerRepo):
     """Repository class for handling operations on the 'job' table.
 
     Args:
@@ -56,29 +55,20 @@ class JobRepo(ApplicationRepo):
         """
 
         with self._database as db:
-            db.insert(data=job.as_df())
+            db.insert(data=job.as_df(), tablename=self.__tablename)
 
 
-    def get(self, category_id: int) -> pd.DataFrame:
+    @abstractmethod
+    def get(self, id: int) -> pd.DataFrame:
         """
         Fetches data from the 'job' table based on the category_id.
 
         Args:
-            category_id (int): The ID of the category to fetch data for.
+            id (int): The ID of the job.
 
         Returns:
             pd.DataFrame: A DataFrame containing the data for the specified category.
         """
-        # Construct SQL query using the category_id
-        query = """
-        SELECT * FROM job
-        WHERE category_id = :category_id;
-        """
-        params = {'category_id': category_id}
-
-        # Use the database connection to execute the query and return the result as a DataFrame
-        with self._database as conn:
-            return conn.query(query, params)
 
     def getall(self) -> pd.DataFrame:
         """
@@ -97,29 +87,54 @@ class JobRepo(ApplicationRepo):
         with self._database as conn:
             return conn.query(query, params)
 
-    def delete(self, category_id: int) -> None:
+    def delete(self, id: int) -> None:
         """
         Deletes records from the 'job' table based on the category_id.
 
         Args:
-            category_id (int): The ID of the category to delete records for.
+            id (int): The ID of the job to delete records for.
 
         Raises:
             ValueError: If attempting to delete from a permanent database.
         """
-        # Check if the database is final and raise an exception if so
-        if self._database.dbset == Stage.LOAD:
-            msg = "Delete from the final database is not permitted."
-            self._logger.exception(msg)
-            raise ValueError(msg)
 
         # Construct SQL query for deletion
         query = """
         DELETE FROM job
-        WHERE category_id = :category_id;
+        WHERE job_id = :job_id;
         """
-        params = {'category_id': category_id}
+        params = {'job_id': id}
 
         # Use the database connection to execute the delete query
         with self._database as conn:
             return conn.execute(query, params)
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    APPDATA JOB REPO                                              #
+# ------------------------------------------------------------------------------------------------ #
+class AppDataJobRepo(JobRepo):
+    def get(self, id: int) -> AppDataJob:
+        """
+        Fetches data from the 'job' table based on job id.
+
+        Args:
+            id (int): The ID of the job.
+
+        Returns:
+            AppDataJob: An AppDataJob object.
+        """
+
+        query = """
+        SELECT * FROM job
+        WHERE job_id = :job_id;
+        """
+        params = {'job_id': id}
+
+        # Use the database connection to execute the query and return the result as a DataFrame
+        with self._database as conn:
+            job_data = conn.query(query, params)
+            try:
+                jobmeta = JobMeta(**job_data.iloc[0].to_dict())
+                return AppDataJob(jobmeta=jobmeta)
+            except KeyError as e:
+                raise ValueError(f"Job id: {id} was not found.")

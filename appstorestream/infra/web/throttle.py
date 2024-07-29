@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Sunday July 28th 2024 08:38:00 am                                                   #
+# Modified   : Sunday July 28th 2024 11:02:33 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,134 +19,96 @@
 """Autothrottle Module"""
 import asyncio
 import random
+import time
 from collections import deque
-from datetime import datetime
 
 
-class Throttle:
+class AThrottle:
     """
-    A class to manage the throttling of requests based on latency and randomized delays.
-
-    Args:
-        min_rate (float): The minimum request rate (requests per second). Default is 1.
-        base_rate (float): The base request rate (requests per second). Default is 5.
-        max_rate (float): The maximum request rate (requests per second). Default is 100.
-        temperature (float): A parameter between 0 and 1 to control the degree of randomization in delays. Default is 0.5.
-        burn_in_period (int): The number of initial requests to treat as a burn-in period. Default is 100.
-        window_size (int): The number of recent requests to consider for latency calculation. Default is 10.
+    Throttling mechanism to control request rate based on latency.
 
     Attributes:
-        min_rate (float): The minimum request rate.
-        base_rate (float): The base request rate.
-        max_rate (float): The maximum request rate.
-        temperature (float): A parameter to control the degree of randomization in delays.
-        burn_in_period (int): The number of initial requests to treat as a burn-in period.
-        window_size (int): The number of recent requests to consider for latency calculation.
-        send_times (deque): A deque to store the send times of requests.
-        recv_times (deque): A deque to store the receive times of requests.
-        request_count (int): A counter for the number of requests made.
-        burn_in (bool): A flag indicating if the burn-in period is active.
+        min_rate (float): Minimum requests per second.
+        base_rate (float): Base requests per second.
+        max_rate (float): Maximum requests per second.
+        temperature (float): Temperature parameter for randomization (0 to 1).
+        current_rate (float): Current requests per second.
+        latencies (deque): Deque to store latency values for the sliding window.
+        send_time (float): Timestamp when the request was sent.
+        burn_in (int): Number of requests during burn-in period where rate adjustments are not made.
+        request_count (int): Counter for the number of requests sent.
 
-    Methods:
-        send(): Marks the datetime before a request is sent.
-        recv(): Marks the datetime after a response is received.
-        delay(): Executes a delay based on the calculated rate and randomization.
+    Arguments:
+        min_rate (float): Minimum requests per second.
+        base_rate (float): Base requests per second.
+        max_rate (float): Maximum requests per second.
+        temperature (float): Temperature parameter for randomization (0 to 1). Default is 0.5.
+        window_size (int): The size of the sliding window for latency measurements. Default is 10.
+        burn_in (int): Number of initial requests during which rate adjustments are not made. Default is 10.
 
-    Usage examples:
+    Usage:
+        throttle = AThrottle(min_rate=5, base_rate=20, max_rate=100, temperature=0.5, window_size=10, burn_in=10)
 
-    Example usage in an asynchronous context:
-
-    ```python
-    import aiohttp
-    import asyncio
-
-    async def fetch(url, throttle):
-        async with aiohttp.ClientSession() as session:
-            await throttle.send()
-            async with session.get(url) as response:
-                await throttle.recv()
-                await throttle.delay()
-                return await response.text()
-
-    async def main(urls, throttle):
-        tasks = [fetch(url, throttle) for url in urls]
-        return await asyncio.gather(*tasks)
-
-    urls = [
-        "https://example.com/page1",
-        "https://example.com/page2",
-        "https://example.com/page3",
-        # Add more URLs as needed
-    ]
-
-    throttle = Throttle(min_rate=1, base_rate=5, max_rate=100, temperature=0.2, burn_in_period=100)
-
-    # Running the async main function
-    results = asyncio.run(main(urls, throttle))
-
-    # Print the results
-    for result in results:
-        print(result)
-    ```
+        # In an async function
+        await throttle.send()
+        # send request
+        await throttle.recv()
+        await throttle.delay()
     """
 
-    def __init__(self, min_rate=1, base_rate=5, max_rate=100, temperature=0.5, burn_in_period=100, window_size=10):
+    def __init__(self, min_rate: float, base_rate: float, max_rate: float, temperature: float = 0.5, window_size: int = 10, burn_in: int = 10) -> None:
         self.min_rate = min_rate
         self.base_rate = base_rate
         self.max_rate = max_rate
         self.temperature = temperature
-        self.burn_in_period = burn_in_period
-        self.window_size = window_size
-
-        self.send_times = deque(maxlen=window_size)
-        self.recv_times = deque(maxlen=window_size)
+        self.current_rate = base_rate
+        self.latencies = deque(maxlen=window_size)
+        self.send_time = None
+        self.burn_in = burn_in
         self.request_count = 0
-        self.burn_in = True
 
-    async def send(self):
-        """Marks the datetime before a request is sent."""
-        send_time = datetime.now()
-        self.send_times.append(send_time)
+    async def send(self) -> None:
+        """Marks the time before sending a request."""
+        self.send_time = time.monotonic()
+
+    async def recv(self) -> None:
+        """Marks the time after receiving a response and calculates latency."""
+        recv_time = time.monotonic()
+        latency = recv_time - self.send_time
+        self.latencies.append(latency)
         self.request_count += 1
-        if self.request_count > self.burn_in_period:
-            self.burn_in = False
+        if self.request_count > self.burn_in:
+            self.update_rate()
 
-    async def recv(self):
-        """Marks the datetime after a response is received."""
-        recv_time = datetime.now()
-        self.recv_times.append(recv_time)
-
-    def _calculate_latency(self):
-        """Calculates the average latency based on the recorded send and receive times."""
-        if len(self.send_times) == 0 or len(self.recv_times) == 0:
-            return None
-        latencies = [(recv - send).total_seconds() for send, recv in zip(self.send_times, self.recv_times)]
-        return sum(latencies) / len(latencies)
-
-    def _calculate_delay(self):
-        """Calculates the delay based on the current rate and randomization."""
-        if self.burn_in:
-            return 1.0 / self.base_rate
-        latency = self._calculate_latency()
-        if latency is None:
-            return 1.0 / self.base_rate
-
-        # PID-like controller logic
-        rate = self.base_rate
-        if latency < 0.1:  # If latency is very low, increase the rate
-            rate = min(self.max_rate, self.base_rate + (self.max_rate - self.base_rate) * (0.1 - latency))
-        else:  # If latency is higher, decrease the rate
-            rate = max(self.min_rate, self.base_rate - (self.base_rate - self.min_rate) * (latency - 0.1))
-
-        delay = 1.0 / rate
-
-        # Randomize delay based on temperature
-        random_factor = random.uniform(-self.temperature, self.temperature)
-        randomized_delay = delay + delay * random_factor
-
-        return max(0, randomized_delay)
-
-    async def delay(self):
-        """Executes a delay based on the calculated rate and randomization."""
-        delay_time = self._calculate_delay()
+    async def delay(self) -> None:
+        """Executes a delay based on the current request rate."""
+        delay_time = self.calculate_delay()
         await asyncio.sleep(delay_time)
+
+    def calculate_delay(self) -> float:
+        """
+        Calculates delay time based on the current request rate and randomization.
+
+        Returns:
+            float: Delay time in seconds.
+        """
+        delay_time = 1.0 / self.current_rate
+        random_factor = random.uniform(1.0 - self.temperature, 1.0 + self.temperature)
+        return delay_time * random_factor
+
+    def update_rate(self) -> None:
+        """
+        Updates the request rate based on the average latency observed over the sliding window.
+        Increases the rate if average latency is low and decreases if it is high.
+        """
+        if len(self.latencies) == 0:
+            return
+
+        avg_latency = sum(self.latencies) / len(self.latencies)
+
+        # Example logic: Adjust rate based on average latency
+        expected_latency = 0.1  # Expected latency in seconds
+        if avg_latency < expected_latency:
+            self.current_rate = min(self.current_rate * 1.1, self.max_rate)
+        else:
+            self.current_rate = max(self.current_rate * 0.9, self.min_rate)

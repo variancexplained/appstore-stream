@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/application/appdata/extract/request.py                              #
+# Filename   : /appstorestream/application/appdata/request.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday July 20th 2024 03:02:29 am                                                 #
-# Modified   : Saturday July 27th 2024 02:35:32 am                                                 #
+# Modified   : Sunday July 28th 2024 02:20:11 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -58,7 +58,7 @@ class AppDataRequest(AsyncRequest):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class AppDataRequestGen(AsyncRequestGen):
+class AppDataAsyncRequestGen(AsyncRequestGen):
     """Encapsulates an asynchronous AppData request generation.
 
     Args:
@@ -71,21 +71,24 @@ class AppDataRequestGen(AsyncRequestGen):
         self,
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
+        start_page: int = 0,
         request_params_cls: type[AppDataRequestParams] = AppDataRequestParams,
         browser_header_cls: type[BrowserHeader] = BrowserHeader,
     ) -> None:
         self._max_requests = max_requests
         self._batch_size = batch_size
+        self._start_page = start_page
+        self._current_page = start_page
         self._request_params = request_params_cls()
         self._browser_header = browser_header_cls()
-        self._request_count = 0
 
-    def __iter__(self) -> AppDataRequestGen:
+    def __iter__(self) -> AppDataAsyncRequestGen:
         """Returns an iterator object for the request generator.
 
         Returns:
             AppDataAsyncRequestGen: The request generator itself.
         """
+
         return self
 
     def __next__(self) -> AppDataRequest:
@@ -109,7 +112,7 @@ class AppDataRequestGen(AsyncRequestGen):
             self._batch_size, requests_remaining
         )
         # Get batch start and stop indices
-        batch_start_page = self._request_count
+        batch_start_page = self._current_page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate parameters for the batch
         param_list = []
@@ -125,7 +128,7 @@ class AppDataRequestGen(AsyncRequestGen):
                 "offset": current_page * self._request_params.limit,
             }
             param_list.append(params)
-            self._request_count += current_batch_size
+            self._current_page += current_batch_size
 
         # Create the Request Object
         return AppDataRequest(

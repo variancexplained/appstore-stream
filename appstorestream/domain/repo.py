@@ -11,14 +11,14 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:29:30 pm                                                 #
-# Modified   : Friday July 26th 2024 04:35:38 pm                                                   #
+# Modified   : Sunday July 28th 2024 10:05:19 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Domain Repository Module"""
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, TypeVar
+from typing import Any, Generic, TypeVar
 
 import pandas as pd
 
@@ -49,17 +49,6 @@ class DomainLayerRepo(ABC, Generic[T]):
         """
         pass
 
-    @abstractmethod
-    def add(self, data: pd.DataFrame) -> None:
-        """Adds data to the repository.
-
-        Args:
-            data (pd.DataFrame): A DataFrame containing the data to be added to the repository.
-
-        Returns:
-            None
-        """
-        pass
 
     @abstractmethod
     def upsert(self, data: pd.DataFrame) -> None:
@@ -76,15 +65,3 @@ class DomainLayerRepo(ABC, Generic[T]):
         """
         pass
 
-    @abstractmethod
-    def delete(self, category_id: int, **kwargs: Any) -> None:
-        """Deletes data from the repository by category ID.
-
-        Args:
-            category_id (int): The ID of the category whose data should be deleted.
-            **kwargs (Any): Additional keyword arguments for customizing the delete operation.
-
-        Returns:
-            None
-        """
-        pass

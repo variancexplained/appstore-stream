@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Saturday July 27th 2024 02:28:17 am                                                 #
+# Modified   : Sunday July 28th 2024 05:23:00 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,15 +19,17 @@
 import asyncio
 import logging
 import os
+import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, Optional
 
 import aiohttp
 
-from appstorestream.application.appdata.extract.response import \
-    AppDataAsyncResponse
-from appstorestream.application.response import AsyncRequest, AsyncResponse
+from appstorestream.application.appdata.response import AppDataAsyncResponse
+from appstorestream.application.base.response import (AsyncRequest,
+                                                      AsyncResponse,
+                                                      ResponseError)
 from appstorestream.infra.web.throttle import AThrottle
 
 
@@ -47,12 +49,12 @@ class ASession(ABC):
     def __init__(
         self,
         throttle: AThrottle,
-        max_concurrency: int = 10,
+        max_concurrency: int = 100,
         retries: int = 3,
         timeout: int = 30,
     ) -> None:
         self._throttle = throttle
-        self._max_concurrency = max_concurrency
+        self._max_concurrency = max(max_concurrency, throttle.max_rate)
         self._retries = retries
         self._timeout = timeout
         self._timeout_obj = aiohttp.ClientTimeout(total=timeout)
@@ -96,36 +98,49 @@ class ASession(ABC):
         async with concurrency:
             while retries < self._retries:
                 try:
-                    self._throttle.start()
+                    await self._throttle.send()
                     self._metrics_svc.increment_requests_total()
 
                     async with client.get(
                         url, proxy=self._proxy, ssl=False, params=params
                     ) as response:
-                        self._throttle.stop()
-                        self._throttle.delay()
+                        await self._throttle.recv()
+                        await self._throttle.delay()
                         response.raise_for_status()
                         self._metrics_svc.increment_requests_successful_total()
                         return await response.json()
 
                 except aiohttp.ClientResponseError as e:
-                    self._logger.warning(
-                        f"ClientResponseError: Response code: {e.status} - {e}. Retry #{retries}."
-                    )
+                    if 400 <= e.status < 500:
+                        self._logger.warning(
+                            f"ClientResponseError: Response code: {e.status} - {e}. Retry #{retries}."
+                        )
+
+                    elif 500 <= e.status < 600:
+                        self._logger.warning(
+                            f"ServerResponseError: Response code: {e.status} - {e}. Retry #{retries}."
+                        )
+                    else:
+                        self._logger.warning(
+                            f"UnexpectedResponseError: Response code: {e.status} - {e}. Retry #{retries}."
+                        )
+
                 except aiohttp.ClientError as e:
                     self._logger.warning(
                         f"ClientError: {e}. Retry #{retries}."
                     )
+
                 except Exception as e:
                     self._logger.warning(
-                        f"Unknown Error: Response code: {e.status}\n{e}. Retry #{retries}."
+                        f"Unknown Error: {e}. Retry #{retries}."
                     )
 
                 retries += 1
                 await asyncio.sleep(2**retries)  # Exponential backoff
 
             self._logger.error("Exhausted retries. Returning to calling environment.")
-            return {"error": e}
+            error = ResponseError(return_code=e.status)
+            return {"error": error}
 
     def _get_proxy(self) -> dict:
         dns = os.getenv("WEBSHARE_DNS")
@@ -179,8 +194,9 @@ class ASessionAppData(ASession):
                 )
                 for param_dict in request.param_list
             ]
-            response_list = await asyncio.gather(*tasks)
-            response.recv(response=response_list)
+            results = await asyncio.gather(*tasks)
+            response.recv(results=results)
+            response.request_count = len(tasks)
             return response
 
 # ------------------------------------------------------------------------------------------------ #
@@ -213,7 +229,8 @@ class ASessionReview(ASession):
                 self._make_request(client=client, url=url, concurrency=concurrency)
                 for url in request.urls
             ]
-            response_list = await asyncio.gather(*tasks)
-            response.recv(response=response_list)
+            results = await asyncio.gather(*tasks)
+            response.recv(results=results)
+            response.request_count = len(tasks)
             return response
 

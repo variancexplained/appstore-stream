@@ -1,53 +1,51 @@
-id,category_id,category,dataset,progress,last_job_id,last_job_date
-1,6000,  Business,AppData,0,,
-2,6001,  Weather,AppData,0,,
-3,6002,  Utilities,AppData,0,,
-4,6003,  Travel,AppData,0,,
-5,6004,  Sports,AppData,0,,
-6,6005,  Social Networking,AppData,0,,
-7,6006,  Reference,AppData,0,,
-8,6007,  Productivity,AppData,0,,
-9,6008,  Photo & Video,AppData,0,,
-10,6009,  News,AppData,0,,
-11,6010,  Navigation,AppData,0,,
-12,6011,  Music,AppData,0,,
-13,6012,  Lifestyle,AppData,0,,
-14,6013,  Health & Fitness,AppData,0,,
-15,6014,  Games,AppData,0,,
-16,6015,  Finance,AppData,0,,
-17,6016,  Entertainment,AppData,0,,
-18,6017,  Education,AppData,0,,
-19,6018,  Books,AppData,0,,
-20,6020,  Medical,AppData,0,,
-21,6021,  Newsstand,AppData,0,,
-22,6022,  Catalogs,AppData,0,,
-23,6023,  Food & Drink,AppData,0,,
-24,6024,  Shopping,AppData,0,,
-25,6026,  Developer Tools,AppData,0,,
-26,6027,  Graphics & Design,AppData,0,,
-27,6000,  Business,Review,0,,
-28,6001,  Weather,Review,0,,
-29,6002,  Utilities,Review,0,,
-30,6003,  Travel,Review,0,,
-31,6004,  Sports,Review,0,,
-32,6005,  Social Networking,Review,0,,
-33,6006,  Reference,Review,0,,
-34,6007,  Productivity,Review,0,,
-35,6008,  Photo & Video,Review,0,,
-36,6009,  News,Review,0,,
-37,6010,  Navigation,Review,0,,
-38,6011,  Music,Review,0,,
-39,6012,  Lifestyle,Review,0,,
-40,6013,  Health & Fitness,Review,0,,
-41,6014,  Games,Review,0,,
-42,6015,  Finance,Review,0,,
-43,6016,  Entertainment,Review,0,,
-44,6017,  Education,Review,0,,
-45,6018,  Books,Review,0,,
-46,6020,  Medical,Review,0,,
-47,6021,  Newsstand,Review,0,,
-48,6022,  Catalogs,Review,0,,
-49,6023,  Food & Drink,Review,0,,
-50,6024,  Shopping,Review,0,,
-51,6026,  Developer Tools,Review,0,,
-52,6027,  Graphics & Design,Review,0,,
+project_id,dataset,category_id,category,project_priority,progress,n_jobs,last_job_id,dt_last_job,project_status
+1,AppData,6000,Business,1,0,0,,,NOT_STARTED
+2,AppData,6001,Weather,5,0,0,,,NOT_STARTED
+3,AppData,6002,Utilities,1,0,0,,,NOT_STARTED
+4,AppData,6003,Travel,3,0,0,,,NOT_STARTED
+5,AppData,6004,Sports,3,0,0,,,NOT_STARTED
+6,AppData,6005,Social Networking,3,0,0,,,NOT_STARTED
+7,AppData,6006,Reference,4,0,0,,,NOT_STARTED
+8,AppData,6007,Productivity,2,0,0,,,NOT_STARTED
+9,AppData,6008,Photo & Video,4,0,0,,,NOT_STARTED
+10,AppData,6009,News,4,0,0,,,NOT_STARTED
+11,AppData,6010,Navigation,4,0,0,,,NOT_STARTED
+12,AppData,6011,Music,3,0,0,,,NOT_STARTED
+13,AppData,6012,Lifestyle,1,0,0,,,NOT_STARTED
+14,AppData,6013,Health & Fitness,2,0,0,,,NOT_STARTED
+15,AppData,6015,Finance,2,0,0,,,NOT_STARTED
+16,AppData,6016,Entertainment,2,0,0,,,NOT_STARTED
+17,AppData,6017,Education,1,0,0,,,NOT_STARTED
+18,AppData,6018,Books,5,0,0,,,NOT_STARTED
+19,AppData,6020,Medical,3,0,0,,,NOT_STARTED
+20,AppData,6021,Newsstand,5,0,0,,,NOT_STARTED
+21,AppData,6022,Catalogs,5,0,0,,,NOT_STARTED
+22,AppData,6023,Food & Drink,1,0,0,,,NOT_STARTED
+23,AppData,6024,Shopping,2,0,0,,,NOT_STARTED
+24,AppData,6026,Developer Tools,5,0,0,,,NOT_STARTED
+25,AppData,6027,Graphics & Design,5,0,0,,,NOT_STARTED
+26,Review,6000,Business,1,0,0,,,NOT_STARTED
+27,Review,6001,Weather,5,0,0,,,NOT_STARTED
+28,Review,6002,Utilities,1,0,0,,,NOT_STARTED
+29,Review,6003,Travel,3,0,0,,,NOT_STARTED
+30,Review,6004,Sports,3,0,0,,,NOT_STARTED
+31,Review,6005,Social Networking,3,0,0,,,NOT_STARTED
+32,Review,6006,Reference,4,0,0,,,NOT_STARTED
+33,Review,6007,Productivity,2,0,0,,,NOT_STARTED
+34,Review,6008,Photo & Video,4,0,0,,,NOT_STARTED
+35,Review,6009,News,4,0,0,,,NOT_STARTED
+36,Review,6010,Navigation,4,0,0,,,NOT_STARTED
+37,Review,6011,Music,3,0,0,,,NOT_STARTED
+38,Review,6012,Lifestyle,1,0,0,,,NOT_STARTED
+39,Review,6013,Health & Fitness,2,0,0,,,NOT_STARTED
+40,Review,6015,Finance,2,0,0,,,NOT_STARTED
+41,Review,6016,Entertainment,2,0,0,,,NOT_STARTED
+42,Review,6017,Education,1,0,0,,,NOT_STARTED
+43,Review,6018,Books,5,0,0,,,NOT_STARTED
+44,Review,6020,Medical,3,0,0,,,NOT_STARTED
+45,Review,6021,Newsstand,5,0,0,,,NOT_STARTED
+46,Review,6022,Catalogs,5,0,0,,,NOT_STARTED
+47,Review,6023,Food & Drink,1,0,0,,,NOT_STARTED
+48,Review,6024,Shopping,2,0,0,,,NOT_STARTED
+49,Review,6026,Developer Tools,5,0,0,,,NOT_STARTED
+50,Review,6027,Graphics & Design,5,0,0,,,NOT_STARTED

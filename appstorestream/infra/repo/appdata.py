@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Saturday July 27th 2024 02:35:02 am                                                 #
+# Modified   : Sunday July 28th 2024 09:27:06 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,12 +21,12 @@ from dataclasses import dataclass
 import pandas as pd
 
 from appstorestream.core.enum import DatabaseSet
-from appstorestream.domain.repo import Repo
+from appstorestream.domain.repo import DomainLayerRepo
 from appstorestream.infra.database.mysql import MySQLDatabase
 
 
 # ------------------------------------------------------------------------------------------------ #
-class AppDataExtractRepo(Repo):
+class AppDataRepo(DomainLayerRepo):
     """Repository class for handling operations on the 'appdata' table.
 
     Args:
@@ -43,14 +43,6 @@ class AppDataExtractRepo(Repo):
         super().__init__()
         self._database = database
 
-    def add(self, appdata: pd.DataFrame) -> None:
-        """Adds AppData to the repository
-
-        Args:
-            appdata (pd.DataFrame):  AppData in DataFrame format.
-        """
-        with self._database as db:
-            db.insert(data=appdata)
 
     def get(self, category_id: int) -> pd.DataFrame:
         """
@@ -73,20 +65,6 @@ class AppDataExtractRepo(Repo):
         with self._database as conn:
             return conn.query(query, params)
 
-    def insert(self, data: pd.DataFrame, dtype: dict = None) -> int:
-        """
-        Inserts data into the 'appdata' table.
-
-        Args:
-            data (pd.DataFrame): DataFrame containing the data to insert.
-            dtype (dict, optional): Dictionary specifying data types for columns.
-
-        Returns:
-            int: Number of rows inserted.
-        """
-        with self._database as conn:
-            return conn.insert(data, tablename=self.__tablename, dtype=dtype)
-
     def upsert(self, data: pd.DataFrame) -> int:
         """
         Upserts (inserts or updates) data into the 'appdata' table.
@@ -103,38 +81,51 @@ class AppDataExtractRepo(Repo):
         # Construct the upsert SQL query
         upsert_query = """
         INSERT INTO appdata (
-            id, name, description, category_id, developer_id, developer_name,
-            developer_view_url, seller_name, seller_url, price, currency,
-            rating_average, rating_average_current_version, rating_count,
-            rating_count_current_version, app_url, screenshot_urls,
-            release_date, release_date_current_version, version, date_extracted
+            app_id, app_name, app_description, category_id, category, developer_id, developer,
+            developer_url, seller_name, seller_url, price, rating_average, rating_average_current_version,
+            rating_average_change_current_version, rating_average_pct_change_current_version,
+            rating_count, rating_count_current_version, rating_count_per_day, rating_count_per_day_current_version,
+            rating_count_pct_change_current_version, rating_count_pct_change_per_day_current_version,
+            app_url, screenshot_urls, release_date, release_date_current_version, app_version,
+            software_lifecycle_duration, time_since_last_release, time_since_first_release, extract_date
         ) VALUES (
-            :id, :name, :description, :category_id, :developer_id, :developer_name,
-            :developer_view_url, :seller_name, :seller_url, :price, :currency,
-            :rating_average, :rating_average_current_version, :rating_count,
-            :rating_count_current_version, :app_url, :screenshot_urls,
-            :release_date, :release_date_current_version, :version, :date_extracted
+            :app_id, :app_name, :app_description, :category_id, :category, :developer_id, :developer,
+            :developer_url, :seller_name, :seller_url, :price, :rating_average, :rating_average_current_version,
+            :rating_average_change_current_version, :rating_average_pct_change_current_version,
+            :rating_count, :rating_count_current_version, :rating_count_per_day, :rating_count_per_day_current_version,
+            :rating_count_pct_change_current_version, :rating_count_pct_change_per_day_current_version,
+            :app_url, :screenshot_urls, :release_date, :release_date_current_version, :app_version,
+            :software_lifecycle_duration, :time_since_last_release, :time_since_first_release, :extract_date
         ) ON DUPLICATE KEY UPDATE
-            name = VALUES(name),
-            description = VALUES(description),
+            app_name = VALUES(app_name),
+            app_description = VALUES(app_description),
             category_id = VALUES(category_id),
+            category = VALUES(category),
             developer_id = VALUES(developer_id),
-            developer_name = VALUES(developer_name),
-            developer_view_url = VALUES(developer_view_url),
+            developer = VALUES(developer),
+            developer_url = VALUES(developer_url),
             seller_name = VALUES(seller_name),
             seller_url = VALUES(seller_url),
             price = VALUES(price),
-            currency = VALUES(currency),
             rating_average = VALUES(rating_average),
             rating_average_current_version = VALUES(rating_average_current_version),
+            rating_average_change_current_version = VALUES(rating_average_change_current_version),
+            rating_average_pct_change_current_version = VALUES(rating_average_pct_change_current_version),
             rating_count = VALUES(rating_count),
             rating_count_current_version = VALUES(rating_count_current_version),
+            rating_count_per_day = VALUES(rating_count_per_day),
+            rating_count_per_day_current_version = VALUES(rating_count_per_day_current_version),
+            rating_count_pct_change_current_version = VALUES(rating_count_pct_change_current_version),
+            rating_count_pct_change_per_day_current_version = VALUES(rating_count_pct_change_per_day_current_version),
             app_url = VALUES(app_url),
             screenshot_urls = VALUES(screenshot_urls),
             release_date = VALUES(release_date),
             release_date_current_version = VALUES(release_date_current_version),
-            version = VALUES(version),
-            date_extracted = VALUES(date_extracted);
+            app_version = VALUES(app_version),
+            software_lifecycle_duration = VALUES(software_lifecycle_duration),
+            time_since_last_release = VALUES(time_since_last_release),
+            time_since_first_release = VALUES(time_since_first_release),
+            extract_date = VALUES(extract_date);
         """
 
         # Execute the upsert query for each record
@@ -144,30 +135,3 @@ class AppDataExtractRepo(Repo):
                 result = conn.execute(upsert_query, record)
                 upsert_count += result.rowcount
             return upsert_count
-
-    def delete(self, category_id: int) -> None:
-        """
-        Deletes records from the 'appdata' table based on the category_id.
-
-        Args:
-            category_id (int): The ID of the category to delete records for.
-
-        Raises:
-            ValueError: If attempting to delete from a permanent database.
-        """
-        # Check if the database is permanent and raise an exception if so
-        if self._database.dbset == DatabaseSet.PERMANENT:
-            msg = "Delete from the permanent database is not permitted."
-            self._logger.exception(msg)
-            raise ValueError(msg)
-
-        # Construct SQL query for deletion
-        query = """
-        DELETE FROM appdata
-        WHERE category_id = :category_id
-        """
-        params = {'category_id': category_id}
-
-        # Use the database connection to execute the delete query
-        with self._database as conn:
-            return conn.execute(query, params)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Thursday July 25th 2024 11:06:14 pm                                                 #
+# Modified   : Sunday July 28th 2024 11:21:27 am                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -48,11 +48,13 @@ class MySQLDatabase(Database):
         config_cls (Type[Config]): System configuration class.
     """
 
-    def __init__(self, dbset: DatabaseSet, config_cls: Type[Config] = Config) -> None:
+    __dbname = 'appstorestream'
+
+    def __init__(self, config_cls: Type[Config] = Config) -> None:
         super().__init__()
         self._config = config_cls()
-        self._dbset = dbset
-        self._dbname = f"{self._config.get_environment()}_{dbset.value}"
+
+        self._dbname = f"{self.__dbname}_{self._config.get_environment()}"
         self._mysql_credentials = self._config.mysql
         self._connection_string = self._get_connection_string()
         self._engine = None
