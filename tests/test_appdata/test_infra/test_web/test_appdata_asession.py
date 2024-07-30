@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 01:09:08 pm                                                   #
-# Modified   : Monday July 29th 2024 04:14:30 pm                                                   #
+# Modified   : Tuesday July 30th 2024 12:48:08 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -66,10 +66,13 @@ class TestAppDataAsession:  # pragma: no cover
             assert isinstance(request.baseurl, str)
             assert len(request.param_list) == 2
             response = await session.get(request=request)
-            logger.debug(str(response))
-            assert response.request_count == BATCH_SIZE
-            assert response.response_count == BATCH_SIZE
-            assert response.record_count <= BATCH_SIZE * RESULTS_PER_PAGE
+            response.process_response()
+            logger.debug(str(response.metrics))
+            assert response.metrics.request_count == BATCH_SIZE
+            assert response.metrics.response_count == BATCH_SIZE
+            assert response.metrics.record_count <= BATCH_SIZE * RESULTS_PER_PAGE
+            assert len(response.content) == response.metrics.record_count
+            logging.debug(response.content.head())
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

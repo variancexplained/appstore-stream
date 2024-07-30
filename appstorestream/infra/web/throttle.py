@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Monday July 29th 2024 02:43:43 pm                                                   #
+# Modified   : Monday July 29th 2024 07:36:39 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -75,27 +75,18 @@ class AThrottle(InfraService):
         self.temperature = temperature
         self.current_rate = base_rate
         self.latencies = deque(maxlen=window_size)
-        self.send_time = None
         self.burn_in = burn_in
         self.request_count = 0
 
-    async def send(self) -> None:
-        """Marks the time before sending a request."""
-        self.send_time = time.monotonic()
-
-    async def recv(self) -> None:
+    async def delay(self, latency: float) -> None:
         """Marks the time after receiving a response and calculates latency."""
-        recv_time = time.monotonic()
-        latency = recv_time - self.send_time
         self.latencies.append(latency)
         self.request_count += 1
         if self.request_count > self.burn_in:
             self.update_rate()
-
-    async def delay(self) -> None:
-        """Executes a delay based on the current request rate."""
-        delay_time = self.calculate_delay()
-        await asyncio.sleep(delay_time)
+        else:
+            delay_time = self.calculate_delay()
+            await asyncio.sleep(delay_time)
 
     def calculate_delay(self) -> float:
         """

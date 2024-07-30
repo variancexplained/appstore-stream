@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Monday July 29th 2024 02:51:45 pm                                                   #
+# Modified   : Monday July 29th 2024 11:12:02 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,6 +24,7 @@ from dependency_injector import containers, providers
 
 from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.database.mysql import MySQLDatabase
+from appstorestream.infra.monitor.metrics import Metrics
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.repo.job import JobRepo
 from appstorestream.infra.repo.project import ProjectRepo
@@ -97,6 +98,7 @@ class StateContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class WebContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
+    monitor = providers.DependenciesContainer()
 
     athrottle = providers.Singleton(
         AThrottle,
@@ -125,6 +127,16 @@ class WebContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
+#                                      MONITOR                                                     #
+# ------------------------------------------------------------------------------------------------ #
+class MonitorContainer(containers.DeclarativeContainer):
+
+    config = providers.Configuration()
+
+    metrics = providers.Singleton(Metrics, port=config.monitor.prometheus_client_port)
+
+
+# ------------------------------------------------------------------------------------------------ #
 #                                       FRAMEWORK                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class AppStoreStreamContainer(containers.DeclarativeContainer):
@@ -137,4 +149,6 @@ class AppStoreStreamContainer(containers.DeclarativeContainer):
 
     state = providers.Container(StateContainer, config=config)
 
-    web = providers.Container(WebContainer, config=config)
+    monitor = providers.Container(MonitorContainer, config=config)
+
+    web = providers.Container(WebContainer, config=config, monitor=monitor)

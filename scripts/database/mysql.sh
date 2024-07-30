@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/bash
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 09:15:59 pm                                                #
-# Modified   : Thursday July 25th 2024 03:30:31 am                                                 #
+# Modified   : Monday July 29th 2024 05:31:59 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #

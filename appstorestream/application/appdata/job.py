@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Monday July 29th 2024 02:38:23 pm                                                   #
+# Modified   : Monday July 29th 2024 11:33:56 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,6 +31,7 @@ from appstorestream.core.service import NestedNamespace
 from appstorestream.domain.appdata.request import AppDataAsyncRequestGen, AppDataRequest
 from appstorestream.domain.appdata.response import AppDataAsyncResponse
 from appstorestream.domain.base.state import CircuitBreaker
+from appstorestream.infra.monitor.metrics import Metrics
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.web.asession import ASessionAppData
 
@@ -62,6 +63,7 @@ class AppDataJob(Job):
             appdata_repo (AppDataRepo, optional): Repository for app data persistence. Defaults to `Provide[AppStoreStreamContainer.data.appdata_repo]`.
             asession (ASessionAppData, optional): Asynchronous session for requests. Defaults to `Provide[AppStoreStreamContainer.web.asession_appdata]`.
             circuit_breaker (CircuitBreaker, optional): Circuit breaker for managing request failures. Defaults to `Provide[AppStoreStreamContainer.state.circuit_breaker]`.
+            metrics (Metrics): Class encapsulating metrics monitored by prometheus.
     """
 
     @inject
@@ -76,6 +78,7 @@ class AppDataJob(Job):
         circuit_breaker: CircuitBreaker = Provide[
             AppStoreStreamContainer.state.circuit_breaker
         ],
+        metrics: Metrics = Provide[AppStoreStreamContainer.monitor.metrics],
     ) -> None:
         """
         Initializes the AppDataJob with the specified parameters.
@@ -85,6 +88,7 @@ class AppDataJob(Job):
         self._appdata_repo = appdata_repo
         self._asession = asession
         self._circuit_breaker = circuit_breaker
+        self._metrics = metrics
 
         self._jobmeta = JobMeta(
             project_id=project.project_id,
@@ -147,6 +151,7 @@ class AppDataJob(Job):
                 if response.ok:
                     self._appdata_repo.insert(data=response.get_content())
                     self._update_job(request=request, response=response)
+                    self._update_metrics(response=response)
                     self._circuit_breaker.evaluate_response(response=response)
 
     def terminate(self) -> None:
@@ -178,6 +183,39 @@ class AppDataJob(Job):
         self, request: AppDataRequest, response: AppDataAsyncResponse
     ) -> None:
         self._jobmeta.update(request=request, response=response)
+
+    def _update_metrics(self, response: AppDataAsyncResponse) -> None:
+
+        # Set request duration
+        self.metrics.duration.inc(response.duration)
+
+        # Progress Metrics
+        self._metrics.request_count.inc(response.request_count)
+        self._metrics.response_count.inc(response.response_count)
+        self._metrics.record_count.inc(response.record_count)
+
+        # Performance Metrics
+        self._metrics.requests_per_second.set(response.requests_per_second)
+        self._metrics.responses_per_second.set(response.responses_per_second)
+        self._metrics.records_per_second.set(response.records_per_second)
+
+        # Error Metrics
+        self._metrics.total_errors.inc(response.total_errors)
+        self._metrics.client_errors.inc(response.client_errors)
+        self._metrics.server_errors.inc(response.server_errors)
+        self._metrics.redirect_errors.inc(response.redirect_errors)
+        self._metrics.data_errors.inc(response.data_errors)
+        self._metrics.unknown_errors.inc(response.unknown_errors)
+        self._metrics.page_not_found_errors.inc(response.page_not_found_errors)
+
+        # Error Rates
+        self._metrics.total_error_rate.set(response.total_error_rate)
+        self._metrics.client_error_rate.set(response.client_error_rate)
+        self._metrics.server_error_rate.set(response.server_error_rate)
+        self._metrics.redirect_error_rate.set(response.redirect_error_rate)
+        self._metrics.data_error_rate.set(response.data_error_rate)
+        self._metrics.unknown_error_rate.set(response.unknown_error_rate)
+        self._metrics.page_not_found_error_rate.set(response.page_not_found_error_rate)
 
     def as_dict(self) -> dict:
         """Obtain attributes from sub components into flattened dictionary."""

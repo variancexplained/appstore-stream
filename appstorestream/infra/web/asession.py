@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Monday July 29th 2024 03:37:18 pm                                                   #
+# Modified   : Tuesday July 30th 2024 12:15:57 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,6 +19,7 @@
 import asyncio
 import logging
 import os
+import time
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
@@ -26,9 +27,10 @@ import aiohttp
 
 from appstorestream.domain.appdata.response import AppDataAsyncResponse
 from appstorestream.domain.base.request import AsyncRequest
-from appstorestream.domain.base.response import AsyncResponse, ResponseError
+from appstorestream.domain.base.response import AsyncResponse, AsyncResponseMetrics
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.base.service import InfraService
+from appstorestream.infra.monitor.metrics import Metrics
 from appstorestream.infra.web.throttle import AThrottle
 
 
@@ -63,6 +65,8 @@ class ASession(InfraService):
 
         self._proxy = self._config.proxy
 
+        self._latency = []
+
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
     @abstractmethod
@@ -86,6 +90,7 @@ class ASession(InfraService):
         client: aiohttp.ClientSession,
         url: str,
         concurrency: asyncio.Semaphore,
+        metrics: AsyncResponseMetrics,
         params: Optional[Dict] = None,
     ) -> Dict[str, any]:
         """Executes the HTTP request and returns a JSON response.
@@ -100,48 +105,53 @@ class ASession(InfraService):
             Dict[str, any]: The JSON response or an error dictionary.
         """
 
-        retries = 0
+        metrics.retries = 0
+        metrics.request_count += 1
 
         async with concurrency:
-            while retries < self._retries:
+            while metrics.retries < self._retries:
                 try:
-                    await self._throttle.send()
+                    start_time = time.time()
                     async with client.get(
                         url, proxy=self._proxy, ssl=False, params=params
                     ) as response:
-                        await self._throttle.recv()
-                        await self._throttle.delay()
                         response.raise_for_status()
+                        latency = time.time() - start_time
+                        metrics.add_latency(latency=latency)
                         return await response.json(encoding="UTF-8", content_type=None)
 
                 except aiohttp.ClientResponseError as e:
-                    error = ResponseError(return_code=e.status)
+                    metrics.log_error(return_code=e.status)
                     if 400 <= e.status < 500:
                         self._logger.warning(
-                            f"ClientResponseError: Response code: {e.status} - {e}. Retry #{retries}."
+                            f"ClientResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
                         )
 
                     elif 500 <= e.status < 600:
                         self._logger.warning(
-                            f"ServerResponseError: Response code: {e.status} - {e}. Retry #{retries}."
+                            f"ServerResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
                         )
                     else:
                         self._logger.warning(
-                            f"UnexpectedResponseError: Response code: {e.status} - {e}. Retry #{retries}."
+                            f"UnexpectedResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
                         )
 
                 except aiohttp.ClientError as e:
-                    error = ResponseError(return_code=e.status)
-                    self._logger.warning(f"ClientError: {e}. Retry #{retries}.")
+                    metrics.log_error(return_code=e.status)
+                    self._logger.warning(f"ClientError: {e}. Retry #{metrics.retries}.")
 
                 except Exception as e:
-                    error = ResponseError(return_code=e.status)
-                    self._logger.warning(f"Unknown Error: {e}. Retry #{retries}.")
+                    metrics.log_error(return_code=e.status)
+                    self._logger.warning(
+                        f"Unknown Error: {e}. Retry #{metrics.retries}."
+                    )
 
-                retries += 1
+                metrics.retries += 1
+
+                await asyncio.sleep(2**metrics.retries)  # Exponential backoff
 
             self._logger.error("Exhausted retries. Returning to calling environment.")
-            return {"error": error}
+            return
 
     def _get_proxy(self) -> dict:
         dns = os.getenv("WEBSHARE_DNS")
@@ -175,8 +185,8 @@ class ASessionAppData(ASession):
 
         concurrency = asyncio.Semaphore(self._max_concurrency)
 
-        response = AppDataAsyncResponse()
-        response.send()
+        metrics = AsyncResponseMetrics()
+        metrics.send()
 
         async with aiohttp.ClientSession(
             headers=request.header,
@@ -192,12 +202,13 @@ class ASessionAppData(ASession):
                     url=request.baseurl,
                     params=param_dict,
                     concurrency=concurrency,
+                    metrics=metrics,
                 )
                 for param_dict in request.param_list
             ]
             results = await asyncio.gather(*tasks)
-            response.recv(results=results)
-            response.request_count = len(tasks)
+            metrics.recv()
+            response = AppDataAsyncResponse(results=results, metrics=metrics)
             return response
 
 

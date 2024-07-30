@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Monday July 29th 2024 02:50:39 pm                                                   #
+# Modified   : Monday July 29th 2024 11:33:57 pm                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -54,7 +54,7 @@ class JobMeta(DataClass):
         batch_size (int, optional): The batch size. Defaults to 100.
         bookmark (int, optional): The bookmark. Defaults to 0.
         runtime (int, optional): The runtime duration in seconds. Defaults to 0.
-        concurrent_requests_duration (int, optional): The duration of concurrent requests. Defaults to 0.
+        duration (int, optional): The duration of concurrent requests. Defaults to 0.
         request_count (int, optional): The number of requests made. Defaults to 0.
         response_count (int, optional): The number of responses received. Defaults to 0.
         record_count (int, optional): The number of records processed. Defaults to 0.
@@ -92,7 +92,7 @@ class JobMeta(DataClass):
     batch_size: int = 100
     bookmark: int = 0
     runtime: int = 0
-    concurrent_requests_duration: int = 0
+    duration: int = 0
     request_count: int = 0
     response_count: int = 0
     record_count: int = 0
@@ -152,7 +152,7 @@ class JobMeta(DataClass):
             response (AsyncResponse): The asynchronous response object.
         """
         self.bookmark = request.bookmark + 1
-        self.concurrent_requests_duration += response.concurrent_requests_duration
+        self.duration += response.duration
         self.request_count += response.request_count
         self.response_count += response.response_count
         self.record_count += response.record_count
@@ -169,11 +169,9 @@ class JobMeta(DataClass):
         self.dt_ended = datetime.now()
         self.runtime = (self.dt_ended - self.dt_started).total_seconds()
 
-        self.request_throughput = self.request_count / self.concurrent_requests_duration
-        self.response_throughput = (
-            self.response_count / self.concurrent_requests_duration
-        )
-        self.record_throughput = self.record_count / self.concurrent_requests_duration
+        self.request_throughput = self.request_count / self.duration
+        self.response_throughput = self.response_count / self.duration
+        self.record_throughput = self.record_count / self.duration
 
         self.total_error_rate = self.total_errors / self.request_count
         self.redirect_error_rate = self.redirect_errors / self.request_count

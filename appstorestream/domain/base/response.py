@@ -11,56 +11,38 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 03:50:26 am                                                   #
-# Modified   : Monday July 29th 2024 03:54:51 pm                                                   #
+# Modified   : Tuesday July 30th 2024 12:48:54 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Application Layer Base Module"""
 import logging
-from abc import abstractmethod
+import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List
 
 import pandas as pd
 
 from appstorestream.core.data import DataClass
-from appstorestream.core.enum import ErrorType
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class ResponseError(DataClass):
-    """Encapsulates the response error that is returned once retries are exhaused."""
-
-    return_code: int
-    error_type: ErrorType = None
-
-    def __post_init__(self) -> None:
-        if 300 <= self.return_code < 400:
-            self.error_type = "RedirectError"
-        if 400 <= self.return_code < 500:
-            self.error_type = "ClientResponseError"
-        elif 500 <= self.return_code < 600:
-            self.error_type = "ServerResponseError"
-        else:
-            self.error_type = "Unknown"
-
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class AsyncResponse(DataClass):
-    content: list[dict] = field(default_factory=list)
+class AsyncResponseMetrics(DataClass):
     time_sent: datetime = None
     time_recv: datetime = None
-    concurrent_requests_duration: int = 0
+    latency: list[float] = field(default_factory=list)
+    latency_average: float = 0.0
+    latency_total: float = 0.0
+    duration: float = 0.0
     request_count: int = 0
     response_count: int = 0
     record_count: int = 0
-    request_throughput: float = 0.0
-    response_throughput: float = 0.0
-    record_throughput: float = 0.0
+    requests_per_second: float = 0.0
+    responses_per_second: float = 0.0
+    records_per_second: float = 0.0
     total_errors: int = 0
     redirect_errors: int = 0
     client_errors: int = 0
@@ -75,28 +57,50 @@ class AsyncResponse(DataClass):
     data_error_rate: float = 0.0
     unknown_error_rate: float = 0.0
     page_not_found_error_rate: float = 0.0
-    ok: bool = False
-
-    def get_content(self) -> pd.DataFrame:
-        """Returns the content from the AsyncRequest as a pandas dictionary"""
-        return pd.DataFrame(self.content)
+    retries: int = 0
 
     def send(self) -> None:
-        self.time_sent = datetime.now()
+        self.time_sent = time.time()
 
-    def recv(self, results: list) -> None:
-        self.time_recv = datetime.now()
-        self.concurrent_requests_duration = (
-            self.time_recv - self.time_sent
-        ).total_seconds()
-        self.parse_results(results=results)
+    def recv(self) -> None:
+        self.time_recv = time.time()
+        self.duration = self.time_recv - self.time_sent
 
-        self.request_throughput = self.request_count / self.concurrent_requests_duration
-        self.response_throughput = (
-            self.response_count / self.concurrent_requests_duration
+    def add_latency(self, latency: float) -> None:
+        self.latency.append(latency)
+
+    def log_error(self, return_code: int) -> None:
+        self.total_errors += 1
+        if 300 <= return_code < 400:
+            self.redirect_errors += 1
+        if 400 <= return_code < 500:
+            self.client_errors += 1
+            if return_code == 404:
+                self.page_not_found_errors += 1
+        elif 500 <= return_code < 600:
+            self.server_errors += 1
+        else:
+            self.unknown_errors += 1
+
+    def finalize(self) -> None:
+        self.latency_average = (
+            sum(self.latency) / len(self.latency) if len(self.latency) > 0 else 0
         )
-        self.record_throughput = self.record_count / self.concurrent_requests_duration
+        self.latency_total = sum(self.latency)
 
+        # Request Performance Metrics
+        self.requests_per_second = (
+            self.request_count / self.duration if self.duration > 0 else 0
+        )
+        self.responses_per_second = (
+            self.response_count / self.duration if self.duration > 0 else 0
+        )
+
+        self.records_per_second = (
+            self.record_count / self.duration if self.duration > 0 else 0
+        )
+
+        # Error Rates
         self.total_error_rate = (
             self.total_errors / self.request_count if self.request_count > 0 else 0
         )
@@ -121,21 +125,45 @@ class AsyncResponse(DataClass):
             else 0
         )
 
-        self.ok = len(self.content) > 0
 
-    def log_error(self, error: ResponseError) -> None:
-        self.total_errors += 1
-        if "redirect" in error.error_type.lower():
-            self.redirect_errors += 1
-        elif "client" in error.error_type.lower():
-            self.client_errors += 1
-        elif "server" in error.error_type.lower():
-            self.server_errors += 1
+# ------------------------------------------------------------------------------------------------ #
+class AsyncResponse(ABC):
+    def __init__(self, results: list, metrics: AsyncResponseMetrics) -> None:
+        self._results = results
+        self._metrics = metrics
+        self._content = []
+        self._finalized = False
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+
+    @property
+    def ok(self) -> bool:
+        return len(self._content) > 0
+
+    @property
+    def metrics(self) -> AsyncResponseMetrics:
+        if not self._finalized:
+            self._not_finalized()
         else:
-            self.unknown_errors += 1
-        if error.return_code == 404:
-            self.page_not_found_errors += 1
+            return self._metrics
+
+    @property
+    def content(self) -> pd.DataFrame:
+        if not self._finalized:
+            self._not_finalized()
+        else:
+            return pd.DataFrame(self._content)
+
+    def process_response(self) -> pd.DataFrame:
+        """Returns the content from the AsyncRequest as a pandas dictionary"""
+        self.parse_results(results=self._results)
+        self._metrics.finalize()
+        self._finalized = True
 
     @abstractmethod
     def parse_results(self, results: list) -> None:
         """Parse the results"""
+
+    def _not_finalized(self) -> None:
+        self._logger.warning(
+            "The response has not been finalized. Run process_response prior to accessing response content and metrics."
+        )
