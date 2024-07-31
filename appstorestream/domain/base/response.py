@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 03:50:26 am                                                   #
-# Modified   : Tuesday July 30th 2024 12:48:54 am                                                  #
+# Modified   : Wednesday July 31st 2024 04:52:53 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,7 +21,6 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
 
 import pandas as pd
 
@@ -31,12 +30,15 @@ from appstorestream.core.data import DataClass
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AsyncResponseMetrics(DataClass):
-    time_sent: datetime = None
-    time_recv: datetime = None
+    time_sent: float = None
+    time_recv: float = None
     latency: list[float] = field(default_factory=list)
-    latency_average: float = 0.0
-    latency_total: float = 0.0
+    average_latency: float = 0.0
+    total_latency: float = 0.0
+    effective_latency: float = 0.0
     duration: float = 0.0
+    average_concurrent_latency: float = 0.0
+    concurrency_efficiency_ratio: float = 0.0
     request_count: int = 0
     response_count: int = 0
     record_count: int = 0
@@ -65,6 +67,10 @@ class AsyncResponseMetrics(DataClass):
     def recv(self) -> None:
         self.time_recv = time.time()
         self.duration = self.time_recv - self.time_sent
+        self.average_latency = (
+            sum(self.latency) / len(self.latency) if len(self.latency) > 0 else 0
+        )
+        self.total_latency = sum(self.latency)
 
     def add_latency(self, latency: float) -> None:
         self.latency.append(latency)
@@ -83,12 +89,8 @@ class AsyncResponseMetrics(DataClass):
             self.unknown_errors += 1
 
     def finalize(self) -> None:
-        self.latency_average = (
-            sum(self.latency) / len(self.latency) if len(self.latency) > 0 else 0
-        )
-        self.latency_total = sum(self.latency)
 
-        # Request Performance Metrics
+        # Request Throughput Metrics
         self.requests_per_second = (
             self.request_count / self.duration if self.duration > 0 else 0
         )
@@ -98,6 +100,19 @@ class AsyncResponseMetrics(DataClass):
 
         self.records_per_second = (
             self.record_count / self.duration if self.duration > 0 else 0
+        )
+
+        # Performance Metrics
+        self.average_concurrent_latency = (
+            self.duration / self.request_count if self.request_count > 0 else 0
+        )
+        self.concurrency_efficiency_ratio = (
+            self.total_latency / (self.request_count * self.duration)
+            if self.request_count > 0
+            else 0
+        )
+        self.effective_latency = (
+            self.total_latency / self.duration if self.duration > 0 else 0
         )
 
         # Error Rates

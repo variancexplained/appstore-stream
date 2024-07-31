@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Tuesday July 30th 2024 12:15:57 am                                                  #
+# Modified   : Tuesday July 30th 2024 02:15:05 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -207,7 +207,11 @@ class ASessionAppData(ASession):
                 for param_dict in request.param_list
             ]
             results = await asyncio.gather(*tasks)
+            # The following computes the average/total latency and duration.
             metrics.recv()
+            # Throttle the next request
+            await self._throttle.delay(latency=metrics.average_latency)
+            # Bundle the metrics and results into a Response object.
             response = AppDataAsyncResponse(results=results, metrics=metrics)
             return response
 
@@ -228,8 +232,8 @@ class ASessionReview(ASession):
 
         concurrency = asyncio.Semaphore(self._max_concurrency)
 
-        response = AppDataAsyncResponse()
-        response.send()
+        metrics = AsyncResponseMetrics()
+        metrics.send()
 
         async with aiohttp.ClientSession(
             headers=request.header,
@@ -243,6 +247,10 @@ class ASessionReview(ASession):
                 for url in request.urls
             ]
             results = await asyncio.gather(*tasks)
-            response.recv(results=results)
-            response.request_count = len(tasks)
+            # The following computes the average/total latency and duration.
+            metrics.recv()
+            # Throttle the next request
+            await self._throttle.delay(latency=metrics.latency_average)
+            # Bundle the metrics and results into a Response object.
+            response = AppDataAsyncResponse(results=results, metrics=metrics)
             return response
