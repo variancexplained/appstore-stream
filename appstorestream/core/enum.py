@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 22nd 2024 10:19:32 pm                                                   #
-# Modified   : Thursday August 1st 2024 01:00:58 am                                                #
+# Modified   : Thursday August 1st 2024 01:12:31 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -62,11 +62,3 @@ class CircuitBreakerStates(Enum):
     HALF_OPEN = "HALF_OPEN"
     TERMINATED = "TERMINATED"
     COMPLETE = "COMPLETE"
-
-
-class AThrottleStage(Enum):
-    BURNIN = "BURNIN"
-    EXPLORATION = "EXPLORATION"
-    EXPLOITATION = "EXPLOITATION"
-    EXPLOITATION_PID = "EXPLOITATION_PID"
-    EXPLOITATION_PID_MULTIVARIATE = "EXPLOITATION_PID_MULTIVARIATE"

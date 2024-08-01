@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Thursday August 1st 2024 01:02:01 am                                                #
+# Modified   : Thursday August 1st 2024 01:32:22 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,14 +21,27 @@ import asyncio
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, List
 
 import numpy as np
 from simple_pid import PID
 
-from appstorestream.core.enum import AThrottleStage
 from appstorestream.domain.base.metric import Metric
 from appstorestream.infra.base.service import InfraService
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+class AThrottleStage(Enum):
+    BURNIN = "BURNIN"
+    EXPLORATION = "EXPLORATION"
+    EXPLORATION_HEATUP = "EXPLORATION_HEATUP"
+    EXPLORATION_COOLDOWN = "EXPLORATION_COOLDOWN"
+    EXPLOITATION = "EXPLOITATION"
+    EXPLOITATION_PID = "EXPLOITATION_PID"
+    EXPLOITATION_PID_MULTIVARIATE = "EXPLOITATION_PID_MULTIVARIATE"
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -184,14 +197,14 @@ class ExplorationStage(AdaptiveThrottleStage):
         self._metrics.compute_latency_metrics(self.latencies)
 
         if self._is_stable():
-            if self._current_stage == AThrottleStage.HEATUP:
+            if self._current_stage == AThrottleStage.EXPLORATION_HEATUP:
                 self._metrics.current_rate += self.heatup_factor
             else:
                 self._reset_baseline()
                 self._current_stage = AThrottleStage.EXPLOITATION
         else:
             self._metrics.current_rate -= self.cooldown_factor
-            self._current_stage = AThrottleStage.COOLDOWN
+            self._current_stage = AThrottleStage.EXPLORATION_COOLDOWN
 
         self.compute_delay()
         return self._metrics
@@ -474,10 +487,6 @@ class ExploitationPIDSimple(AdaptiveThrottleStage):
 
         return self._metrics
 
-
-import asyncio
-from enum import Enum
-from typing import Dict, List, Type
 
 # ------------------------------------------------------------------------------------------------ #
 
