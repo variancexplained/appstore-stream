@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Thursday August 1st 2024 01:32:22 am                                                #
+# Modified   : Thursday August 1st 2024 02:31:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,19 +20,34 @@
 import asyncio
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from simple_pid import PID
 
 from appstorestream.domain.base.metric import Metric
 from appstorestream.infra.base.service import InfraService
 
 # ------------------------------------------------------------------------------------------------ #
+sns.set_theme(style="white")
+sns.set_palette(palette="Blues_r")
 
 
+# ------------------------------------------------------------------------------------------------ #
+class AThrottleService(InfraService):
+    """Base class for HTTP request throttle algorithms"""
+
+    @abstractmethod
+    async def delay(self, latencies: list) -> int:
+        """Accepts a list of delays, executes a delay and returns the delay in seconds."""
+
+
+# ------------------------------------------------------------------------------------------------ #
 class AThrottleStage(Enum):
     BURNIN = "BURNIN"
     EXPLORATION = "EXPLORATION"
@@ -44,35 +59,100 @@ class AThrottleStage(Enum):
 
 
 # ------------------------------------------------------------------------------------------------ #
-
-
-class AThrottle(InfraService):
-    """Base class for HTTP request throttle algorithms"""
-
-    @abstractmethod
-    async def delay(self, latencies: list) -> int:
-        """Accepts a list of delays, executes a delay and returns the delay in seconds."""
+@dataclass
+class AThrottleLatency(Metric):
+    mean_latency: float = 0
+    std_latency: float = 0
+    cv_latency: float = 0
 
 
 # ------------------------------------------------------------------------------------------------ #
+@dataclass
+class AThrottleHistory:
+    baseline_latency: float
+    mean_latency_history: list[float] = field(default_factory=list)
+    baseline_mean_latency_history: list[float] = field(default_factory=list)
+    delay_history: list[float] = field(default_factory=list)
+
+    def update_history(
+        self, mean_latency: float, delay: float, baseline_latency: float = None
+    ) -> None:
+        self.mean_latency_history.append(mean_latency)
+        self.delay_history.append(delay)
+        self.baseline_latency = baseline_latency or self.baseline_latency
+        self.baseline_mean_latency_history.append(self.baseline_latency)
+
+    def plot_latency(self, with_delay: bool = False) -> None:
+        if with_delay:
+            self._plot_latency_with_delay()
+        else:
+            self._plot_latency()
+
+    def _plot_latency(self) -> None:
+        _, ax = plt.subplots(figsize=(12, 4))
+        latency = self._format_latency_for_plotting()
+        ax = sns.lineplot(data=latency, x="Session", y="Latency", hue="Latency", ax=ax)
+        ax.set_title("Latency History")
+        plt.tight_layout()
+        plt.show()
+
+    def _plot_latency_with_delay(self) -> None:
+        """Renders two, 2-axis plots showing mean vs baseline latency and/or delay and rate"""
+        fig, ax = plt.subplots(figsize=(12, 4))
+        latency = self._format_latency_for_plotting()
+        delay = self._format_delay_for_plotting()
+
+        sns.lineplot(data=latency, x="Session", y="Latency", hue="Metric", ax=ax)
+        ax2 = ax.twinx()
+
+        sns.lineplot(data=delay, x="Session", y="Delay", ax=ax2, color="orange")
+        ax.set_title("Latency History w/ Delay")
+
+        ax2.legend(handles=[a.lines[0] for a in [ax2]], labels=["Delay"], loc=4)
+
+        plt.tight_layout()
+        plt.show()
+
+    def _format_latency_for_plotting(self) -> pd.DataFrame:
+        """Prepares the data for plotting"""
+        df = pd.DataFrame(
+            {
+                "Baseline Latency": self.baseline_mean_latency_history,
+                "Mean Latency": self.mean_latency_history,
+            }
+        )
+        df = df.reset_index().rename(columns={"index": "Session"})
+
+        df2 = pd.melt(
+            df,
+            id_vars=["Session"],
+            value_vars=["Baseline Latency", "Mean Latency"],
+            var_name="Metric",
+            value_name="Latency",
+        )
+        return df2
+
+    def _format_delay_for_plotting(self) -> pd.DataFrame:
+        df = pd.DataFrame({"Delay": self.delay_history})
+        df = df.reset_index().rename(columns={"index": "Session"})
+        return df
 
 
+# ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AThrottleMetrics(Metric):
     current_stage: AThrottleStage
-    current_delay: float = 0
-    current_rate: float = 0
-    current_mean_latency: float = 0
-    current_std_latency: float = 0
-    current_cv_latency: float = 0
+    baseline_metrics: AThrottleLatency
+    current_metrics: AThrottleLatency
+    history: AThrottleHistory
 
     def compute_latency_metrics(self, latencies: list) -> None:
         if len(latencies) > 0:
-            self.current_mean_latency = np.mean(latencies)
-            self.current_std_latency = np.std(latencies)
-            self.current_cv_latency = (
-                self.current_std_latency / self.current_mean_latency
-                if self.current_mean_latency != 0
+            self.current_metrics.mean_latency = np.mean(latencies)
+            self.current_metrics.std_latency = np.std(latencies)
+            self.current_metrics.cv_latency = (
+                self.current_metrics.std_latency / self.current_metrics.mean_latency
+                if self.current_metrics.mean_latency != 0
                 else 0
             )
 
@@ -83,27 +163,22 @@ class AdaptiveThrottleStage(ABC):
 
     def __init__(
         self,
-        base_rate: float,
-        window_size: int,
+        delay: float,
+        session_window_size: int,
         temperature: float,
-        min_rate: float,
-        max_rate: float,
+        min_delay: float,
+        max_delay: float,
         **kwargs
     ) -> None:
-        self._base_rate = base_rate
-        self._window_size = window_size
+        self._delay = delay
+        self._session_window_size = session_window_size
         self._temperature = temperature
-        self._min_rate = min_rate
-        self._max_rate = max_rate
+        self._min_delay = min_delay
+        self._max_delay = max_delay
 
         self._latencies = []
         self._metrics = AThrottleMetrics(
             current_stage=AThrottleStage.BURNIN,
-            current_rate=self._base_rate,
-            current_delay=1 / self._base_rate if self._base_rate != 0 else 0,
-            current_mean_latency=0,
-            current_std_latency=0,
-            current_cv_latency=0,
         )
 
     async def __call__(self, latencies: list) -> AThrottleMetrics:
@@ -114,22 +189,19 @@ class AdaptiveThrottleStage(ABC):
 
         """
 
-    def compute_delay(self):
-        # Delay is the inverse of rate.
-        self._metrics.current_delay = (
-            1 / self._metrics.current_rate if self._metrics.current_rate != 0 else 0
-        )
+    def randomize_delay(self, delay: float) -> float:
         # Apply temperature to the std latency to determine range of noise magnitude
         noise_range = self._metrics.current_std_latency * self._temperature
         # Add noise to current delay
-        self._metrics.current_delay += np.random.uniform(-noise_range, noise_range)
-        self._metrics.current_delay = max(self._metrics.current_delay, self._min_rate)
-        self._metrics.current_delay = min(self._metrics.current_delay, self._max_rate)
+        delay += np.random.uniform(-noise_range, noise_range)
+        delay = max(delay, self._min_delay)
+        delay = min(delay, self._max_delay)
+        return delay
 
     def add_latency(self, latencies: list) -> None:
         self._latencies.extend(latencies)
-        if len(self._latencies) > self._window_size:
-            self._latencies = self._latencies[-self._window_size :]
+        if len(self._latencies) > self._session_window_size:
+            self._latencies = self._latencies[-self._session_window_size :]
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -140,27 +212,33 @@ class BurningStage(AdaptiveThrottleStage):
 
     def __init__(
         self,
-        base_rate: float,
-        window_size: int,
+        base_delay: float,
+        session_window_size: int,
         temperature: float,
-        min_rate: float,
-        max_rate: float,
+        min_delay: float,
+        max_delay: float,
         **kwargs
     ) -> None:
+        # The current_delay is set to the base delay.
         super().__init__(
-            base_rate=base_rate,
-            window_size=window_size,
+            delay=base_delay,
+            session_window_size=session_window_size,
             temperature=temperature,
-            min_rate=min_rate,
-            max_rate=max_rate,
+            min_delay=min_delay,
+            max_delay=max_delay,
         )
 
     async def __call__(self, latencies: List[float]) -> AThrottleMetrics:
         self.add_latencies(latencies)
         # Compute metrics with the current latencies
         self._metrics.compute_latency_metrics(self.latencies)
-        # Here, no rate adjustment is typically made during burnin stage
-        self.compute_delay()
+        # Set baseline metrics
+        self._metrics.set_baseline(
+            mean_latency=self._metrics.current_mean_latency,
+            std_latency=self._metrics.current_std_latency,
+            cv_latency=self._metrics.current_cv_latency,
+        )
+        # Here, no error nor rate adjustment is typically made during burnin stage
         return self._metrics
 
 
@@ -168,21 +246,21 @@ class BurningStage(AdaptiveThrottleStage):
 class ExplorationStage(AdaptiveThrottleStage):
     def __init__(
         self,
-        base_rate: float,
-        window_size: int,
+        base_delay: float,
+        session_window_size: int,
         heatup_factor: float,
         cooldown_factor: float,
         exploration_threshold: float,
         temperature: float,
-        min_rate: float,
-        max_rate: float,
+        min_delay: float,
+        max_delay: float,
     ):
         super().__init__(
-            base_rate=base_rate,
+            base_delay=base_delay,
             temperature=temperature,
-            min_rate=min_rate,
-            max_rate=max_rate,
-            window_size=window_size,
+            min_delay=min_delay,
+            max_delay=max_delay,
+            session_window_size=session_window_size,
         )
         self.heatup_factor = heatup_factor
         self.cooldown_factor = cooldown_factor
@@ -275,11 +353,12 @@ class PIDController:
         Returns:
             float: The control output to adjust the process.
         """
-        error = self.setpoint - current_value
+
         current_time = time.time()
         delta_time = current_time - self._last_time
 
         if delta_time >= self.sample_time:
+            error = self.setpoint - current_value
             self._integral += error * delta_time
             derivative = (
                 (error - self._prev_error) / delta_time if delta_time > 0 else 0
@@ -305,16 +384,16 @@ class ExploitationPID(AdaptiveThrottleStage):
         ki: float,
         kd: float,
         temperature: float,
-        min_rate: float,
-        max_rate: float,
+        min_delay: float,
+        max_delay: float,
         sample_time: int,  # Time in seconds to wait before returning metrics
     ):
         super().__init__(
-            base_rate=min_rate,  # Initialize base_rate as min_rate
+            base_delay=min_delay,  # Initialize base_delay as min_delay
             temperature=temperature,
-            min_rate=min_rate,
-            max_rate=max_rate,
-            window_size=sample_time,
+            min_delay=min_delay,
+            max_delay=max_delay,
+            session_window_size=sample_time,
         )
         self.target_latency = target_latency
         self.kp = kp
@@ -335,7 +414,7 @@ class ExploitationPID(AdaptiveThrottleStage):
             self.previous_error = error
 
             # PID calculation for rate adjustment
-            self._metrics.current_rate = (
+            self._metrics.current_delay = (
                 self.kp * error + self.ki * self.integral + self.kd * derivative
             )
 
@@ -365,16 +444,16 @@ class ExploitationPIDMultivariate(AdaptiveThrottleStage):
         ki_cv: float,
         kd_cv: float,
         temperature: float,
-        min_rate: float,
-        max_rate: float,
+        min_delay: float,
+        max_delay: float,
         sample_time: int,  # Time in seconds to wait before returning metrics
     ):
         super().__init__(
-            base_rate=min_rate,  # Initialize base_rate as min_rate
+            base_delay=min_delay,  # Initialize base_delay as min_delay
             temperature=temperature,
-            min_rate=min_rate,
-            max_rate=max_rate,
-            window_size=sample_time,
+            min_delay=min_delay,
+            max_delay=max_delay,
+            session_window_size=sample_time,
         )
         self.target_mean_latency = target_mean_latency
         self.target_std_latency = target_std_latency
@@ -454,16 +533,16 @@ class ExploitationPIDSimple(AdaptiveThrottleStage):
         ki: float,
         kd: float,
         temperature: float,
-        min_rate: float,
-        max_rate: float,
+        min_delay: float,
+        max_delay: float,
         sample_time: int,  # Time in seconds to wait before returning metrics
     ):
         super().__init__(
-            base_rate=min_rate,
+            base_delay=min_delay,
             temperature=temperature,
-            min_rate=min_rate,
-            max_rate=max_rate,
-            window_size=sample_time,
+            min_delay=min_delay,
+            max_delay=max_delay,
+            session_window_size=sample_time,
         )
         self.target_latency = target_latency
         self.pid = PID(kp, ki, kd, setpoint=target_latency)
@@ -491,7 +570,7 @@ class ExploitationPIDSimple(AdaptiveThrottleStage):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class ThrottleController:
+class AThrottleController:
     def __init__(
         self,
         stages: Dict[AThrottleStage, AdaptiveThrottleStage],
@@ -500,6 +579,7 @@ class ThrottleController:
         self.stages = stages
         self.current_stage = initial_stage
         self.active_stage = self.stages[self.current_stage]
+        self._history = AThrottleHistory()
 
     async def process_latencies(self, latencies: List[float]) -> AThrottleMetrics:
         # Process latencies using the active stage
@@ -547,5 +627,8 @@ class ThrottleController:
     async def run(self, latencies: List[float]):
         while True:
             metrics = await self.process_latencies(latencies)
-            # Handle metrics or other logic if needed
-            await asyncio.sleep(1)  # Adjust sleep time as needed
+            # Update History
+            self._update_history(metrics)
+
+            await asyncio.sleep(metrics.current_delay)  # Adjust sleep time as needed
+            return metrics

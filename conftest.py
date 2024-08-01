@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Thursday August 1st 2024 01:36:28 am                                                #
+# Modified   : Thursday August 1st 2024 11:32:25 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,11 +24,11 @@ import pytest
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.web.throttle import (
+    AThrottleController,
     AThrottleStage,
     ExploitationPID,
     ExploitationPIDMultivariate,
     ExplorationStage,
-    ThrottleController,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -142,7 +142,7 @@ def exploitation_pid_multivariate():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture
 def controller(exploration_stage, exploitation_pid, exploitation_pid_multivariate):
-    return ThrottleController(
+    return AThrottleController(
         stages={
             AThrottleStage.BURNIN: exploration_stage,
             AThrottleStage.EXPLORATION: exploration_stage,
