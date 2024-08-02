@@ -11,12 +11,14 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Thursday August 1st 2024 02:31:29 pm                                                #
+# Modified   : Friday August 2nd 2024 12:30:34 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Autothrottle Module"""
+from __future__ import annotations
+
 import asyncio
 import time
 from abc import ABC, abstractmethod
@@ -24,222 +26,138 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from simple_pid import PID
 
 from appstorestream.domain.base.metric import Metric
 from appstorestream.infra.base.service import InfraService
 
-# ------------------------------------------------------------------------------------------------ #
-sns.set_theme(style="white")
-sns.set_palette(palette="Blues_r")
-
-
-# ------------------------------------------------------------------------------------------------ #
-class AThrottleService(InfraService):
-    """Base class for HTTP request throttle algorithms"""
-
-    @abstractmethod
-    async def delay(self, latencies: list) -> int:
-        """Accepts a list of delays, executes a delay and returns the delay in seconds."""
-
-
-# ------------------------------------------------------------------------------------------------ #
-class AThrottleStage(Enum):
-    BURNIN = "BURNIN"
-    EXPLORATION = "EXPLORATION"
-    EXPLORATION_HEATUP = "EXPLORATION_HEATUP"
-    EXPLORATION_COOLDOWN = "EXPLORATION_COOLDOWN"
-    EXPLOITATION = "EXPLOITATION"
-    EXPLOITATION_PID = "EXPLOITATION_PID"
-    EXPLOITATION_PID_MULTIVARIATE = "EXPLOITATION_PID_MULTIVARIATE"
-
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class AThrottleLatency(Metric):
-    mean_latency: float = 0
-    std_latency: float = 0
-    cv_latency: float = 0
-
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class AThrottleHistory:
-    baseline_latency: float
-    mean_latency_history: list[float] = field(default_factory=list)
-    baseline_mean_latency_history: list[float] = field(default_factory=list)
-    delay_history: list[float] = field(default_factory=list)
-
-    def update_history(
-        self, mean_latency: float, delay: float, baseline_latency: float = None
-    ) -> None:
-        self.mean_latency_history.append(mean_latency)
-        self.delay_history.append(delay)
-        self.baseline_latency = baseline_latency or self.baseline_latency
-        self.baseline_mean_latency_history.append(self.baseline_latency)
-
-    def plot_latency(self, with_delay: bool = False) -> None:
-        if with_delay:
-            self._plot_latency_with_delay()
-        else:
-            self._plot_latency()
-
-    def _plot_latency(self) -> None:
-        _, ax = plt.subplots(figsize=(12, 4))
-        latency = self._format_latency_for_plotting()
-        ax = sns.lineplot(data=latency, x="Session", y="Latency", hue="Latency", ax=ax)
-        ax.set_title("Latency History")
-        plt.tight_layout()
-        plt.show()
-
-    def _plot_latency_with_delay(self) -> None:
-        """Renders two, 2-axis plots showing mean vs baseline latency and/or delay and rate"""
-        fig, ax = plt.subplots(figsize=(12, 4))
-        latency = self._format_latency_for_plotting()
-        delay = self._format_delay_for_plotting()
-
-        sns.lineplot(data=latency, x="Session", y="Latency", hue="Metric", ax=ax)
-        ax2 = ax.twinx()
-
-        sns.lineplot(data=delay, x="Session", y="Delay", ax=ax2, color="orange")
-        ax.set_title("Latency History w/ Delay")
-
-        ax2.legend(handles=[a.lines[0] for a in [ax2]], labels=["Delay"], loc=4)
-
-        plt.tight_layout()
-        plt.show()
-
-    def _format_latency_for_plotting(self) -> pd.DataFrame:
-        """Prepares the data for plotting"""
-        df = pd.DataFrame(
-            {
-                "Baseline Latency": self.baseline_mean_latency_history,
-                "Mean Latency": self.mean_latency_history,
-            }
-        )
-        df = df.reset_index().rename(columns={"index": "Session"})
-
-        df2 = pd.melt(
-            df,
-            id_vars=["Session"],
-            value_vars=["Baseline Latency", "Mean Latency"],
-            var_name="Metric",
-            value_name="Latency",
-        )
-        return df2
-
-    def _format_delay_for_plotting(self) -> pd.DataFrame:
-        df = pd.DataFrame({"Delay": self.delay_history})
-        df = df.reset_index().rename(columns={"index": "Session"})
-        return df
-
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AThrottleMetrics(Metric):
-    current_stage: AThrottleStage
-    baseline_metrics: AThrottleLatency
-    current_metrics: AThrottleLatency
-    history: AThrottleHistory
-
-    def compute_latency_metrics(self, latencies: list) -> None:
-        if len(latencies) > 0:
-            self.current_metrics.mean_latency = np.mean(latencies)
-            self.current_metrics.std_latency = np.std(latencies)
-            self.current_metrics.cv_latency = (
-                self.current_metrics.std_latency / self.current_metrics.mean_latency
-                if self.current_metrics.mean_latency != 0
-                else 0
-            )
+    mean_latency: float = 0
+    std_latency: float = 0
+    cv_latency: float = 0
+    rate: float = 0
+    delay: float = 0
 
 
 # ------------------------------------------------------------------------------------------------ #
-class AdaptiveThrottleStage(ABC):
-    """Base class for a stage of adaptive throttling"""
+class AThrottleState(Enum):
+    BURNIN = "BURNIN"
+    EXPLORE = "EXPLORE"
+    EXPLOIT = "EXPLOIT"
+
+
+# ------------------------------------------------------------------------------------------------ #
+class AThrottleStage(InfraService):
+    """Base class for HTTP request throttle stage algorithms"""
 
     def __init__(
         self,
-        delay: float,
-        session_window_size: int,
-        temperature: float,
-        min_delay: float,
-        max_delay: float,
-        **kwargs
+        controller: AThrottleController,
+        stage_length: int = 50,
+        temperature: float = 0.5,
+        concurrency: int = 100,
+        base_rate: int = 100,
+        min_rate: int = 50,
+        max_rate: int = 1000,
+        metrics: AThrottleMetrics = None,
+        **kwargs,
     ) -> None:
-        self._delay = delay
-        self._session_window_size = session_window_size
+        self._controller = controller
+        self._stage_length = stage_length
         self._temperature = temperature
-        self._min_delay = min_delay
-        self._max_delay = max_delay
+        self._concurrency = concurrency
+        self._base_rate = base_rate
+        self._min_rate = min_rate
+        self._max_rate = max_rate
+        self._metrics = metrics
 
+        self._kwargs = kwargs
         self._latencies = []
-        self._metrics = AThrottleMetrics(
-            current_stage=AThrottleStage.BURNIN,
+
+        self._start_time = None
+        # Compute min and max delay
+        self._min_delay = 1 / self._max_rate
+        self._max_delay = 1 / self._min_rate
+
+    @property
+    def controller(self) -> AThrottleController:
+        return self._controller
+
+    @abstractmethod
+    async def delay(self, latencies: list) -> AThrottleMetrics:
+        """Accepts a list of delays, executes a delay and returns the delay in seconds."""
+
+    @abstractmethod
+    async def add_latencies(self, latencies: list) -> AThrottleMetrics:
+        """Adds latencies to the latencies list. Subclasses may use different latency window sizes."""
+
+    def compute_delay(self) -> float:
+        # Presumes a metrics object and that the rate member reflects the current request rate.
+        self._metrics.delay = 1 / self._metrics.rate if self._metrics.rate > 0 else 0
+        # Add noise to current delay
+        self._metrics.delay += np.random.normal(
+            loc=self._metrics.delay, scale=self._temperature, size=None
+        )
+        self._metrics.delay = max(self._metrics.delay, self._metrics.min_delay)
+        self._metrics.delay = min(self._metrics.delay, self._metrics.max_delay)
+
+    def compute_metrics(self) -> None:
+        """Computes latency mean, standard deviation and coefficient of variation in the metrics object"""
+        self._metrics.mean_latency = np.mean(self._latencies)
+        self._metrics.std_latency = np.std(self._latencies)
+        self._cv_latency = (
+            self._std_latency / self._mean_latency if self._mean_latency > 0 else 0
         )
 
-    async def __call__(self, latencies: list) -> AThrottleMetrics:
-        """Accepts a list  of latencies and returns a metrics object containing delay.
-
-        Args:
-            latencies (list): List of latencies for a request session.
-
-        """
-
-    def randomize_delay(self, delay: float) -> float:
-        # Apply temperature to the std latency to determine range of noise magnitude
-        noise_range = self._metrics.current_std_latency * self._temperature
-        # Add noise to current delay
-        delay += np.random.uniform(-noise_range, noise_range)
-        delay = max(delay, self._min_delay)
-        delay = min(delay, self._max_delay)
-        return delay
-
-    def add_latency(self, latencies: list) -> None:
-        self._latencies.extend(latencies)
-        if len(self._latencies) > self._session_window_size:
-            self._latencies = self._latencies[-self._session_window_size :]
+    def has_expired(self) -> bool:
+        self._start_time = self._start_time or time.time()
+        return (time.time() - self._start_time) > self._stage_length * 60
 
 
 # ------------------------------------------------------------------------------------------------ #
-class BurningStage(AdaptiveThrottleStage):
+class BurningStage(AThrottleStage):
     """Burn in stage is designed to learn the baseline latency statistics."""
 
-    __current_stage = AThrottleStage.BURNIN
-
     def __init__(
         self,
-        base_delay: float,
-        session_window_size: int,
-        temperature: float,
-        min_delay: float,
-        max_delay: float,
-        **kwargs
+        controller: AThrottleController,
+        stage_length: int = 50,
+        temperature: float = 0.5,
+        concurrency: int = 100,
+        burnin_rate: int = 100,
+        min_rate: int = 50,
+        max_rate: int = 1000,
+        **kwargs,
     ) -> None:
-        # The current_delay is set to the base delay.
         super().__init__(
-            delay=base_delay,
-            session_window_size=session_window_size,
+            controller=controller,
+            stage_length=stage_length,
             temperature=temperature,
-            min_delay=min_delay,
-            max_delay=max_delay,
+            concurrency=concurrency,
+            min_rate=min_rate,
+            max_rate=max_rate,
+            **kwargs,
         )
+        self._burnin_rate = burnin_rate
+        self._metrics = AThrottleMetrics(rate=self._burnin_rate)
 
-    async def __call__(self, latencies: List[float]) -> AThrottleMetrics:
-        self.add_latencies(latencies)
-        # Compute metrics with the current latencies
-        self._metrics.compute_latency_metrics(self.latencies)
-        # Set baseline metrics
-        self._metrics.set_baseline(
-            mean_latency=self._metrics.current_mean_latency,
-            std_latency=self._metrics.current_std_latency,
-            cv_latency=self._metrics.current_cv_latency,
-        )
-        # Here, no error nor rate adjustment is typically made during burnin stage
-        return self._metrics
+    async def delay(self, latencies: list) -> int:
+        """Accepts a list of delays, executes a delay and returns the delay in seconds."""
+        if self.has_expired():
+            self._controller.stage = AThrottleStage.EXPLORE
+            return self._metrics
+        else:
+            self.compute_metrics(latencies=latencies)
+            self.compute_delay()
+            return self._metrics
+
+    def add_latencies(self, latencies: List) -> None:
+        self._latencies.extend(latencies)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -525,7 +443,7 @@ class ExploitationPIDMultivariate(AdaptiveThrottleStage):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class ExploitationPIDSimple(AdaptiveThrottleStage):
+class ExploitationPIDSimple(AThrottleStage):
     def __init__(
         self,
         target_latency: float,
@@ -571,64 +489,15 @@ class ExploitationPIDSimple(AdaptiveThrottleStage):
 
 
 class AThrottleController:
-    def __init__(
-        self,
-        stages: Dict[AThrottleStage, AdaptiveThrottleStage],
-        initial_stage: AThrottleStage = AThrottleStage.BURNIN,
-    ):
-        self.stages = stages
-        self.current_stage = initial_stage
-        self.active_stage = self.stages[self.current_stage]
-        self._history = AThrottleHistory()
 
-    async def process_latencies(self, latencies: List[float]) -> AThrottleMetrics:
-        # Process latencies using the active stage
-        metrics = await self.active_stage(latencies)
+    def __init__(self, config: dict) -> None:
+        self._config = config
+        self._state = AThrottleState.BURNIN
 
-        # Check if a transition to a different stage is needed
-        self._handle_stage_transition()
+    @property
+    def state(self) -> AThrottleState:
+        return self._state
 
-        return metrics
-
-    def _handle_stage_transition(self):
-        new_stage = self._determine_next_stage()
-        if new_stage != self.current_stage:
-            self.current_stage = new_stage
-            self.active_stage = self.stages[self.current_stage]
-
-    def _determine_next_stage(self) -> AThrottleStage:
-        # Logic to determine the next stage based on current metrics and stage
-        if self.current_stage == AThrottleStage.BURNIN:
-            if (
-                self.stages[AThrottleStage.BURNIN]._current_stage
-                == AThrottleStage.EXPLORATION
-            ):
-                return AThrottleStage.EXPLORATION
-        elif self.current_stage == AThrottleStage.EXPLORATION:
-            if (
-                self.stages[AThrottleStage.EXPLORATION]._current_stage
-                == AThrottleStage.EXPLOITATION
-            ):
-                return AThrottleStage.EXPLOITATION_PID
-        elif self.current_stage == AThrottleStage.EXPLOITATION_PID:
-            # You may add conditions for transitioning to the multivariate PID stage if needed
-            pass
-        elif self.current_stage == AThrottleStage.EXPLOITATION_PID_MULTIVARIATE:
-            # Final stage logic or transitions to other stages
-            pass
-
-        return self.current_stage
-
-    def set_stage(self, stage: AThrottleStage):
-        if stage in self.stages:
-            self.current_stage = stage
-            self.active_stage = self.stages[stage]
-
-    async def run(self, latencies: List[float]):
-        while True:
-            metrics = await self.process_latencies(latencies)
-            # Update History
-            self._update_history(metrics)
-
-            await asyncio.sleep(metrics.current_delay)  # Adjust sleep time as needed
-            return metrics
+    @state.setter
+    def state(self, state: AThrottleState) -> None:
+        self._state = state
