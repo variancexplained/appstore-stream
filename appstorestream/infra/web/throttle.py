@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Friday August 2nd 2024 09:16:42 am                                                  #
+# Modified   : Friday August 2nd 2024 01:54:21 pm                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -34,15 +34,15 @@ import numpy as np
 import pandas as pd
 from simple_pid import PID
 
-from appstorestream.domain.base.metric import Metric
+from appstorestream.core.data import DataClass
 from appstorestream.infra.base.service import InfraService
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class AThrottleMetrics(Metric):
+class AThrottleCore(DataClass):
     """
-    A class to track and compute metrics for throttling requests.
+    Encapsulates core data and metrics central to the adaptive throttle module.
 
     Attributes:
         window_size (int): Number of latency records to consider for the window. Default is 60000.
@@ -65,6 +65,9 @@ class AThrottleMetrics(Metric):
     baseline_mean_latency: float = 0  # Baseline figures computed during burn-in.
     baseline_std_latency: float = 0
     baseline_cv_latency: float = 0
+    current_mean_latency: float = 0  # Baseline figures computed during burn-in.
+    current_std_latency: float = 0
+    current_cv_latency: float = 0
     current_rate: float = 0  # Current rate and delay.
     current_delay: float = 0
     min_rate: int = 50  # Minimum rate of requests per second
@@ -110,10 +113,35 @@ class AThrottleMetrics(Metric):
                     else 0
                 )
             except Exception as e:
-                logging.error(f"Error computing baseline metrics: {e}")
+                logging.error(f"Error computing baseline acore: {e}")
                 raise RuntimeError("Failed to compute baseline metrics.") from e
         else:
             print("Baseline metrics have already been computed.")
+
+    def compute_current_stats(self) -> None:
+        """
+        Computes current statistics (mean, standard deviation, and coefficient of variation) from latency data.
+
+        Raises:
+            ValueError: If the latency deque is empty.
+            RuntimeError: If an error occurs during statistics computation.
+        """
+        # Extract the most recent `window_size` records
+        current_latency = list(self.latency)[-self.window_size :]
+        if len(current_latency) == 0:
+            raise ValueError("The current window has no data to compute stability.")
+
+        try:
+            self.current_mean_latency = np.mean(current_latency)
+            self.current_std_latency = np.std(current_latency)
+            self.current_cv_latency = (
+                self.current_std_latency / self.current_mean_latency
+                if self.current_mean_latency > 0
+                else 0
+            )
+        except Exception as e:
+            logging.error(f"Error computing current acore: {e}")
+            raise RuntimeError("Failed to compute current metrics.") from e
 
     def stabilized(self) -> bool:
         """
@@ -195,8 +223,8 @@ class AThrottleStage(InfraService):
     """Base class for HTTP request throttle stage algorithms.
 
     Args:
-        metrics (AThrottleMetrics, optional): An optional metrics instance for tracking throttling metrics.
-        controller (AThrottleController): The controller instance to manage throttling.
+        metrics (AThrottleCore, optional): An optional metrics instance for tracking throttling metrics.
+        controller (AThrottle): The controller instance to manage throttling.
         stage_length (int, optional): The length of the stage in minutes. Defaults to 50.
         temperature (float, optional): The temperature parameter for adding noise to delay. Defaults to 0.5.
         min_rate (int, optional): The minimum rate of requests per second. Defaults to 50.
@@ -207,39 +235,43 @@ class AThrottleStage(InfraService):
 
     def __init__(
         self,
-        metrics: AThrottleMetrics,
-        controller: AThrottleController,
+        acore: AThrottleCore,
         stage_length: int = 50,
         **kwargs,
     ) -> None:
-        self._metrics = metrics
-        self._controller = controller
+        self._acore = acore
         self._stage_length = stage_length
 
         self._kwargs = kwargs
         self._start_time = None
+        self._controller = None
 
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     @property
-    def controller(self) -> AThrottleController:
+    def controller(self) -> AThrottle:
         """Returns the throttle controller instance."""
         return self._controller
 
+    @controller.setter
+    def controller(self, controller: AThrottle) -> None:
+        """Returns the throttle controller instance."""
+        self._controller = controller
+
     @property
-    def metrics(self) -> AThrottleController:
+    def acore(self) -> AThrottleCore:
         """Returns the metrics instance."""
-        return self._metrics
+        return self._acore
 
     @abstractmethod
-    async def __call__(self, latencies: list) -> AThrottleMetrics:
+    async def __call__(self, latencies: list) -> None:
         """Accepts a list of delays, executes a delay, and returns the delay in seconds.
 
         Args:
             latencies (list): List of latency values.
 
         Returns:
-            AThrottleMetrics: Updated throttle metrics.
+            AThrottleCore: Updated throttle metrics.
         """
         pass
 
@@ -267,8 +299,8 @@ class BurninStage(AThrottleStage):
 
     def __init__(
         self,
-        metrics: AThrottleMetrics,
-        controller: AThrottleController,
+        acore: AThrottleCore,
+        burnin_rate: int = 100,
         stage_length: int = 50,
         **kwargs,
     ) -> None:
@@ -276,25 +308,21 @@ class BurninStage(AThrottleStage):
         Initializes the BurninStage.
 
         Args:
-            metrics (AThrottleMetrics): The metrics object used for tracking latency and computing statistics.
-            controller (AThrottleController): The controller managing the throttle stages.
+            metrics (AThrottleCore): The metrics object used for tracking latency and computing statistics.
+            controller (AThrottle): The controller managing the throttle stages.
             stage_length (int, optional): The duration of the burn-in stage in minutes. Defaults to 50 minutes.
             **kwargs: Additional keyword arguments to pass to the parent class.
 
         Raises:
             ValueError: If metrics or controller is not provided.
         """
-        if metrics is None:
-            raise ValueError("AThrottleMetrics instance must be provided.")
-        if controller is None:
-            raise ValueError("AThrottleController instance must be provided.")
-
         super().__init__(
-            metrics=metrics,
-            controller=controller,
+            acore=acore,
             stage_length=stage_length,
             **kwargs,
         )
+        self._burnin_rate = burnin_rate
+        self._acore.current_rate = self._burnin_rate
 
     async def __call__(self, latencies: list) -> int:
         """
@@ -313,12 +341,12 @@ class BurninStage(AThrottleStage):
         """
 
         try:
-            self._metrics.add_latency(latencies=latencies)
-            self._metrics.compute_delay()
-            await asyncio.sleep(self._metrics.current_delay)
+            self._acore.add_latency(latencies=latencies)
+            self._acore.compute_delay()
+            await asyncio.sleep(self._acore.current_delay)
 
             if self.stage_expired():
-                self._metrics.compute_baseline_stats()
+                self._acore.compute_baseline_stats()
                 self._controller.state = AThrottleStatus.EXPLORE
 
             return 0  # Status code indicating successful processing
@@ -330,39 +358,64 @@ class BurninStage(AThrottleStage):
 
 # ------------------------------------------------------------------------------------------------ #
 class ExplorationStage(AThrottleStage):
-    """Exploration stage optimizes delay while monitoring server stability."""
+    """
+    Exploration stage optimizes delay while monitoring server stability.
+
+    Attributes:
+        _observation_period (int): The period to observe before making adjustments.
+        _heatup_factor (int): The factor by which the rate is increased during heatup.
+        _cooldown_factor (int): The factor by which the rate is decreased during cooldown.
+        _in_heatup (bool): Indicates if the stage is in the heatup phase.
+    """
 
     def __init__(
         self,
-        metrics: AThrottleMetrics,
-        controller: AThrottleController,
+        acore: AThrottleCore,
         observation_period: int = 3,
         heatup_factor: int = 50,
         cooldown_factor: int = 10,
         stage_length: int = 5,
         **kwargs,
     ) -> None:
+        """
+        Initializes the ExplorationStage with the provided metrics, controller, and parameters.
+
+        Args:
+            metrics (AThrottleCore): Metrics object for tracking and calculating delays.
+            controller (AThrottle): Controller object for managing the throttle state.
+            observation_period (int): Time period to observe the system before making adjustments.
+            heatup_factor (int): Factor by which to increase the rate during heatup.
+            cooldown_factor (int): Factor by which to decrease the rate during cooldown.
+            stage_length (int): Duration of the exploration stage in minutes.
+        """
         super().__init__(
-            metrics=metrics,
-            controller=controller,
+            acore=acore,
             stage_length=stage_length,
             **kwargs,
         )
         self._observation_period = observation_period
         self._heatup_factor = heatup_factor
         self._cooldown_factor = cooldown_factor
-
         self._in_heatup = True
+        self._logger = logging.getLogger(__name__)
 
     async def __call__(self, latencies: list) -> int:
-        """Accepts a list of delays, executes a delay and returns the delay in seconds."""
-        self._metrics.add_latency(latencies=latencies)
+        """
+        Executes the exploration stage, adjusting the rate based on server stability.
 
-        if self.in_observation():
-            pass
-        else:
-            if self._metrics.stabilized():
-                # If in heatup continue to increase rate
+        Args:
+            latencies (list): List of request latencies.
+
+        Returns:
+            int: The current delay in seconds.
+        """
+        try:
+            self._acore.add_latency(latencies=latencies)
+
+            if self.in_observation():
+                return self._acore.current_delay
+
+            if self._acore.stabilized():
                 if self._in_heatup:
                     self.bump_rate()
                 else:
@@ -371,49 +424,154 @@ class ExplorationStage(AThrottleStage):
                 self._in_heatup = False
                 self.backoff_rate()
 
-        self._metrics.compute_delay()
-        await asyncio.sleep(self._metrics.current_delay)
+            self._acore.compute_delay()
+            await asyncio.sleep(self._acore.current_delay)
+
+            if self.stage_expired():
+                self._controller.state = AThrottleStatus.BURNIN
+
+        except Exception as e:
+            self._logger.error(f"Error in exploration stage: {e}")
+            raise
 
     def in_observation(self) -> bool:
-        """Returns true if the current time is within our observation period."""
-        if not self._metrics.modified:
+        """
+        Checks if the current time is within the observation period.
+
+        Returns:
+            bool: True if within the observation period, False otherwise.
+        """
+        if not self._acore.modified:
             return False
-        return (time.time() - self._metrics.modified) < self._observation_period
+        return (time.time() - self._acore.modified) < self._observation_period
 
     def bump_rate(self) -> None:
-        """Increases the rate by the heatup factor"""
+        """
+        Increases the request rate by the heatup factor.
+        """
+        try:
+            orig = self._acore.current_rate
+            self._acore.current_rate += self._heatup_factor
+            self._acore.modified = time.time()
+            pct_increase = round(
+                (self._acore.current_rate - orig) / orig * 100,
+                2,
+            )
 
-        orig = self._metrics.current_rate
-        self._metrics.current_rate += self._heatup_factor
-        self._metrics.modified = time.time()
-        pct_increase = round(
-            (self._metrics.current_rate - orig) / orig * 100,
-            2,
-        )
-
-        self._logger.debug(
-            f"Increased request rate by {pct_increase}% from {orig} to {self._metrics.current_rate}."
-        )
+            self._logger.debug(
+                f"Increased request rate by {pct_increase}% from {orig} to {self._acore.current_rate}."
+            )
+        except Exception as e:
+            self._logger.error(f"Error increasing request rate: {e}")
+            raise
 
     def backoff_rate(self) -> None:
-        """Decreases the rate by the cooldown factor"""
+        """
+        Decreases the request rate by the cooldown factor.
+        """
+        try:
+            orig = self._acore.current_rate
+            self._acore.current_rate -= self._cooldown_factor
+            self._acore.modified = time.time()
+            pct_decrease = round(
+                (orig - self._acore.current_rate) / orig * 100,
+                2,
+            )
+            self._logger.debug(
+                f"Decreased request rate by {pct_decrease}% from {orig} to {self._acore.current_rate}."
+            )
+        except Exception as e:
+            self._logger.error(f"Error decreasing request rate: {e}")
+            raise
 
-        orig = self._metrics.current_rate
-        self._metrics.current_rate -= self._cooldown_factor
-        self._metrics.modified = time.time()
-        pct_decrease = round(
-            (orig - self._metrics.current_rate) / orig * 100,
-            2,
+
+# ------------------------------------------------------------------------------------------------ #
+class ExploitPIDStage(AThrottleStage):
+    """
+    Exploitation stage that uses a PID controller to adjust the request rate based on latency CoV.
+
+    Attributes:
+        acore (AThrottleCore): Core component managing latency metrics and rates.
+        controller (AThrottle): Controller for managing throttle state transitions.
+        stage_length (int): Duration of the stage in seconds.
+        kp (float): Proportional gain for the PID controller.
+        ki (float): Integral gain for the PID controller.
+        kd (float): Derivative gain for the PID controller.
+        target (float): Target value for the PID controller.
+        output_limits (tuple): Min and max limits for the PID controller output.
+        sample_time (int): Time in seconds to wait before returning metrics.
+        proportional_on_measurement (bool): Whether to calculate proportional term based on measurement.
+        differential_on_measurement (bool): Whether to calculate derivative term based on measurement.
+    """
+
+    def __init__(
+        self,
+        acore: AThrottleCore,
+        target: float,
+        stage_length: int = 600,
+        kp: float = -0.1,  # Negative tunings are for reverse mode optimization
+        ki: float = -0.01,
+        kd: float = -0.05,
+        output_limits: tuple = (50, 1000),
+        sample_time: int = 0.01,  # Time in seconds to wait before returning metrics
+        proportional_on_measurement: bool = False,
+        differential_on_measurement: bool = False,
+    ):
+        super().__init__(
+            acore=acore,
+            stage_length=stage_length,
         )
-        self._logger.debug(
-            f"Decreased request rate by {pct_decrease}% from {orig} to {self._metrics.current_rate}."
-        )
+        self._target = target
+        self._kp = kp
+        self._ki = ki
+        self._kd = kd
+        self._output_limits = output_limits
+        self._sample_time = sample_time
+        self._proportional_on_measurement = proportional_on_measurement
+        self._differential_on_measurement = differential_on_measurement
+
+        self._pid = PID(kp, ki, kd, setpoint=self._target)
+        self._pid.output_limits = self._output_limits
+        self._pid.proportional_on_measurement = self._proportional_on_measurement
+        self._pid.differential_on_measurement = self._differential_on_measurement
+        self._pid.sample_time = self._sample_time
+
+    async def __call__(self, latencies: List[float]) -> AThrottleCore:
+        """
+        Adjusts the request rate based on the latency CoV using a PID controller.
+
+        Args:
+            latencies (List[float]): List of recent latency values.
+
+        Returns:
+            AThrottleCore: Updated core component with adjusted request rate.
+
+        Raises:
+            Exception: If an error occurs during the exploitation stage.
+        """
+        try:
+            self._acore.add_latency(latencies=latencies)
+            self._acore.compute_current_stats()
+
+            # Compute new output from the PID according to the current latency coefficient of variation.
+            control = self._pid(self._acore.current_cv_latency)
+
+            # Adjust rate based on PID output
+            self._acore.current_rate = control
+
+            self._acore.compute_delay()
+
+            await asyncio.sleep(self._acore.current_delay)
+
+        except Exception as e:
+            self._logger.error(f"Error in exploitation stage: {e}")
+            raise
 
 
 # ------------------------------------------------------------------------------------------------ #
 
 
-class AThrottleController:
+class AThrottle:
 
     def __init__(self, config: dict) -> None:
         self._config = config
@@ -426,8 +584,3 @@ class AThrottleController:
     @state.setter
     def state(self, state: AThrottleStatus) -> None:
         self._state = state
-
-
-# ------------------------------------------------------------------------------------------------ #
-class AThrottle:
-    """Dummy class for construction purposes"""

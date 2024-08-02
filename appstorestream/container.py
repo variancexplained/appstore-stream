@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Friday August 2nd 2024 02:11:03 am                                                  #
+# Modified   : Friday August 2nd 2024 01:26:42 pm                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -32,7 +32,7 @@ from appstorestream.infra.repo.project import ProjectRepo
 from appstorestream.infra.repo.review import ReviewRepo
 from appstorestream.infra.repo.uow import UoW
 from appstorestream.infra.web.asession import ASessionAppData, ASessionReview
-from appstorestream.infra.web.throttle import AThrottleController, BurninStage
+from appstorestream.infra.web.throttle import AThrottle, BurninStage
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -101,7 +101,7 @@ class AThrottleContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    controller = providers.Singleton(AThrottleController, config=config.athrottle)
+    controller = providers.Singleton(AThrottle, config=config.athrottle)
 
 
 # ------------------------------------------------------------------------------------------------ #
