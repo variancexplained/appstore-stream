@@ -4,20 +4,20 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /config/base.yaml                                                                   #
+# Filename   : /config/prod.yaml                                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Friday August 2nd 2024 07:29:40 am                                                  #
+# Modified   : Friday August 2nd 2024 03:40:26 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 # ================================================================================================ #
-#                                 BASE CONFIG FILE                                                 #
+#                                 PROD CONFIG FILE                                                 #
 # ================================================================================================ #
 # ------------------------------------------------------------------------------------------------ #
 #                                DATABASE CONFIG SECTION                                           #
@@ -57,22 +57,22 @@ asession:
 athrottle:
   temperature: 0.5 # To distribute noise in the delay.
   concurrency: 100 # Same as max concurrency
-  window_size: 60000 # Window size in # of requests.
   min_rate: 50 # 50 requests per second.
   max_rate: 1000 # 1000 requests per second.
   burnin:
-    stage_length: 300 # Duration in seconds
+    stage_length: 5 # Duration in minutes
     burnin_rate: 100 # 100 requests per second.
   exploration:
-    stage_length: 300 # Maximum duration in seconds for exploration. If limit reached, reset and burnin phase restarted.
+    stage_length: 5 # Maximum duration in minutes for exploration. If limit reached, reset and burnin phase restarted.
     threshold: 1.2  # System stable if process variable within 120% of baseline.
-    observation_period: 60 # Number of seconds between changes.
+    window_size: 15 # Window size in # of sessions. With a batch size of 100, 15 sessions = 1500 requests.
+    observation_period: 3 # Number of sessions between changes.
     heatup_factor: 50 # 50 requests per second increase per iteration during exploration.
     cooldown_factor: 10 # 10 requests per second decrease per iteration during exploration.
     min_rate: 50 # 50 requests per second or a delay of 2 seconds with batch size of 100
     max_rate: 1000  # 1000 requests per second or delay of 0.1 seconds with batch size of 100.
   exploitation:
-    stage_length: 600 # Approximately 10 minutes.
+    stage_length: 10 # Duration in minutes
 
 
 
@@ -95,12 +95,12 @@ logging:
     console:
       class: logging.StreamHandler
       formatter: console
-      level: DEBUG
+      level: INFO
       stream: ext://sys.stderr
     file:
       backupCount: 0
       class: logging.handlers.TimedRotatingFileHandler
-      filename: logs/appstore_stream.log
+      filename: logs/prod/appstore_stream.log
       formatter: file
       interval: 1
       level: DEBUG
@@ -115,6 +115,10 @@ logging:
 # ------------------------------------------------------------------------------------------------ #
 #                                     MONITOR                                                      #
 # ------------------------------------------------------------------------------------------------ #
-monitor:
-  prometheus_client_port: 8000
-  prometheus_client_endpoint: http://localhost:8000/metrics
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'appstore_stream'
+    static_configs:
+      - targets: ['appstore_stream.com:8000']

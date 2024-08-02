@@ -11,11 +11,13 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 1st 2024 01:22:50 am                                                #
-# Modified   : Thursday August 1st 2024 01:37:52 am                                                #
+# Modified   : Friday August 2nd 2024 09:27:51 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+import asyncio
+import inspect
 import logging
 from datetime import datetime
 
@@ -23,7 +25,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from appstorestream.infra.web.throttle import AThrottleStage
+from appstorestream.infra.web.throttle import AThrottleStatus
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long
@@ -40,7 +42,9 @@ single_line = f"\n{100 * '-'}"
 class TestThrottleStages:  # pragma: no cover
     # ============================================================================================ #
     @pytest.mark.asyncio
-    async def test_burnin_stage(self, burnin_stage, random_latencies, caplog):
+    async def test_burnin_stage(
+        self, burnin_stage, random_latencies, exploration_stage, caplog
+    ):
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} test_burnin_stage at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
@@ -48,15 +52,26 @@ class TestThrottleStages:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
 
-        metrics = await burnin_stage(random_latencies)
-        assert metrics.current_rate is not None
-        assert metrics.current_delay is not None
-        assert metrics.current_stage == AThrottleStage.BURNIN
-        assert metrics.current_mean_latency is not None
-        assert metrics.current_std_latency is not None
-        assert metrics.current_cv_latency is not None
+        for i in range(3):
+            await burnin_stage(random_latencies)
+            logger.debug(burnin_stage.metrics)
+            assert burnin_stage.metrics.baseline_mean_latency == 0
+            assert burnin_stage.metrics.baseline_std_latency == 0
+            assert burnin_stage.metrics.baseline_cv_latency == 0
+            assert burnin_stage.controller.state == AThrottleStatus.BURNIN
 
-        logger.info(f"Burnin Stage Metrics: {metrics}")
+        # Wait for stage to expire.
+        await asyncio.sleep(2)
+        # Call it after stage expires. Updates statistics
+        await burnin_stage(random_latencies)
+        assert burnin_stage.metrics.baseline_mean_latency != 0
+        assert burnin_stage.metrics.baseline_std_latency != 0
+        assert burnin_stage.metrics.baseline_cv_latency != 0
+        assert burnin_stage.metrics.current_rate == 50
+        assert burnin_stage.controller.state == AThrottleStatus.EXPLORE
+
+        logger.debug(burnin_stage.metrics)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -69,109 +84,46 @@ class TestThrottleStages:  # pragma: no cover
     async def test_exploration_stage(self, exploration_stage, random_latencies, caplog):
         start = datetime.now()
         logger.info(
-            f"\n\nStarted {self.__class__.__name__} test_exploration_stage at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
+        rate = 50
+        await exploration_stage(random_latencies)
+        assert exploration_stage.metrics.current_rate != rate
+        rate = exploration_stage.metrics.current_rate
+        logger.debug(exploration_stage.metrics)
 
-        metrics = await exploration_stage(random_latencies)
-        assert metrics.current_rate is not None
-        assert metrics.current_delay is not None
-        assert metrics.current_stage == AThrottleStage.EXPLORATION
-        assert metrics.current_mean_latency is not None
-        assert metrics.current_std_latency is not None
-        assert metrics.current_cv_latency is not None
+        # Rate shouldn't change as still in the observation period.
+        await exploration_stage(random_latencies)
+        assert exploration_stage.metrics.current_rate == rate
+        logger.debug(exploration_stage.metrics)
+        # Wait for stage to expire.
+        await asyncio.sleep(3)
+        # Rate should change since observation period expired.
+        await exploration_stage(random_latencies)
+        assert exploration_stage.metrics.current_rate != rate
+        # save rate as it will be reduced in the next iteration, following the observation period.
+        oldrate = exploration_stage.metrics.current_rate
+        logger.debug(exploration_stage.metrics)
 
-        logger.info(f"Exploration Stage Metrics: {metrics}")
+        # Wait for stage to expire.
+        await asyncio.sleep(3)
+
+        random_latencies2 = list(np.random.randint(10, 500, 10))
+        assert (isinstance(latency, (int, float)) for latency in random_latencies2)
+        # Rate should reduce since observation period expired, and not stable.
+        await exploration_stage(random_latencies2)
+        assert exploration_stage.metrics.current_rate != rate
+        assert (
+            exploration_stage.metrics.current_rate == oldrate - 10
+        )  # cooldown factor is 10
+        logger.debug(exploration_stage.metrics)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
+
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} test_exploration_stage in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    @pytest.mark.asyncio
-    async def test_exploitation_pid(self, exploitation_pid, random_latencies, caplog):
-        start = datetime.now()
-        logger.info(
-            f"\n\nStarted {self.__class__.__name__} test_exploitation_pid at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-
-        metrics = await exploitation_pid(random_latencies)
-        assert metrics.current_rate is not None
-        assert metrics.current_delay is not None
-        assert metrics.current_stage == AThrottleStage.EXPLOITATION_PID
-        assert metrics.current_mean_latency is not None
-        assert metrics.current_std_latency is not None
-        assert metrics.current_cv_latency is not None
-
-        logger.info(f"Exploitation PID Metrics: {metrics}")
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-        logger.info(
-            f"\n\nCompleted {self.__class__.__name__} test_exploitation_pid in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    @pytest.mark.asyncio
-    async def test_exploitation_pid_multivariate(
-        self, exploitation_pid_multivariate, random_latencies, caplog
-    ):
-        start = datetime.now()
-        logger.info(
-            f"\n\nStarted {self.__class__.__name__} test_exploitation_pid_multivariate at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-
-        metrics = await exploitation_pid_multivariate(random_latencies)
-        assert metrics.current_rate is not None
-        assert metrics.current_delay is not None
-        assert metrics.current_stage == AThrottleStage.EXPLOITATION_PID_MULTIVARIATE
-        assert metrics.current_mean_latency is not None
-        assert metrics.current_std_latency is not None
-        assert metrics.current_cv_latency is not None
-
-        logger.info(f"Exploitation PID Multivariate Metrics: {metrics}")
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-        logger.info(
-            f"\n\nCompleted {self.__class__.__name__} test_exploitation_pid_multivariate in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    @pytest.mark.asyncio
-    async def test_controller(self, controller, random_latencies, caplog):
-        start = datetime.now()
-        logger.info(
-            f"\n\nStarted {self.__class__.__name__} test_controller at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-
-        for stage in controller.stages.values():
-            metrics = await stage(random_latencies)
-            assert metrics.current_rate is not None
-            assert metrics.current_delay is not None
-            assert metrics.current_stage in AThrottleStage
-            assert metrics.current_mean_latency is not None
-            assert metrics.current_std_latency is not None
-            assert metrics.current_cv_latency is not None
-
-            logger.info(f"Controller Stage Metrics: {metrics}")
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-        logger.info(
-            f"\n\nCompleted {self.__class__.__name__} test_controller in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)

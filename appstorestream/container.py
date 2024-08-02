@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Monday July 29th 2024 11:12:02 pm                                                   #
+# Modified   : Friday August 2nd 2024 02:11:03 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,6 +23,7 @@ import logging.config  # pragma: no cover
 from dependency_injector import containers, providers
 
 from appstorestream.domain.base.state import CircuitBreaker
+from appstorestream.infra.base.config import Config
 from appstorestream.infra.database.mysql import MySQLDatabase
 from appstorestream.infra.monitor.metrics import Metrics
 from appstorestream.infra.repo.appdata import AppDataRepo
@@ -31,7 +32,7 @@ from appstorestream.infra.repo.project import ProjectRepo
 from appstorestream.infra.repo.review import ReviewRepo
 from appstorestream.infra.repo.uow import UoW
 from appstorestream.infra.web.asession import ASessionAppData, ASessionReview
-from appstorestream.infra.web.throttle import AThrottle
+from appstorestream.infra.web.throttle import AThrottleController, BurninStage
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -94,21 +95,24 @@ class StateContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                         WEB                                                      #
+#                                    WEB ATHROTTLE                                                 #
 # ------------------------------------------------------------------------------------------------ #
-class WebContainer(containers.DeclarativeContainer):
-    config = providers.Configuration()
-    monitor = providers.DependenciesContainer()
+class AThrottleContainer(containers.DeclarativeContainer):
 
-    athrottle = providers.Singleton(
-        AThrottle,
-        min_rate=config.athrottle.min_rate,
-        base_rate=config.athrottle.base_rate,
-        max_rate=config.athrottle.max_rate,
-        temperature=config.athrottle.temperature,
-        window_size=config.athrottle.window_size,
-        burn_in=config.athrottle.burn_in,
-    )
+    config = providers.Configuration()
+
+    controller = providers.Singleton(AThrottleController, config=config.athrottle)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                     WEB SESSION                                                  #
+# ------------------------------------------------------------------------------------------------ #
+class SessionContainer(containers.DeclarativeContainer):
+
+    config = providers.Configuration()
+
+    athrottle = providers.Singleton()
+
     asession_appdata = providers.Singleton(
         ASessionAppData,
         throttle=athrottle,
@@ -127,21 +131,13 @@ class WebContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                      MONITOR                                                     #
-# ------------------------------------------------------------------------------------------------ #
-class MonitorContainer(containers.DeclarativeContainer):
-
-    config = providers.Configuration()
-
-    metrics = providers.Singleton(Metrics, port=config.monitor.prometheus_client_port)
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                                       FRAMEWORK                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class AppStoreStreamContainer(containers.DeclarativeContainer):
 
-    config = providers.Configuration(yaml_files=["config/base.yaml"])
+    config_filepath = Config().filepath
+
+    config = providers.Configuration(yaml_files=[config_filepath])
 
     logs = providers.Container(LoggingContainer, config=config)
 
@@ -149,6 +145,6 @@ class AppStoreStreamContainer(containers.DeclarativeContainer):
 
     state = providers.Container(StateContainer, config=config)
 
-    monitor = providers.Container(MonitorContainer, config=config)
+    session = providers.Container(SessionContainer, config=config)
 
-    web = providers.Container(WebContainer, config=config, monitor=monitor)
+    athrottle = providers.Container(AThrottleContainer, config=config)

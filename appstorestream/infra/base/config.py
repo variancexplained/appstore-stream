@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/config/config.py                                              #
+# Filename   : /appstorestream/infra/base/config.py                                                #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Monday July 29th 2024 04:48:41 am                                                   #
+# Modified   : Friday August 2nd 2024 01:19:59 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -108,6 +108,14 @@ class Config:
         return self._current_environment
 
     #  ------------------------------------------------------------------------------------------- #
+    @property
+    def filepath(self) -> str:
+        """Returns the configuration filepath for the current environment."""
+        env = self.get_environment().lower()
+
+        return os.path.join(os.getenv("CONFIG_FOLDER", "config"), f"{env}.yaml")
+
+    #  ------------------------------------------------------------------------------------------- #
     def change_environment(self, new_value: str) -> None:
         """
         Changes the environment variable and updates it in the current process.
@@ -151,14 +159,7 @@ class Config:
         Loads the base configuration as well as environment specific config.
 
         """
-        env = os.getenv("ENV", "dev")
-        # Get the base config filename
-        config_filepath = os.path.join(
-            os.getenv("CONFIG_FOLDER", "config"), "base.yaml"
-        )
-
-        # Open config files.
-        with open(config_filepath, "r") as config_file:
+        with open(self.filepath, "r") as config_file:
             config = yaml.safe_load(config_file)
 
         return config

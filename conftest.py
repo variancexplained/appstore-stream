@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Thursday August 1st 2024 11:32:25 am                                                #
+# Modified   : Friday August 2nd 2024 08:27:31 am                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,10 +24,8 @@ import pytest
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.web.throttle import (
-    AThrottleController,
-    AThrottleStage,
-    ExploitationPID,
-    ExploitationPIDMultivariate,
+    AThrottleMetrics,
+    BurninStage,
     ExplorationStage,
 )
 
@@ -54,11 +52,7 @@ def mode():
 def container():
     container = AppStoreStreamContainer()
     container.init_resources()
-    container.wire(
-        packages=[
-            "appstorestream.application.appdata.job",
-        ]
-    )
+    container.wire(modules=["appstorestream.infra.web.throttle"])
 
     return container
 
@@ -78,75 +72,40 @@ def appdata_json():
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.fixture
+@pytest.fixture(scope="function", autouse=False)
 def random_latencies():
     # Provide a list of random latencies for testing
     return [0.2, 0.5, 1.2, 0.7, 0.8, 1.1, 0.6, 1.0]
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                              ATHROTTLE EXPLORATIONS STAGE                                        #
+#                                   ATHROTTLE METRICS                                              #
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture
-def exploration_stage():
+@pytest.fixture(scope="function", autouse=False)
+def athrottle_metrics():
+    # Create the initial metrics object that is initialized by the controller and fed to the burnin stage
+    return AThrottleMetrics(current_rate=50, min_rate=10)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                ATHROTTLE BURNIN STAGE                                            #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function", autouse=False)
+def burnin_stage(container, athrottle_metrics):
+    return BurninStage(
+        metrics=athrottle_metrics,
+        controller=container.athrottle.controller(),
+        stage_length=1,
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                            ATHROTTLE EXPLORATION STAGE                                           #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function", autouse=False)
+def exploration_stage(container, athrottle_metrics):
     return ExplorationStage(
-        base_rate=0.5,
-        window_size=10,
-        heatup_factor=0.1,
-        cooldown_factor=0.05,
-        exploration_threshold=1.2,
-        temperature=0.3,
-        min_rate=0.1,
-        max_rate=2.0,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                              ATHROTTLE EXPLOITATION PID                                          #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture
-def exploitation_pid():
-    return ExploitationPID(
-        target_latency=1.0,
-        kp=1.0,
-        ki=0.1,
-        kd=0.05,
-        temperature=0.3,
-        min_rate=0.1,
-        max_rate=2.0,
-        sample_time=0.01,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                      ATHROTTLE EXPLOITATION PID MULTIVARIATE STAGE                               #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture
-def exploitation_pid_multivariate():
-    return ExploitationPIDMultivariate(
-        target_mean_latency=1.0,
-        target_cv_latency=0.01,
-        target_std_latency=0.01,
-        kp=[1.0, 1.2],
-        ki=[0.1, 0.15],
-        kd=[0.05, 0.07],
-        temperature=0.3,
-        min_rate=0.1,
-        max_rate=2.0,
-        sample_time=0.01,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                         ATHROTTLE THROTTLE CONTROLLER STAGE                                      #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture
-def controller(exploration_stage, exploitation_pid, exploitation_pid_multivariate):
-    return AThrottleController(
-        stages={
-            AThrottleStage.BURNIN: exploration_stage,
-            AThrottleStage.EXPLORATION: exploration_stage,
-            AThrottleStage.EXPLOITATION_PID: exploitation_pid,
-            AThrottleStage.EXPLOITATION_PID_MULTIVARIATE: exploitation_pid_multivariate,
-        }
+        metrics=athrottle_metrics,
+        controller=container.athrottle.controller(),
+        stage_length=5,
     )
