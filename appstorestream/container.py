@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Friday August 2nd 2024 01:26:42 pm                                                  #
+# Modified   : Sunday August 4th 2024 11:15:19 pm                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -32,7 +32,7 @@ from appstorestream.infra.repo.project import ProjectRepo
 from appstorestream.infra.repo.review import ReviewRepo
 from appstorestream.infra.repo.uow import UoW
 from appstorestream.infra.web.asession import ASessionAppData, ASessionReview
-from appstorestream.infra.web.throttle import AThrottle, BurninStage
+from appstorestream.infra.web.throttle import AThrottle, AThrottleHistory
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -95,23 +95,29 @@ class StateContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                    WEB ATHROTTLE                                                 #
+#                                    WEB CONTAINER                                                 #
 # ------------------------------------------------------------------------------------------------ #
-class AThrottleContainer(containers.DeclarativeContainer):
+class WebContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    controller = providers.Singleton(AThrottle, config=config.athrottle)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                     WEB SESSION                                                  #
-# ------------------------------------------------------------------------------------------------ #
-class SessionContainer(containers.DeclarativeContainer):
-
-    config = providers.Configuration()
-
-    athrottle = providers.Singleton()
+    athrottle = providers.Singleton(
+        AThrottle,
+        athrottle_history=AThrottleHistory(),
+        burnin_length=config.athrottle.burnin_length,
+        explore_length=config.athrottle.explore_length,
+        exploit_length=config.athrottle.exploit_length,
+        current_stage=0,
+        concurrency=config.athrottle.concurrency,
+        rate=config.athrottle.rate,
+        temperature=config.athrottle.temperature,
+        exploration_heatup_step_size=config.athrottle.exploration_heatup_step_size,
+        exploration_cooldown_step_size=config.athrottle.exploration_cooldown_step_size,
+        threshold=config.athrottle.threshold,
+        k=config.athrottle.k,
+        min_rate=config.athrottle.min_rate,
+        max_rate=config.athrottle.max_rate,
+    )
 
     asession_appdata = providers.Singleton(
         ASessionAppData,
@@ -145,6 +151,4 @@ class AppStoreStreamContainer(containers.DeclarativeContainer):
 
     state = providers.Container(StateContainer, config=config)
 
-    session = providers.Container(SessionContainer, config=config)
-
-    athrottle = providers.Container(AThrottleContainer, config=config)
+    web = providers.Container(WebContainer, config=config)

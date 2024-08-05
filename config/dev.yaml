@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Friday August 2nd 2024 03:40:34 am                                                  #
+# Modified   : Sunday August 4th 2024 11:21:21 pm                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -55,27 +55,18 @@ asession:
 #                    ASYNCHRONOUS HTTTP REQUEST THROTTLE CONFIG SECTION                            #
 # ------------------------------------------------------------------------------------------------ #
 athrottle:
-  temperature: 0.5 # To distribute noise in the delay.
-  concurrency: 100 # Same as max concurrency
-  min_rate: 50 # 50 requests per second.
-  max_rate: 1000 # 1000 requests per second.
-  burnin:
-    stage_length: 5 # Duration in minutes
-    burnin_rate: 100 # 100 requests per second.
-  exploration:
-    stage_length: 5 # Maximum duration in minutes for exploration. If limit reached, reset and burnin phase restarted.
-    threshold: 1.2  # System stable if process variable within 120% of baseline.
-    window_size: 15 # Window size in # of sessions. With a batch size of 100, 15 sessions = 1500 requests.
-    observation_period: 3 # Number of sessions between changes.
-    heatup_factor: 50 # 50 requests per second increase per iteration during exploration.
-    cooldown_factor: 10 # 10 requests per second decrease per iteration during exploration.
-    min_rate: 50 # 50 requests per second or a delay of 2 seconds with batch size of 100
-    max_rate: 1000  # 1000 requests per second or delay of 0.1 seconds with batch size of 100.
-  exploitation:
-    stage_length: 10 # Duration in minutes
-
-
-
+  burnin_length: 300 # Number of seconds in stage
+  explore_length: 300 # Number of seconds in stage
+  exploit_length: 600 # Number of seconds in stage
+  concurrency: 100
+  min_rate: 50 # Default minimum rate
+  max_rate: 1000 # Default maximum Rate
+  rate: 50 # Default rate in requests per second for burnin stage
+  temperature: 0.5 # Scale of random noise in delay.
+  exploration_heatup_step_size: 10 # Number of requests per second to increase in heatup.
+  exploration_cooldown_step_size: -5 # Number of requests per second to decrease in cooldown
+  threshold: 0.2 # Threshold for proportion of change in cv and mean latency
+  alpha: 0.05 # Significance for hypothesis testing
 
 # ------------------------------------------------------------------------------------------------ #
 #                                     LOGGING                                                      #

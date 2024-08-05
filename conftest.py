@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Friday August 2nd 2024 12:38:33 pm                                                  #
+# Modified   : Sunday August 4th 2024 08:35:32 pm                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,12 +23,7 @@ import pytest
 
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
-from appstorestream.infra.web.throttle import (
-    AThrottleCore,
-    BurninStage,
-    ExploitPIDStage,
-    ExplorationStage,
-)
+from appstorestream.infra.web.throttle import AThrottle, AThrottleHistory
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [""]
@@ -77,52 +72,3 @@ def appdata_json():
 def random_latencies():
     # Provide a list of random latencies for testing
     return [0.2, 0.5, 1.2, 0.7, 0.8, 1.1, 0.6, 1.0]
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                   ATHROTTLE METRICS                                              #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=False)
-def athrottle_acore():
-    # Create the initial acore object that is initialized by the controller and fed to the burnin stage
-    return AThrottleCore(current_rate=50, min_rate=10)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                ATHROTTLE BURNIN STAGE                                            #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=False)
-def burnin_stage(container, athrottle_acore):
-    return BurninStage(
-        acore=athrottle_acore,
-        controller=container.athrottle.controller(),
-        stage_length=1,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                            ATHROTTLE EXPLORATION STAGE                                           #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=False)
-def exploration_stage(container, athrottle_acore):
-    return ExplorationStage(
-        acore=athrottle_acore,
-        controller=container.athrottle.controller(),
-        stage_length=5,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                           ATHROTTLE EXPLOITATION STAGE                                           #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=False)
-def exploitation_stage(container, athrottle_acore):
-    return ExploitPIDStage(
-        acore=athrottle_acore,
-        controller=container.athrottle.controller(),
-        stage_length=600,
-        kp=-0.1,
-        ki=-0.01,
-        kd=-0.05,
-        target=0.40917980243766183,
-    )
