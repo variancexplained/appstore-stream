@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 1st 2024 01:22:50 am                                                #
-# Modified   : Sunday August 4th 2024 11:10:30 pm                                                  #
+# Modified   : Thursday August 15th 2024 03:56:41 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -73,9 +73,9 @@ class TestThrottleStages:  # pragma: no cover
                 assert athrottle.rate_changes == 0
             elif athrottle.current_stage == AThrottleStatus.EXPLORE.value:
                 # Rate should increase monotonically because the site is stable.
-                assert (
-                    athrottle.rate
-                    == previous_rate + athrottle.exploration_heatup_step_size
+                assert athrottle.rate == min(
+                    previous_rate + athrottle.exploration_heatup_step_size,
+                    athrottle.max_rate,
                 )
                 assert athrottle.rate_changes == previous_rate_changes + 1
                 assert athrottle.rate_increases == athrottle.rate_changes

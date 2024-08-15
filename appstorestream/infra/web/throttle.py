@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Sunday August 4th 2024 11:44:07 pm                                                  #
+# Modified   : Thursday August 15th 2024 03:50:17 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -187,35 +187,6 @@ class AThrottle(DataClass):
         self.delay = self._compute_delay(self.rate)
         return self.delay
 
-    def _compute_delay(self, rate: float) -> float:
-        """
-        Internal method to compute delay based on the current rate and add random normal variation.
-
-        Args:
-            rate (float): The current rate of requests per second.
-
-        Returns:
-            float: The computed delay in seconds.
-
-        Raises:
-            RuntimeError: If delay computation fails.
-        """
-        try:
-            if rate > 0:
-                delay = 1 / rate * self.concurrency
-            else:
-                delay = 0
-
-            delay += np.random.normal(loc=delay, scale=self.temperature, size=None)
-            delay = min(delay, self.max_delay)
-            delay = max(delay, self.min_delay)
-
-            return delay
-
-        except Exception as e:
-            logging.error(f"Error computing delay: {e}")
-            raise RuntimeError("Failed to compute delay.") from e
-
     def adjust_rate(self) -> None:
         """
         Adjust the rate based on the current stage of throttling.
@@ -311,6 +282,35 @@ class AThrottle(DataClass):
         delay = self.get_delay()
         await asyncio.sleep(delay)
         return self.delay
+
+    def _compute_delay(self, rate: float) -> float:
+        """
+        Internal method to compute delay based on the current rate and add random normal variation.
+
+        Args:
+            rate (float): The current rate of requests per second.
+
+        Returns:
+            float: The computed delay in seconds.
+
+        Raises:
+            RuntimeError: If delay computation fails.
+        """
+        try:
+            if rate > 0:
+                delay = 1 / rate * self.concurrency
+            else:
+                delay = 0
+
+            delay += np.random.normal(loc=delay, scale=self.temperature, size=None)
+            delay = min(delay, self.max_delay)
+            delay = max(delay, self.min_delay)
+
+            return delay
+
+        except Exception as e:
+            logging.error(f"Error computing delay: {e}")
+            raise RuntimeError("Failed to compute delay.") from e
 
     def _count_adjustments(self, adjustment: float) -> None:
         """

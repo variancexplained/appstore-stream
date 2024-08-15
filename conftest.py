@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Sunday August 4th 2024 08:35:32 pm                                                  #
+# Modified   : Sunday August 4th 2024 11:47:09 pm                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,6 @@ import pytest
 
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
-from appstorestream.infra.web.throttle import AThrottle, AThrottleHistory
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [""]
