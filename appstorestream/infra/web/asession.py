@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Friday August 16th 2024 09:10:05 am                                                 #
+# Modified   : Friday August 16th 2024 11:33:25 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,13 +25,13 @@ from typing import Dict, Optional
 
 import aiohttp
 
+from appstorestream.application.metrics.extract import ExtractMetrics, Metrics
 from appstorestream.domain.appdata.response import AppDataAsyncResponse
 from appstorestream.domain.base.request import AsyncRequest
 from appstorestream.domain.base.response import AsyncResponse
 from appstorestream.domain.review.response import ReviewAsyncResponse
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.base.service import InfraService
-from appstorestream.infra.metrics.session import ExtractMetrics, Metrics
 from appstorestream.infra.web.throttle import AThrottle
 
 
