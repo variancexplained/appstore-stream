@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Friday August 16th 2024 11:33:09 am                                                 #
+# Modified   : Friday August 16th 2024 11:41:16 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -161,7 +161,9 @@ class TransformMetricServer(MetricServer):
         """Update the metrics with the provided values."""
 
         # Update the metrics with the provided values
-        # Assuming `metrics` is a dictionary containing the new values
+        # Convert `metrics` to a dictionary containing the new values
+        metrics = metrics.as_dict()
+
         self.transform_runtime_start_timestamp_seconds.labels(**self._labels).set(
             metrics.get("runtime_start_timestamp_seconds", 0)
         )
