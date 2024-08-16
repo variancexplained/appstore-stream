@@ -11,12 +11,14 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 06:13:17 pm                                                   #
-# Modified   : Friday August 16th 2024 12:57:41 am                                                 #
+# Modified   : Friday August 16th 2024 04:37:33 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Metrics Module"""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from threading import Lock
@@ -30,6 +32,14 @@ from appstorestream.core.data import DataClass
 @dataclass
 class Metrics(DataClass):
     """Base Metrics class"""
+
+    @abstractmethod
+    def start(self) -> None:
+        """Abstract method to capture metrics at process start."""
+
+    @abstractmethod
+    def stop(self) -> None:
+        """Abstract method to capture metrics at process stop."""
 
 
 # ------------------------------------------------------------------------------------------------ #

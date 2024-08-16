@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 03:50:26 am                                                   #
-# Modified   : Friday August 16th 2024 01:00:58 am                                                 #
+# Modified   : Friday August 16th 2024 08:44:24 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,12 +24,12 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-from appstorestream.infra.web.metrics import SessionMetrics
+from appstorestream.infra.metrics.session import ExtractMetrics
 
 
 # ------------------------------------------------------------------------------------------------ #
 class AsyncResponse(ABC):
-    def __init__(self, results: list, metrics: SessionMetrics) -> None:
+    def __init__(self, results: list, metrics: ExtractMetrics) -> None:
         self._results = results
         self._metrics = metrics
         self._content = []
@@ -41,7 +41,7 @@ class AsyncResponse(ABC):
         return len(self._content) > 0
 
     @property
-    def metrics(self) -> SessionMetrics:
+    def metrics(self) -> ExtractMetrics:
         if not self._finalized:
             self._not_finalized()
         else:

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Thursday August 15th 2024 09:01:00 pm                                               #
+# Modified   : Friday August 16th 2024 10:21:59 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ from dependency_injector import containers, providers
 from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.database.mysql import MySQLDatabase
-from appstorestream.infra.monitor.metrics import Metrics
+from appstorestream.infra.metrics.session import Metrics
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.repo.job import JobRepo
 from appstorestream.infra.repo.project import ProjectRepo
