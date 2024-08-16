@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Sunday August 4th 2024 11:15:19 pm                                                  #
+# Modified   : Thursday August 15th 2024 09:01:00 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -101,6 +101,8 @@ class WebContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
+    metrics = providers.Singleton(Metrics, port=config.monitor.prometheus_client_port)
+
     athrottle = providers.Singleton(
         AThrottle,
         athrottle_history=AThrottleHistory(),
@@ -125,6 +127,7 @@ class WebContainer(containers.DeclarativeContainer):
         max_concurrency=config.asession.max_concurrency,
         retries=config.asession.retries,
         timeout=config.asession.timeout,
+        metrics=metrics,
     )
 
     asession_review = providers.Singleton(
@@ -133,6 +136,7 @@ class WebContainer(containers.DeclarativeContainer):
         max_concurrency=config.asession.max_concurrency,
         retries=config.asession.retries,
         timeout=config.asession.timeout,
+        metrics=metrics,
     )
 
 

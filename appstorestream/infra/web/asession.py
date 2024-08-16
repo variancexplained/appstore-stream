@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Sunday August 4th 2024 11:51:37 pm                                                  #
+# Modified   : Friday August 16th 2024 01:00:58 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,10 +27,12 @@ import aiohttp
 
 from appstorestream.domain.appdata.response import AppDataAsyncResponse
 from appstorestream.domain.base.request import AsyncRequest
-from appstorestream.domain.base.response import AsyncResponse, AsyncResponseMetrics
+from appstorestream.domain.base.response import AsyncResponse
+from appstorestream.domain.review.response import ReviewAsyncResponse
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.base.service import InfraService
 from appstorestream.infra.monitor.metrics import Metrics
+from appstorestream.infra.web.metrics import SessionMetrics
 from appstorestream.infra.web.throttle import AThrottle
 
 
@@ -51,12 +53,14 @@ class ASession(InfraService):
     def __init__(
         self,
         throttle: AThrottle,
+        metrics: Metrics,
         max_concurrency: int = 100,
         retries: int = 3,
         timeout: int = 30,
         config_cls: type[Config] = Config,
     ) -> None:
         self._throttle = throttle
+        self._metrics = metrics
         self._max_concurrency = max(max_concurrency, throttle.max_rate)
         self._retries = retries
         self._timeout = timeout
@@ -69,8 +73,47 @@ class ASession(InfraService):
 
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
-    @abstractmethod
     async def get(self, request: AsyncRequest) -> AsyncResponse:
+        """Formats and executes asynchronous get commands.
+
+        Args:
+            request (AsyncRequest): An Asyncronous HTTP Request
+        """
+        connector = aiohttp.TCPConnector()
+
+        concurrency = asyncio.Semaphore(self._max_concurrency)
+
+        # Create and start (send) metrics object.
+        metrics = SessionMetrics()
+        metrics.send()
+        # Get response using method defined in subclass.
+        results = await self.get_response(
+            request=request,
+            connector=connector,
+            timeout=self._timeout_obj,
+            metrics=metrics,
+            concurrency=concurrency,
+            trust_env=True,
+            raise_for_status=True,
+        )
+        # Computes average, total latency and duration
+        metrics.recv()
+        # Throttle the next request
+        await self._throttle.throttle(latency=metrics.latencies)
+        response = AppDataAsyncResponse(results=results, metrics=metrics)
+        return response
+
+    @abstractmethod
+    async def get_response(
+        self,
+        request: AsyncRequest,
+        connector: aiohttp.TCPConnector,
+        timeout: aiohttp.ClientTimeout,
+        metrics: SessionMetrics,
+        concurrency: asyncio.Semaphore,
+        trust_env: bool = True,
+        raise_for_status: bool = True,
+    ) -> AsyncResponse:
         """Formats and executes asynchronous get commands.
 
         Args:
@@ -90,7 +133,7 @@ class ASession(InfraService):
         client: aiohttp.ClientSession,
         url: str,
         concurrency: asyncio.Semaphore,
-        metrics: AsyncResponseMetrics,
+        metrics: SessionMetrics,
         params: Optional[Dict] = None,
     ) -> Dict[str, any]:
         """Executes the HTTP request and returns a JSON response.
@@ -174,26 +217,28 @@ class ASessionAppData(ASession):
         headers (dict): Header dictionary. Optional
     """
 
-    async def get(self, request: AsyncRequest) -> AppDataAsyncResponse:
+    async def get_response(
+        self,
+        request: AsyncRequest,
+        connector: aiohttp.TCPConnector,
+        timeout: aiohttp.ClientTimeout,
+        metrics: SessionMetrics,
+        concurrency: asyncio.Semaphore,
+        trust_env: bool = True,
+        raise_for_status: bool = True,
+    ) -> AsyncResponse:
         """Formats and executes asynchronous get commands.
 
         Args:
             request (AsyncRequest): An Asyncronous HTTP Request
         """
 
-        conn = aiohttp.TCPConnector()
-
-        concurrency = asyncio.Semaphore(self._max_concurrency)
-
-        metrics = AsyncResponseMetrics()
-        metrics.send()
-
         async with aiohttp.ClientSession(
             headers=request.header,
-            connector=conn,
-            trust_env=True,
-            raise_for_status=True,
-            timeout=self._timeout_obj,
+            connector=connector,
+            trust_env=trust_env,
+            raise_for_status=raise_for_status,
+            timeout=timeout,
         ) as client:
 
             tasks = [
@@ -206,41 +251,36 @@ class ASessionAppData(ASession):
                 )
                 for param_dict in request.param_list
             ]
-            results = await asyncio.gather(*tasks)
-            # The following computes the average/total latency and duration.
-            metrics.recv()
-            # Throttle the next request
-            await self._throttle.throttle(latency=metrics.average_latency)
-            # Bundle the metrics and results into a Response object.
-            response = AppDataAsyncResponse(results=results, metrics=metrics)
-            return response
+            return await asyncio.gather(*tasks)
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                      ASESSION REVIEW                                             #
 # ------------------------------------------------------------------------------------------------ #
 class ASessionReview(ASession):
-    @abstractmethod
-    async def get(self, request: AsyncRequest) -> AsyncResponse:
+
+    async def get_response(
+        self,
+        request: AsyncRequest,
+        connector: aiohttp.TCPConnector,
+        timeout: aiohttp.ClientTimeout,
+        metrics: SessionMetrics,
+        concurrency: asyncio.Semaphore,
+        trust_env: bool = True,
+        raise_for_status: bool = True,
+    ) -> ReviewAsyncResponse:
         """Formats and executes asyncronous get commands.
 
         Args:
             request (AsyncRequest): An Asyncronous HTTP Request
         """
 
-        conn = aiohttp.TCPConnector()
-
-        concurrency = asyncio.Semaphore(self._max_concurrency)
-
-        metrics = AsyncResponseMetrics()
-        metrics.send()
-
         async with aiohttp.ClientSession(
             headers=request.header,
-            connector=conn,
-            trust_env=True,
-            raise_for_status=True,
-            timeout=self._timeout_obj,
+            connector=connector,
+            trust_env=trust_env,
+            raise_for_status=raise_for_status,
+            timeout=timeout,
         ) as client:
             tasks = [
                 self.make_request(
@@ -251,11 +291,4 @@ class ASessionReview(ASession):
                 )
                 for url in request.urls
             ]
-            results = await asyncio.gather(*tasks)
-            # The following computes the average/total latency and duration.
-            metrics.recv()
-            # Throttle the next request
-            await self._throttle.throttle(latency=metrics.latency_average)
-            # Bundle the metrics and results into a Response object.
-            response = AppDataAsyncResponse(results=results, metrics=metrics)
-            return response
+            return await asyncio.gather(*tasks)
