@@ -1,36 +1,60 @@
-appstorestream_load_job_runtime_duration_seconds_total:
+load_job_runtime_duration_seconds_total:
+  Category: load
+  MetricName: appstorestream_load_job_runtime_duration_seconds_total
   Description: Load Total Duration In Seconds for Job
   Type: Counter
-appstorestream_load_job_record_count_total:
+load_job_record_count_total:
+  Category: load
+  MetricName: appstorestream_load_job_record_count_total
   Description: Load Total Load Record Count for Job
   Type: Counter
-appstorestream_load_job_record_average_size_bytes:
+load_job_record_average_size_bytes:
+  Category: load
+  MetricName: appstorestream_load_job_record_average_size_bytes
   Description: Load Load Record Count for Job
   Type: Gauge
-appstorestream_load_job_record_size_bytes_total:
+load_job_record_size_bytes_total:
+  Category: load
+  MetricName: appstorestream_load_job_record_size_bytes_total
   Description: Load Total Load Record Count for Job
   Type: Counter
-appstorestream_load_job_record_per_second_ratio:
+load_job_record_per_second_ratio:
+  Category: load
+  MetricName: appstorestream_load_job_record_per_second_ratio
   Description: Load Records Per Second for Job
   Type: Gauge
-appstorestream_load_task_runtime_start_timestamp_seconds:
+load_task_runtime_start_timestamp_seconds:
+  Category: load
+  MetricName: appstorestream_load_task_runtime_start_timestamp_seconds
   Description: Load Start Timestamp In Seconds for Task
   Type: Gauge
-appstorestream_load_task_runtime_stop_timestamp_seconds:
+load_task_runtime_stop_timestamp_seconds:
+  Category: load
+  MetricName: appstorestream_load_task_runtime_stop_timestamp_seconds
   Description: Load Stop Timestamp In Seconds for Task
   Type: Gauge
-appstorestream_load_task_runtime_duration_seconds:
+load_task_runtime_duration_seconds:
+  Category: load
+  MetricName: appstorestream_load_task_runtime_duration_seconds
   Description: Load Duration In Seconds for Task
   Type: Gauge
-appstorestream_load_task_record_count:
+load_task_record_count:
+  Category: load
+  MetricName: appstorestream_load_task_record_count
   Description: Load Load Record Count for Task
   Type: Gauge
-appstorestream_load_task_record_average_size_bytes:
+load_task_record_average_size_bytes:
+  Category: load
+  MetricName: appstorestream_load_task_record_average_size_bytes
   Description: Load Load Record Count for Task
   Type: Gauge
-appstorestream_load_task_record_size_bytes_total:
+load_task_record_size_bytes_total:
+  Category: load
+  MetricName: appstorestream_load_task_record_size_bytes_total
   Description: Load Total Load Record Count for Task
   Type: Gauge
-appstorestream_load_task_record_per_second_ratio:
+load_task_record_per_second_ratio:
+  Category: load
+  MetricName: appstorestream_load_task_record_per_second_ratio
   Description: Load Records Per Second for Task
   Type: Gauge

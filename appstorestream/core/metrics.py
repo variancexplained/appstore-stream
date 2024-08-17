@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 06:13:17 pm                                                   #
-# Modified   : Saturday August 17th 2024 12:04:31 pm                                               #
+# Modified   : Saturday August 17th 2024 12:43:35 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -102,8 +102,8 @@ class MetricsExporter(ABC):
             else:
                 raise
 
-    def load_config(self, category: str) -> list:
-        return self._config.load_metrics_config()[category]
+    def load_config(self, category: str, level: str) -> list:
+        return self._config.load_metrics_config()
 
     @classmethod
     def start_server(cls, port: int = 8000):
