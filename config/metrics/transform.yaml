@@ -53,6 +53,11 @@ transform_task_record_count:
   MetricName: appstorestream_transform_task_record_count
   Description: Transform Record Count for Task
   Type: Gauge
+transform_task_record_size_bytes_total:
+  Category: transform
+  MetricName: appstorestream_transform_task_record_size_bytes_total
+  Description: Transform Record Size In Bytes for Task
+  Type: Gauge
 transform_task_record_average_size_bytes:
   Category: transform
   MetricName: appstorestream_transform_task_record_average_size_bytes

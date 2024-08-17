@@ -13,9 +13,9 @@ extract_job_runtime_duration_seconds_total:
   MetricName: appstorestream_extract_job_runtime_duration_seconds_total
   Description: Extract session duration total for Job
   Type: Counter
-extract_job_request_session_count_total:
+extract_job_session_count_total:
   Category: extract
-  MetricName: appstorestream_extract_job_request_session_count_total
+  MetricName: appstorestream_extract_job_session_count_total
   Description: Extract session count for a Job
   Type: Counter
 extract_job_request_count_total:

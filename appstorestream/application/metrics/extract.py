@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Saturday August 17th 2024 12:04:30 pm                                               #
+# Modified   : Saturday August 17th 2024 02:14:32 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,76 +20,31 @@
 
 import time
 from dataclasses import dataclass, field
+from typing import Union
 
 import aiohttp
 import numpy as np
-from prometheus_client import CollectorRegistry
 
-from appstorestream.core.metrics import Metrics, MetricsExporter
+from appstorestream.application.base.metrics import (
+    ExtractMetrics,
+    JobMetrics,
+    TaskMetrics,
+)
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class ExtractMetrics(Metrics):
-    extract_job_runtime_start_timestamp_seconds: float = 0.0
-    extract_job_runtime_stop_timestamp_seconds: float = 0.0
-    extract_job_runtime_duration_seconds_total: float = 0.0
-
-    extract_job_request_session_count_total: float = 0.0
-    extract_job_request_count_total: int = 0
-
-    extract_job_response_count_total: int = 0
-    extract_job_response_average_per_second_ratio: float = 0.0
-    extract_job_response_average_latency_seconds: float = 0.0
-    extract_job_response_latency_seconds_total: float = 0.0
-    extract_job_response_average_size_bytes: int = 0
-    extract_job_response_size_bytes_total: int = 0
-
-    extract_job_success_failure_retries_total: int = 0
-    extract_job_success_failure_errors_total: int = 0
-    extract_job_success_failure_request_failure_rate_ratio: float = 0.0
-    extract_job_success_failure_request_success_rate_ratio: float = 0.0
-
-    extract_task_runtime_start_timestamp_seconds: float = 0.0
-    extract_task_runtime_stop_timestamp_seconds: float = 0.0
-    extract_task_runtime_duration_seconds: float = 0.0
-
-    extract_task_request_count_total: int = 0
-    extract_task_request_per_second_ratio: float = 0.0
-
-    extract_task_response_count_total: int = 0
-    extract_task_response_per_second_ratio: float = 0.0
-    extract_task_response_average_latency_seconds: float = 0.0
-    extract_task_response_latency_seconds_total: float = 0.0
-    extract_task_response_average_size_bytes: int = 0
-    extract_task_response_size_bytes_total: int = 0
-
-    extract_task_success_failure_retries_total: int = 0
-    extract_task_success_failure_errors_total: int = 0
-    extract_task_success_failure_client_errors_total: int = 0
-    extract_task_success_failure_server_errors_total: int = 0
-    extract_task_success_failure_redirect_errors_total: int = 0
-    extract_task_success_failure_unknown_errors_total: int = 0
-    extract_task_success_failure_request_failure_rate_ratio: float = 0.0
-    extract_task_success_failure_request_success_rate_ratio: float = 0.0
-
-    extract_task_throttle_concurrency_efficiency_ratio: float = 0.0
-    extract_task_throttle_average_latency_efficiency_ratio: float = 0.0
-    extract_task_throttle_total_latency_efficiency_ratio: float = 0.0
-
+class ExtractTaskMetrics(ExtractMetrics, TaskMetrics):
+    level: str = "task"
     latencies: list[float] = field(default_factory=list)
 
     def start(self) -> None:
-        # Set Job start time if not already set.
-        self.extract_job_runtime_start_timestamp_seconds = (
-            self.extract_job_runtime_start_timestamp_seconds or time.time()
-        )
-        # Set task start time.
-        self.extract_task_runtime_start_timestamp_seconds = time.time()
+        # Task Start Timestamp
+        self.runtime_start_timestamp_seconds = time.time()
 
     def stop(self) -> None:
-        self.extract_job_runtime_stop_timestamp_seconds = time.time()
-        self.extract_task_runtime_stop_timestamp_seconds = time.time()
+        # Stop time
+        self.runtime_stop_timestamp_seconds = time.time()
         self.runtime_duration_seconds = (
             self.runtime_stop_timestamp_seconds - self.runtime_start_timestamp_seconds
         )
@@ -117,7 +72,6 @@ class ExtractMetrics(Metrics):
             self.success_failure_unknown_errors_total += 1
 
     def _compute_request_metrics(self) -> None:
-
         # Requests per second
         self.request_per_second_ratio = (
             (self.request_count_total / self.runtime_duration_seconds)
@@ -137,7 +91,7 @@ class ExtractMetrics(Metrics):
         self.response_average_latency_seconds = np.mean(self.latencies)
         # Total Latency
         self.response_latency_seconds_total = np.sum(self.latencies)
-        # Response Size
+        # Average Response Size
         self.response_average_size_bytes = (
             self.response_size_bytes_total / self.response_count_total
             if self.response_count_total > 0
@@ -183,346 +137,83 @@ class ExtractMetrics(Metrics):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ExtractMetricsExporter(MetricsExporter):
-    """Extract Metric Server Class"""
+@dataclass
+class ExtractJobMetrics(JobMetrics, ExtractMetrics):
+    level: str = "job"
+    session_count_total: int = 0
 
-    _category = "extract"
+    def update_metrics(self, task_metrics: Union[TaskMetrics, ExtractMetrics]) -> None:
+        self._update_runtime_metrics(task_metrics=task_metrics)
+        self._update_request_metrics(task_metrics=task_metrics)
+        self._update_response_metrics(task_metrics=task_metrics)
+        self._update_success_failure_metrics(task_metrics=task_metrics)
 
-    def __init__(
-        self,
-        job_id: str,
-        dataset: str,
-        port: int = 8000,
-        registry: CollectorRegistry = None,
-    ):
-        super().__init__(job_id=job_id, dataset=dataset, port=port, registry=registry)
-
-        self.define_metrics()
-
-    def define_metrics(self):
-        """Defines the metrics for the extract process."""
-
-        metrics_config = self.load_config(category=self._category)
-
-        # Runtime metrics
-        self.extract_runtime_start_timestamp_seconds = self.get_or_create_metric(
-            metric_name="appstorestream_extract_runtime_start_timestamp_seconds",
-            metric_type=metrics_config[
-                "appstorestream_extract_runtime_start_timestamp_seconds"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_runtime_start_timestamp_seconds"
-            ]["Description"],
-            labels=self.labels.keys(),
+    def _update_runtime_metrics(
+        self, task_metrics: Union[TaskMetrics, ExtractMetrics]
+    ) -> None:
+        # Sets runtime start timestamp if not already set.
+        self.runtime_start_timestamp_seconds = (
+            self.runtime_start_timestamp_seconds
+            or task_metrics.runtime_start_timestamp_seconds
         )
+        # Sets runtime stop to task stop in case of job failure, we
+        # have the most recent timestamp
+        self.runtime_stop_timestamp_seconds = (
+            task_metrics.runtime_stop_timestamp_seconds
+        )
+        # Increment job duration
+        self.runtime_duration_seconds_total += task_metrics.runtime_duration_seconds
 
-        self.extract_runtime_stop_timestamp_seconds = self.get_or_create_metric(
-            metric_name="appstorestream_extract_runtime_stop_timestamp_seconds",
-            metric_type=metrics_config[
-                "appstorestream_extract_runtime_stop_timestamp_seconds"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_runtime_stop_timestamp_seconds"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_runtime_duration_seconds = self.get_or_create_metric(
-            metric_name="appstorestream_extract_runtime_duration_seconds",
-            metric_type=metrics_config[
-                "appstorestream_extract_runtime_duration_seconds"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_runtime_duration_seconds"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_runtime_duration_seconds_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_runtime_duration_seconds_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_runtime_duration_seconds_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_runtime_duration_seconds_total"
-            ]["Description"],
-            labels=self.labels.keys(),
+    def _update_request_metrics(
+        self, task_metrics: Union[TaskMetrics, ExtractMetrics]
+    ) -> None:
+        # Session count
+        self.request_session_count_total += 1
+        # Request Count
+        self.request_count_total += task_metrics.request_count_total
+        # Requests per Second
+        self.request_per_second_ratio = (
+            self.request_count_total / self.runtime_duration_seconds_total
         )
 
-        # Request metrics
-        self.extract_request_count_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_request_count_total",
-            metric_type=metrics_config["appstorestream_extract_request_count_total"][
-                "Type"
-            ],
-            description=metrics_config["appstorestream_extract_request_count_total"][
-                "Description"
-            ],
-            labels=self.labels.keys(),
-        )
-        self.extract_request_per_second_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_request_per_second_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_request_per_second_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_request_per_second_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
+    def _update_response_metrics(
+        self, task_metrics: Union[TaskMetrics, ExtractMetrics]
+    ) -> None:
+        # Response Count
+        self.response_count_total += task_metrics.response_count_total
+        # Responses per Second
+        self.response_per_second_ratio = (
+            self.response_count_total / self.runtime_duration_seconds_total
         )
 
-        # Response metrics
-
-        self.extract_response_count_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_response_count_total",
-            metric_type=metrics_config["appstorestream_extract_response_count_total"][
-                "Type"
-            ],
-            description=metrics_config["appstorestream_extract_response_count_total"][
-                "Description"
-            ],
-            labels=self.labels.keys(),
+        # Total Latency
+        self.response_latency_seconds_total += (
+            task_metrics.response_latency_seconds_total
         )
-        self.extract_response_per_second_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_response_per_second_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_response_per_second_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_response_per_second_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_response_average_latency_seconds = self.get_or_create_metric(
-            metric_name="appstorestream_extract_response_average_latency_seconds",
-            metric_type=metrics_config[
-                "appstorestream_extract_response_average_latency_seconds"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_response_average_latency_seconds"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_response_latency_seconds_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_response_latency_seconds_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_response_latency_seconds_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_response_latency_seconds_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_response_average_size_bytes = self.get_or_create_metric(
-            metric_name="appstorestream_extract_response_average_size_bytes",
-            metric_type=metrics_config[
-                "appstorestream_extract_response_average_size_bytes"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_response_average_size_bytes"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_response_size_bytes_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_response_size_bytes_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_response_size_bytes_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_response_size_bytes_total"
-            ]["Description"],
-            labels=self.labels.keys(),
+        # Average Latency
+        self.response_average_latency_seconds = (
+            self.response_latency_seconds_total / self.response_count_total
         )
 
-        # Success/Failure metrics
-        self.extract_success_failure_retries_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_retries_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_retries_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_retries_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_errors_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_errors_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_errors_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_errors_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_client_errors_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_client_errors_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_client_errors_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_client_errors_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_server_errors_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_server_errors_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_server_errors_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_server_errors_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_redirect_errors_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_redirect_errors_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_redirect_errors_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_redirect_errors_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_unknown_errors_total = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_unknown_errors_total",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_unknown_errors_total"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_unknown_errors_total"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_request_failure_rate_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_request_failure_rate_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_request_failure_rate_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_request_failure_rate_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-        self.extract_success_failure_request_success_rate_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_success_failure_request_success_rate_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_success_failure_request_success_rate_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_success_failure_request_success_rate_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
+        # Total Size of Responses
+        self.response_size_bytes_total += task_metrics.response_size_bytes_total
+        # Average response size
+        self.response_average_size_bytes = (
+            self.response_size_bytes_total / self.response_count_total
         )
 
-        # Throttle metrics
-        self.extract_throttle_concurrency_efficiency_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_throttle_concurrency_efficiency_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_throttle_concurrency_efficiency_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_throttle_concurrency_efficiency_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
+    def _update_success_failure_metrics(
+        self, task_metrics: Union[TaskMetrics, ExtractMetrics]
+    ) -> None:
+        # Retries
+        self.success_failure_retries_total += task_metrics.success_failure_retries_total
+        # Errors
+        self.success_failure_errors_total += task_metrics.success_failure_errors_total
+        # Failure Rate
+        self.success_failure_request_failure_rate_ratio = (
+            self.success_failure_errors_total / self.request_count_total
         )
-        self.extract_throttle_average_latency_efficiency_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_throttle_average_latency_efficiency_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_throttle_average_latency_efficiency_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_throttle_average_latency_efficiency_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-
-        self.extract_throttle_total_latency_efficiency_ratio = self.get_or_create_metric(
-            metric_name="appstorestream_extract_throttle_total_latency_efficiency_ratio",
-            metric_type=metrics_config[
-                "appstorestream_extract_throttle_total_latency_efficiency_ratio"
-            ]["Type"],
-            description=metrics_config[
-                "appstorestream_extract_throttle_total_latency_efficiency_ratio"
-            ]["Description"],
-            labels=self.labels.keys(),
-        )
-
-    def update_metrics(self, metrics: Metrics):
-        """Update the metrics with the provided values."""
-        metrics = metrics.as_dict()
-
-        # Update the metrics with the provided values
-        # Assuming `metrics` is a dictionary containing the new values
-        self.extract_runtime_start_timestamp_seconds.labels(**self.labels).inc(
-            metrics.get("runtime_start_timestamp_seconds", 0)
-        )
-        self.extract_runtime_stop_timestamp_seconds.labels(**self.labels).inc(
-            metrics.get("runtime_stop_timestamp_seconds", 0)
-        )
-        self.extract_runtime_duration_seconds.labels(**self.labels).set(
-            metrics.get("runtime_duration_seconds", 0)
-        )
-        self.extract_runtime_duration_seconds_total.labels(**self.labels).inc(
-            metrics.get("runtime_duration_seconds", 0)
-        )
-
-        self.extract_request_count_total.labels(**self.labels).inc(
-            metrics.get("request_count_total", 0)
-        )
-        self.extract_request_per_second_ratio.labels(**self.labels).set(
-            metrics.get("request_per_second_ratio", 0)
-        )
-
-        self.extract_response_count_total.labels(**self.labels).inc(
-            metrics.get("response_count_total", 0)
-        )
-        self.extract_response_per_second_ratio.labels(**self.labels).set(
-            metrics.get("response_per_second_ratio", 0)
-        )
-        self.extract_response_average_latency_seconds.labels(**self.labels).set(
-            metrics.get("response_average_latency_seconds", 0)
-        )
-        self.extract_response_latency_seconds_total.labels(**self.labels).inc(
-            metrics.get("response_latency_seconds_total", 0)
-        )
-        self.extract_response_average_size_bytes.labels(**self.labels).set(
-            metrics.get("response_average_size_bytes", 0)
-        )
-        self.extract_response_size_bytes_total.labels(**self.labels).inc(
-            metrics.get("response_size_bytes_total", 0)
-        )
-
-        self.extract_success_failure_retries_total.labels(**self.labels).inc(
-            metrics.get("success_failure_retries_total", 0)
-        )
-        self.extract_success_failure_errors_total.labels(**self.labels).inc(
-            metrics.get("success_failure_errors_total", 0)
-        )
-        self.extract_success_failure_client_errors_total.labels(**self.labels).inc(
-            metrics.get("success_failure_client_errors_total", 0)
-        )
-        self.extract_success_failure_server_errors_total.labels(**self.labels).inc(
-            metrics.get("success_failure_server_errors_total", 0)
-        )
-        self.extract_success_failure_redirect_errors_total.labels(**self.labels).inc(
-            metrics.get("success_failure_redirect_errors_total", 0)
-        )
-        self.extract_success_failure_unknown_errors_total.labels(**self.labels).inc(
-            metrics.get("success_failure_unknown_errors_total", 0)
-        )
-        self.extract_success_failure_request_failure_rate_ratio.labels(
-            **self.labels
-        ).set(metrics.get("success_failure_request_failure_rate_ratio", 0))
-        self.extract_success_failure_request_success_rate_ratio.labels(
-            **self.labels
-        ).set(metrics.get("success_failure_request_success_rate_ratio", 0))
-
-        self.extract_throttle_concurrency_efficiency_ratio.labels(**self.labels).set(
-            metrics.get("throttle_concurrency_efficiency_ratio", 0)
-        )
-        self.extract_throttle_average_latency_efficiency_ratio.labels(
-            **self.labels
-        ).set(metrics.get("throttle_average_latency_efficiency_ratio", 0))
-        self.extract_throttle_total_latency_efficiency_ratio.labels(**self.labels).set(
-            metrics.get("throttle_total_latency_efficiency_ratio", 0)
+        # Success Rate
+        self.success_failure_request_success_rate_ratio = (
+            1 - self.success_failure_request_failure_rate_ratio
         )
