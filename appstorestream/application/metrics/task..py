@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Friday August 16th 2024 11:59:42 am                                                 #
+# Modified   : Friday August 16th 2024 12:16:59 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,12 +31,12 @@ from appstorestream.core.metrics import Metrics, MetricServer
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class TaskMetrics(Metrics):
-    runtime_start_timestamp_seconds: float = None
-    runtime_stop_timestamp_seconds: float = None
-    runtime_duration_seconds: int = None
+    runtime_start_timestamp_seconds: float = 0.0
+    runtime_stop_timestamp_seconds: float = 0.0
+    runtime_duration_seconds: int = 0
 
-    record_count_total: int = None
-    record_per_second_ratio: float = None
+    record_count_total: int = 0
+    record_per_second_ratio: float = 0.0
 
     def start(self) -> None:
         self.runtime_start_timestamp_seconds = time.time()

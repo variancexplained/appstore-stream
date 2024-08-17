@@ -11,15 +11,18 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Sunday August 4th 2024 11:47:09 pm                                                  #
+# Modified   : Friday August 16th 2024 02:52:20 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 import json
+from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 import pytest
+from prometheus_client import CollectorRegistry
 
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
@@ -71,3 +74,30 @@ def appdata_json():
 def random_latencies():
     # Provide a list of random latencies for testing
     return [0.2, 0.5, 1.2, 0.7, 0.8, 1.1, 0.6, 1.0]
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                  RESPONSE OBJECT                                                 #
+# ------------------------------------------------------------------------------------------------ #
+
+
+@pytest.fixture(scope="session", autouse=False)
+def response():
+    """Mocks a response object."""
+
+    @dataclass
+    class Response:
+        content_length: int = 0
+
+    return Response()
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                  RESPONSE OBJECT                                                 #
+# ------------------------------------------------------------------------------------------------ #
+
+
+@pytest.fixture(scope="session", autouse=False)
+def custom_prometheus_registry():
+    """Creates a custom prometheus metrics registry."""
+    return CollectorRegistry()

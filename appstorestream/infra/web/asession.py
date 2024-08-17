@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Friday August 16th 2024 11:33:25 am                                                 #
+# Modified   : Friday August 16th 2024 07:40:38 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -149,7 +149,7 @@ class ASession(InfraService):
         metrics.counts_requests_total += 1
 
         async with concurrency:
-            while metrics.retries < self._retries:
+            while metrics.success_failure_retries_total < self._retries:
                 try:
                     start_time = time.time()
                     async with client.get(
@@ -162,7 +162,8 @@ class ASession(InfraService):
                         return await response.json(encoding="UTF-8", content_type=None)
 
                 except aiohttp.ClientResponseError as e:
-                    metrics.log_http_error(return_code=e.status)
+                    if metrics.success_failure_retries_total == self._retries - 1:
+                        metrics.log_http_error(return_code=e.status)
                     if 400 <= e.status < 500:
                         self._logger.warning(
                             f"ClientResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."

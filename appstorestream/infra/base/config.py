@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Friday August 2nd 2024 01:19:59 am                                                  #
+# Modified   : Friday August 16th 2024 07:36:16 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -38,20 +38,20 @@ class Config:
     A class for managing configuration and .env environment variables.
 
     Attributes:
-        _file_path (str): Path to the .env file.
+        _env_file_path (str): Path to the .env file.
         _current_environment (str): Current environment variable value.
         namespace_mode (bool): If True, returneed data can be accessed using dot
             notation.Default = True
     """
 
-    def __init__(self, file_path: str = ".env", namespace_mode: bool = True):
+    def __init__(self, env_file_path: str = ".env", namespace_mode: bool = True):
         """
         Initialize the Config class with the path to the .env file.
 
         Args:
             file_path (str): Path to the .env file.
         """
-        self._file_path = file_path
+        self._env_file_path = env_file_path
         self._current_environment = self.get_environment()
         self._namespace_mode = namespace_mode
         self._config = self.load_config()
@@ -125,16 +125,18 @@ class Config:
         """
         key = "ENV"
         # Load existing values
-        env_values = dotenv_values(self._file_path)
+        env_values = dotenv_values(self._env_file_path)
         # Add/update the key-value pair
         env_values[key] = new_value
         # Write all values back to the file
-        with open(self._file_path, "w") as file:
+        with open(self._env_file_path, "w") as file:
             for k, v in env_values.items():
                 file.write(f"{k}={v}\n")
         # Update the environment variable in the current process
         os.environ[key] = new_value
-        print(f"Updated {key} to {new_value} in {self._file_path} and current process")
+        print(
+            f"Updated {key} to {new_value} in {self._env_file_path} and current process"
+        )
 
     #  ------------------------------------------------------------------------------------------- #
     def get_environment(self):
@@ -159,10 +161,32 @@ class Config:
         Loads the base configuration as well as environment specific config.
 
         """
-        with open(self.filepath, "r") as config_file:
-            config = yaml.safe_load(config_file)
+
+        config_filepath_base = os.getenv("CONFIG_FILEPATH_BASE")
+        config_filepath_env = self.filepath
+
+        # Load base config
+        with open(config_filepath_base, "r") as base_config_file:
+            base_config = yaml.safe_load(base_config_file)
+
+        # Load env config
+        with open(config_filepath_env, "r") as env_config_file:
+            env_config = yaml.safe_load(env_config_file)
+
+        config = {**base_config, **env_config}
 
         return config
+
+    #  ------------------------------------------------------------------------------------------- #
+    def load_metrics_config(self) -> dict:
+        """
+        Loads and returns the metrics configuration
+        """
+        config_filepath_base = os.getenv("CONFIG_FILEPATH_BASE")
+        # Load base config
+        with open(config_filepath_base, "r") as base_config_file:
+            base_config = yaml.safe_load(base_config_file)
+        return base_config["metrics"]
 
     #  ------------------------------------------------------------------------------------------- #
     def to_namespace(self, config: dict) -> NestedNamespace:

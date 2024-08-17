@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/metrics/session.py                                            #
+# Filename   : /appstorestream/application/metrics/extract.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Friday August 16th 2024 10:21:35 am                                                 #
+# Modified   : Friday August 16th 2024 08:32:33 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 
 import aiohttp
 import numpy as np
-from prometheus_client import Counter, Gauge
+from prometheus_client import REGISTRY, Counter, Gauge
 
 from appstorestream.core.metrics import Metrics, MetricServer
 
@@ -31,32 +31,32 @@ from appstorestream.core.metrics import Metrics, MetricServer
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class ExtractMetrics(Metrics):
-    runtime_start_timestamp_seconds: float = None
-    runtime_stop_timestamp_seconds: float = None
-    runtime_duration_seconds: float = None
+    runtime_start_timestamp_seconds: float = 0.0
+    runtime_stop_timestamp_seconds: float = 0.0
+    runtime_duration_seconds: float = 0.0
 
-    request_count_total: int = None
-    request_per_second_ratio: float = None
+    request_count_total: int = 0
+    request_per_second_ratio: float = 0.0
 
-    response_count_total: int = None
-    response_per_second_ratio: float = None
-    response_average_latency_seconds: float = None
-    response_latency_seconds_total: float = None
-    response_average_size_bytes: int = None
-    response_size_bytes_total: int = None
+    response_count_total: int = 0
+    response_per_second_ratio: float = 0.0
+    response_average_latency_seconds: float = 0.0
+    response_latency_seconds_total: float = 0.0
+    response_average_size_bytes: int = 0
+    response_size_bytes_total: int = 0
 
-    success_failure_retries_total: int = None
-    success_failure_errors_total: int = None
-    success_failure_client_errors_total: int = None
-    success_failure_server_errors_total: int = None
-    success_failure_redirect_errors_total: int = None
-    success_failure_unknown_errors_total: int = None
-    success_failure_request_failure_rate_ratio: float = None
-    success_failure_request_success_rate_ratio: float = None
+    success_failure_retries_total: int = 0
+    success_failure_errors_total: int = 0
+    success_failure_client_errors_total: int = 0
+    success_failure_server_errors_total: int = 0
+    success_failure_redirect_errors_total: int = 0
+    success_failure_unknown_errors_total: int = 0
+    success_failure_request_failure_rate_ratio: float = 0.0
+    success_failure_request_success_rate_ratio: float = 0.0
 
-    throttle_concurrency_efficiency_ratio: float = None
-    throttle_average_latency_efficiency_ratio: float = None
-    throttle_total_latency_efficiency_ratio: float = None
+    throttle_concurrency_efficiency_ratio: float = 0.0
+    throttle_average_latency_efficiency_ratio: float = 0.0
+    throttle_total_latency_efficiency_ratio: float = 0.0
 
     latencies: list[float] = field(default_factory=list)
 
@@ -161,136 +161,259 @@ class ExtractMetrics(Metrics):
 class ExtractMetricServer(MetricServer):
     """Extract Metric Server Class"""
 
+    _category = "extract"
+
     def __init__(self, job_id: str, dataset: str, port: int = 8000):
-        super().__init__(job_id, dataset, port)
+        super().__init__(job_id=job_id, dataset=dataset, port=port)
+
         self.define_metrics()
 
     def define_metrics(self):
         """Defines the metrics for the extract process."""
 
+        metrics_config = self.load_config(category=self._category)
+
         # Runtime metrics
-        self.extract_runtime_start_timestamp_seconds = Counter(
-            "appstorestream_extract_runtime_start_timestamp_seconds",
-            "Start timestamp in seconds",
-            self._labels.keys(),
+        self.extract_runtime_start_timestamp_seconds = self.get_or_create_metric(
+            metric_name="appstorestream_extract_runtime_start_timestamp_seconds",
+            metric_type=metrics_config[
+                "appstorestream_extract_runtime_start_timestamp_seconds"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_runtime_start_timestamp_seconds"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_runtime_stop_timestamp_seconds = Counter(
-            "appstorestream_extract_runtime_stop_timestamp_seconds",
-            "Stop timestamp in seconds",
-            self._labels.keys(),
+
+        self.extract_runtime_stop_timestamp_seconds = self.get_or_create_metric(
+            metric_name="appstorestream_extract_runtime_stop_timestamp_seconds",
+            metric_type=metrics_config[
+                "appstorestream_extract_runtime_stop_timestamp_seconds"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_runtime_stop_timestamp_seconds"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_runtime_duration_seconds = Gauge(
-            "appstorestream_extract_runtime_duration_seconds",
-            "Session duration",
-            self._labels.keys(),
+        self.extract_runtime_duration_seconds = self.get_or_create_metric(
+            metric_name="appstorestream_extract_runtime_duration_seconds",
+            metric_type=metrics_config[
+                "appstorestream_extract_runtime_duration_seconds"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_runtime_duration_seconds"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_runtime_duration_seconds_total = Counter(
-            "appstorestream_extract_runtime_duration_seconds_total",
-            "Session duration",
-            self._labels.keys(),
+        self.extract_runtime_duration_seconds_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_runtime_duration_seconds_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_runtime_duration_seconds_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_runtime_duration_seconds_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
 
         # Request metrics
-        self.extract_request_count_total = Counter(
-            "appstorestream_extract_request_count_total",
-            "Request count",
-            self._labels.keys(),
+        self.extract_request_count_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_request_count_total",
+            metric_type=metrics_config["appstorestream_extract_request_count_total"][
+                "Type"
+            ],
+            description=metrics_config["appstorestream_extract_request_count_total"][
+                "Description"
+            ],
+            labels=self.labels.keys(),
         )
-        self.extract_request_per_second_ratio = Gauge(
-            "appstorestream_extract_request_per_second_ratio",
-            "Requests per second",
-            self._labels.keys(),
+        self.extract_request_per_second_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_request_per_second_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_request_per_second_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_request_per_second_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
 
         # Response metrics
-        self.extract_response_count_total = Counter(
-            "appstorestream_extract_response_count_total",
-            "Response count",
-            self._labels.keys(),
+
+        self.extract_response_count_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_response_count_total",
+            metric_type=metrics_config["appstorestream_extract_response_count_total"][
+                "Type"
+            ],
+            description=metrics_config["appstorestream_extract_response_count_total"][
+                "Description"
+            ],
+            labels=self.labels.keys(),
         )
-        self.extract_response_per_second_ratio = Gauge(
-            "appstorestream_extract_response_per_second_ratio",
-            "Responses per second",
-            self._labels.keys(),
+        self.extract_response_per_second_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_response_per_second_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_response_per_second_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_response_per_second_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_response_average_latency_seconds = Gauge(
-            "appstorestream_extract_response_average_latency_seconds",
-            "Average latency for a session",
-            self._labels.keys(),
+        self.extract_response_average_latency_seconds = self.get_or_create_metric(
+            metric_name="appstorestream_extract_response_average_latency_seconds",
+            metric_type=metrics_config[
+                "appstorestream_extract_response_average_latency_seconds"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_response_average_latency_seconds"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_response_latency_seconds_total = Counter(
-            "appstorestream_extract_response_latency_seconds_total",
-            "Total latency for a session",
-            self._labels.keys(),
+        self.extract_response_latency_seconds_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_response_latency_seconds_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_response_latency_seconds_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_response_latency_seconds_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_response_average_size_bytes = Gauge(
-            "appstorestream_extract_response_average_size_bytes",
-            "Average response size for a session",
-            self._labels.keys(),
+        self.extract_response_average_size_bytes = self.get_or_create_metric(
+            metric_name="appstorestream_extract_response_average_size_bytes",
+            metric_type=metrics_config[
+                "appstorestream_extract_response_average_size_bytes"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_response_average_size_bytes"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_response_size_bytes_total = Counter(
-            "appstorestream_extract_response_size_bytes_total",
-            "Total response size for a session",
-            self._labels.keys(),
+        self.extract_response_size_bytes_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_response_size_bytes_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_response_size_bytes_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_response_size_bytes_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
 
         # Success/Failure metrics
-        self.extract_success_failure_retries_total = Counter(
-            "appstorestream_extract_success_failure_retries_total",
-            "Retry count",
-            self._labels.keys(),
+        self.extract_success_failure_retries_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_retries_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_retries_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_retries_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_errors_total = Counter(
-            "appstorestream_extract_success_failure_errors_total",
-            "Error count",
-            self._labels.keys(),
+        self.extract_success_failure_errors_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_errors_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_errors_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_errors_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_client_errors_total = Counter(
-            "appstorestream_extract_success_failure_client_errors_total",
-            "Client error count",
-            self._labels.keys(),
+        self.extract_success_failure_client_errors_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_client_errors_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_client_errors_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_client_errors_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_server_errors_total = Counter(
-            "appstorestream_extract_success_failure_server_errors_total",
-            "Server error count",
-            self._labels.keys(),
+        self.extract_success_failure_server_errors_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_server_errors_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_server_errors_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_server_errors_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_redirect_errors_total = Counter(
-            "appstorestream_extract_success_failure_redirect_errors_total",
-            "Redirect error count",
-            self._labels.keys(),
+        self.extract_success_failure_redirect_errors_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_redirect_errors_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_redirect_errors_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_redirect_errors_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_unknown_errors_total = Counter(
-            "appstorestream_extract_success_failure_unknown_errors_total",
-            "Unknown error count",
-            self._labels.keys(),
+        self.extract_success_failure_unknown_errors_total = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_unknown_errors_total",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_unknown_errors_total"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_unknown_errors_total"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_request_failure_rate_ratio = Gauge(
-            "appstorestream_extract_success_failure_request_failure_rate_ratio",
-            "Errors / Requests",
-            self._labels.keys(),
+        self.extract_success_failure_request_failure_rate_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_request_failure_rate_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_request_failure_rate_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_request_failure_rate_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_success_failure_request_success_rate_ratio = Gauge(
-            "appstorestream_extract_success_failure_request_success_rate_ratio",
-            "1 - failure_rate",
-            self._labels.keys(),
+        self.extract_success_failure_request_success_rate_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_success_failure_request_success_rate_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_success_failure_request_success_rate_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_success_failure_request_success_rate_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
 
         # Throttle metrics
-        self.extract_throttle_concurrency_efficiency_ratio = Gauge(
-            "appstorestream_extract_throttle_concurrency_efficiency_ratio",
-            "Average latency / (Duration / Requests)",
-            self._labels.keys(),
+        self.extract_throttle_concurrency_efficiency_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_throttle_concurrency_efficiency_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_throttle_concurrency_efficiency_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_throttle_concurrency_efficiency_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_throttle_average_latency_efficiency_ratio = Gauge(
-            "appstorestream_extract_throttle_average_latency_efficiency_ratio",
-            "Average Latency / Average Duration",
-            self._labels.keys(),
+        self.extract_throttle_average_latency_efficiency_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_throttle_average_latency_efficiency_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_throttle_average_latency_efficiency_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_throttle_average_latency_efficiency_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
-        self.extract_throttle_total_latency_efficiency_ratio = Gauge(
-            "appstorestream_extract_throttle_total_latency_efficiency_ratio",
-            "Total Latency / Total Duration",
-            self._labels.keys(),
+
+        self.extract_throttle_total_latency_efficiency_ratio = self.get_or_create_metric(
+            metric_name="appstorestream_extract_throttle_total_latency_efficiency_ratio",
+            metric_type=metrics_config[
+                "appstorestream_extract_throttle_total_latency_efficiency_ratio"
+            ]["Type"],
+            description=metrics_config[
+                "appstorestream_extract_throttle_total_latency_efficiency_ratio"
+            ]["Description"],
+            labels=self.labels.keys(),
         )
 
     def update_metrics(self, metrics: Metrics):
@@ -299,76 +422,76 @@ class ExtractMetricServer(MetricServer):
 
         # Update the metrics with the provided values
         # Assuming `metrics` is a dictionary containing the new values
-        self.extract_runtime_start_timestamp_seconds.labels(**self._labels).inc(
+        self.extract_runtime_start_timestamp_seconds.labels(**self.labels).inc(
             metrics.get("runtime_start_timestamp_seconds", 0)
         )
-        self.extract_runtime_stop_timestamp_seconds.labels(**self._labels).inc(
+        self.extract_runtime_stop_timestamp_seconds.labels(**self.labels).inc(
             metrics.get("runtime_stop_timestamp_seconds", 0)
         )
-        self.extract_runtime_duration_seconds.labels(**self._labels).set(
+        self.extract_runtime_duration_seconds.labels(**self.labels).set(
             metrics.get("runtime_duration_seconds", 0)
         )
-        self.extract_runtime_duration_seconds_total.labels(**self._labels).inc(
+        self.extract_runtime_duration_seconds_total.labels(**self.labels).inc(
             metrics.get("runtime_duration_seconds", 0)
         )
 
-        self.extract_request_count_total.labels(**self._labels).inc(
+        self.extract_request_count_total.labels(**self.labels).inc(
             metrics.get("request_count_total", 0)
         )
-        self.extract_request_per_second_ratio.labels(**self._labels).set(
+        self.extract_request_per_second_ratio.labels(**self.labels).set(
             metrics.get("request_per_second_ratio", 0)
         )
 
-        self.extract_response_count_total.labels(**self._labels).inc(
+        self.extract_response_count_total.labels(**self.labels).inc(
             metrics.get("response_count_total", 0)
         )
-        self.extract_response_per_second_ratio.labels(**self._labels).set(
+        self.extract_response_per_second_ratio.labels(**self.labels).set(
             metrics.get("response_per_second_ratio", 0)
         )
-        self.extract_response_average_latency_seconds.labels(**self._labels).set(
+        self.extract_response_average_latency_seconds.labels(**self.labels).set(
             metrics.get("response_average_latency_seconds", 0)
         )
-        self.extract_response_latency_seconds_total.labels(**self._labels).inc(
+        self.extract_response_latency_seconds_total.labels(**self.labels).inc(
             metrics.get("response_latency_seconds_total", 0)
         )
-        self.extract_response_average_size_bytes.labels(**self._labels).set(
+        self.extract_response_average_size_bytes.labels(**self.labels).set(
             metrics.get("response_average_size_bytes", 0)
         )
-        self.extract_response_size_bytes_total.labels(**self._labels).inc(
+        self.extract_response_size_bytes_total.labels(**self.labels).inc(
             metrics.get("response_size_bytes_total", 0)
         )
 
-        self.extract_success_failure_retries_total.labels(**self._labels).inc(
+        self.extract_success_failure_retries_total.labels(**self.labels).inc(
             metrics.get("success_failure_retries_total", 0)
         )
-        self.extract_success_failure_errors_total.labels(**self._labels).inc(
+        self.extract_success_failure_errors_total.labels(**self.labels).inc(
             metrics.get("success_failure_errors_total", 0)
         )
-        self.extract_success_failure_client_errors_total.labels(**self._labels).inc(
+        self.extract_success_failure_client_errors_total.labels(**self.labels).inc(
             metrics.get("success_failure_client_errors_total", 0)
         )
-        self.extract_success_failure_server_errors_total.labels(**self._labels).inc(
+        self.extract_success_failure_server_errors_total.labels(**self.labels).inc(
             metrics.get("success_failure_server_errors_total", 0)
         )
-        self.extract_success_failure_redirect_errors_total.labels(**self._labels).inc(
+        self.extract_success_failure_redirect_errors_total.labels(**self.labels).inc(
             metrics.get("success_failure_redirect_errors_total", 0)
         )
-        self.extract_success_failure_unknown_errors_total.labels(**self._labels).inc(
+        self.extract_success_failure_unknown_errors_total.labels(**self.labels).inc(
             metrics.get("success_failure_unknown_errors_total", 0)
         )
         self.extract_success_failure_request_failure_rate_ratio.labels(
-            **self._labels
+            **self.labels
         ).set(metrics.get("success_failure_request_failure_rate_ratio", 0))
         self.extract_success_failure_request_success_rate_ratio.labels(
-            **self._labels
+            **self.labels
         ).set(metrics.get("success_failure_request_success_rate_ratio", 0))
 
-        self.extract_throttle_concurrency_efficiency_ratio.labels(**self._labels).set(
+        self.extract_throttle_concurrency_efficiency_ratio.labels(**self.labels).set(
             metrics.get("throttle_concurrency_efficiency_ratio", 0)
         )
         self.extract_throttle_average_latency_efficiency_ratio.labels(
-            **self._labels
+            **self.labels
         ).set(metrics.get("throttle_average_latency_efficiency_ratio", 0))
-        self.extract_throttle_total_latency_efficiency_ratio.labels(**self._labels).set(
+        self.extract_throttle_total_latency_efficiency_ratio.labels(**self.labels).set(
             metrics.get("throttle_total_latency_efficiency_ratio", 0)
         )
