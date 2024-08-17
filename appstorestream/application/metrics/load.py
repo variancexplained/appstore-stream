@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Friday August 16th 2024 12:16:21 pm                                                 #
+# Modified   : Saturday August 17th 2024 12:04:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ import aiohttp
 import numpy as np
 from prometheus_client import Counter, Gauge
 
-from appstorestream.core.metrics import Metrics, MetricServer
+from appstorestream.core.metrics import Metrics, MetricsExporter
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -63,7 +63,7 @@ class LoadMetrics(Metrics):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class LoadMetricServer(MetricServer):
+class LoadMetricsExporter(MetricsExporter):
     """Load Metric Server Class"""
 
     def __init__(self, job_id: str, dataset: str, port: int = 8000):

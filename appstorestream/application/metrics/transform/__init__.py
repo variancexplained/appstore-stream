@@ -4,27 +4,15 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /config/prometheus_test.yaml                                                        #
+# Filename   : /appstorestream/application/metrics/transform/__init__.py                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Saturday August 17th 2024 08:22:20 am                                               #
+# Created    : Saturday August 17th 2024 11:13:43 am                                               #
+# Modified   : Saturday August 17th 2024 11:13:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-# ================================================================================================ #
-#                                 PROMETHEUS TEST CONFIG FILE                                      #
-# ================================================================================================ #
-global:
-  scrape_interval: 5m
-
-scrape_configs:
-  - job_name: 'appstore_stream_test'
-    scrape_interval: 5s
-    scrape_timeout: 5s
-    static_configs:
-      - targets: ['172.29.128.1:8020']

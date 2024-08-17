@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 16th 2024 12:03:24 pm                                                 #
-# Modified   : Friday August 16th 2024 02:29:00 pm                                                 #
+# Modified   : Saturday August 17th 2024 12:04:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,7 +26,7 @@ import pytest
 
 from appstorestream.application.metrics.extract import (
     ExtractMetrics,
-    ExtractMetricServer,
+    ExtractMetricsExporter,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -50,9 +50,7 @@ class TestExtractMetrics:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        JOB_ID = f"test_job {datetime.now().strftime('%m/%d/%Y-%H:%M:%S')}"
-        PORT = 8020
-        DATASET = "TestData"
+
         RESPONSES = 10
         LATENCY = 0.1
         DURATION = RESPONSES * LATENCY
@@ -78,6 +76,7 @@ class TestExtractMetrics:  # pragma: no cover
                 metrics.success_failure_retries_total += 1
 
         metrics.stop()
+        logging.debug(metrics)
 
         # Runtime Metrics
         assert metrics.runtime_start_timestamp_seconds > 0
@@ -123,9 +122,169 @@ class TestExtractMetrics:  # pragma: no cover
         assert metrics.throttle_average_latency_efficiency_ratio > 0
         assert metrics.throttle_total_latency_efficiency_ratio > 0
 
-        # Update Metrics
-        metric_server = ExtractMetricServer(job_id=JOB_ID, dataset=DATASET, port=PORT)
-        metric_server.update_metrics(metrics=metrics)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_extract_metrics_server(
+        self, custom_prometheus_registry, extract_metrics, caplog
+    ):
+        start = datetime.now()
+        logger.info(
+            f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        JOB_ID = f"test_job {datetime.now().strftime('%m/%d/%Y-%H:%M:%S')}"
+        PORT = 8020
+        DATASET = "TestData"
+        metrics_server = ExtractMetricsExporter(
+            job_id=JOB_ID,
+            dataset=DATASET,
+            port=PORT,
+            registry=custom_prometheus_registry,
+        )
+        metrics_server.update_metrics(metrics=extract_metrics)
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_runtime_start_timestamp_seconds"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_runtime_stop_timestamp_seconds"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_runtime_duration_seconds_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_runtime_duration_seconds"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value("extract_request_count_total")
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_request_per_second_ratio"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value("extract_response_count_total")
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_response_per_second_ratio"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_response_average_latency_seconds"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_response_latency_seconds_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_response_average_size_bytes"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_response_size_bytes_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_retries_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_errors_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_client_errors_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_server_errors_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_redirect_errors_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_unknown_errors_total"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_request_failure_rate_ratio"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_success_failure_request_success_rate_ratio"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_throttle_concurrency_efficiency_ratio"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_throttle_average_latency_efficiency_ratio"
+            )
+            > 0
+        )
+        assert (
+            custom_prometheus_registry.get_sample_value(
+                "extract_throttle_total_latency_efficiency_ratio"
+            )
+            > 0
+        )
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

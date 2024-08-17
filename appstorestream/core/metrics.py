@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 06:13:17 pm                                                   #
-# Modified   : Friday August 16th 2024 09:05:54 pm                                                 #
+# Modified   : Saturday August 17th 2024 12:04:31 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,18 +19,12 @@
 """Metrics Module"""
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from threading import Lock
-from typing import Union
 
-from prometheus_client import (
-    REGISTRY,
-    CollectorRegistry,
-    Counter,
-    Gauge,
-    start_http_server,
-)
+from prometheus_client import CollectorRegistry, Counter, Gauge, start_http_server
 
 from appstorestream.core.data import DataClass
 from appstorestream.infra.base.config import Config
@@ -51,7 +45,7 @@ class Metrics(DataClass):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class MetricServer(ABC):
+class MetricsExporter(ABC):
     """Base Metric Server Class"""
 
     _server_started = False
@@ -62,32 +56,49 @@ class MetricServer(ABC):
         job_id: str,
         dataset: str,
         config_cls: type[Config] = Config,
-        registry: CollectorRegistry = REGISTRY,
+        registry: CollectorRegistry = None,
         port: int = 8000,
     ):
         self._config = config_cls()
-        self._registry = registry
+        self._registry = registry or CollectorRegistry()
         self.start_server(port=port)
         self.labels = {"job_id": job_id, "dataset": dataset}
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     def get_or_create_metric(self, metric_name, metric_type, description, labels):
-        """Utility function to get or create a metric."""
+        """Utility method to get or create a metric."""
         try:
+            # Try creating and registering the metric
             if metric_type == "Counter":
+                self._logger.debug(f"Creating Counter metric {metric_name}")
                 return Counter(
                     metric_name, description, labels, registry=self._registry
                 )
             elif metric_type == "Gauge":
+                self._logger.debug(f"Creating Gauge metric {metric_name}")
                 return Gauge(metric_name, description, labels, registry=self._registry)
             else:
                 raise ValueError(f"Unsupported metric type: {metric_type}")
         except ValueError as e:
             if "Duplicated timeseries" in str(e):
-                # Retrieve existing metric from the registry if it already exists
-                for collector in self._registry.collectors:
-                    for metric in collector.collect():
-                        if metric.name == metric_name:
-                            return collector
+                self._logger.debug(f"Duplicate timeseries found for {metric_name}.")
+                # Metric already exists, retrieve it from the registry
+                for metric_family in self._registry.collect():
+                    for sample in metric_family.samples:
+                        if sample.name == metric_name:
+                            # Return the metric that caused the duplicate error
+                            for collector in self._registry._collector_to_names:
+                                if (
+                                    metric_name
+                                    in self._registry._collector_to_names[collector]
+                                ):
+                                    self._logger.debug(
+                                        f"Found existing metric: {metric_name}"
+                                    )
+                                    return collector
+                msg = f"Unable to retrieve metric {metric_name} from the registry."
+                raise RuntimeError(msg)
+
             else:
                 raise
 
