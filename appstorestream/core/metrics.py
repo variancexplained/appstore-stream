@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 06:13:17 pm                                                   #
-# Modified   : Friday August 16th 2024 08:45:14 pm                                                 #
+# Modified   : Friday August 16th 2024 09:05:54 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -73,11 +73,11 @@ class MetricServer(ABC):
     def get_or_create_metric(self, metric_name, metric_type, description, labels):
         """Utility function to get or create a metric."""
         try:
-            if metric_type == "counter":
+            if metric_type == "Counter":
                 return Counter(
                     metric_name, description, labels, registry=self._registry
                 )
-            elif metric_type == "gauge":
+            elif metric_type == "Gauge":
                 return Gauge(metric_name, description, labels, registry=self._registry)
             else:
                 raise ValueError(f"Unsupported metric type: {metric_type}")

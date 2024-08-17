@@ -14,7 +14,7 @@ data/*.*
 plots/*.*
 
 # Logs
-logs/*.*
+logs/**/*.*
 
 # Distribution / packaging
 .Python
