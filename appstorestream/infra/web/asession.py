@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Friday August 16th 2024 07:40:38 pm                                                 #
+# Modified   : Monday August 19th 2024 03:39:23 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,6 @@ from typing import Dict, Optional
 
 import aiohttp
 
-from appstorestream.application.metrics.extract import ExtractMetrics, Metrics
 from appstorestream.domain.appdata.response import AppDataAsyncResponse
 from appstorestream.domain.base.request import AsyncRequest
 from appstorestream.domain.base.response import AsyncResponse
@@ -52,14 +51,12 @@ class ASession(InfraService):
     def __init__(
         self,
         throttle: AThrottle,
-        metrics: Metrics,
         max_concurrency: int = 100,
         retries: int = 3,
         timeout: int = 30,
         config_cls: type[Config] = Config,
     ) -> None:
         self._throttle = throttle
-        self._metrics = metrics
         self._max_concurrency = max(max_concurrency, throttle.max_rate)
         self._retries = retries
         self._timeout = timeout

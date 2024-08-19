@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 17th 2024 01:26:17 pm                                               #
-# Modified   : Saturday August 17th 2024 02:21:02 pm                                               #
+# Modified   : Saturday August 17th 2024 06:16:22 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -65,9 +65,6 @@ class ExtractMetrics(DataClass):
     success_failure_unknown_errors_total: int = 0
     success_failure_request_failure_rate_ratio: float = 0.0
     success_failure_request_success_rate_ratio: float = 0.0
-    throttle_concurrency_efficiency_ratio: float = 0.0
-    throttle_average_latency_efficiency_ratio: float = 0.0
-    throttle_total_latency_efficiency_ratio: float = 0.0
 
 
 # ------------------------------------------------------------------------------------------------ #

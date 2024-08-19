@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Saturday August 17th 2024 02:14:32 pm                                               #
+# Modified   : Saturday August 17th 2024 03:41:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -36,6 +36,9 @@ from appstorestream.application.base.metrics import (
 @dataclass
 class ExtractTaskMetrics(ExtractMetrics, TaskMetrics):
     level: str = "task"
+    throttle_concurrency_efficiency_ratio: float = 0.0
+    throttle_average_latency_efficiency_ratio: float = 0.0
+    throttle_total_latency_efficiency_ratio: float = 0.0
     latencies: list[float] = field(default_factory=list)
 
     def start(self) -> None:
@@ -209,6 +212,22 @@ class ExtractJobMetrics(JobMetrics, ExtractMetrics):
         self.success_failure_retries_total += task_metrics.success_failure_retries_total
         # Errors
         self.success_failure_errors_total += task_metrics.success_failure_errors_total
+        # Client Errors
+        self.success_failure_client_errors_total += (
+            task_metrics.success_failure_client_errors_total
+        )
+        # Server Errors
+        self.success_failure_server_errors_total += (
+            task_metrics.success_failure_server_errors_total
+        )
+        # Redirect Errors
+        self.success_failure_redirect_errors_total += (
+            task_metrics.success_failure_redirect_errors_total
+        )
+        # Unkown Errors
+        self.success_failure_unknown_errors_total += (
+            task_metrics.success_failure_unknown_errors_total
+        )
         # Failure Rate
         self.success_failure_request_failure_rate_ratio = (
             self.success_failure_errors_total / self.request_count_total

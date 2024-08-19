@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Friday August 16th 2024 11:33:25 am                                                 #
+# Modified   : Saturday August 17th 2024 06:38:13 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,7 +22,6 @@ import logging.config  # pragma: no cover
 
 from dependency_injector import containers, providers
 
-from appstorestream.application.metrics.extract import Metrics
 from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.database.mysql import MySQLDatabase
@@ -101,8 +100,6 @@ class WebContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    metrics = providers.Singleton(Metrics, port=config.monitor.prometheus_client_port)
-
     athrottle = providers.Singleton(
         AThrottle,
         athrottle_history=AThrottleHistory(),
@@ -127,7 +124,6 @@ class WebContainer(containers.DeclarativeContainer):
         max_concurrency=config.asession.max_concurrency,
         retries=config.asession.retries,
         timeout=config.asession.timeout,
-        metrics=metrics,
     )
 
     asession_review = providers.Singleton(
@@ -136,7 +132,6 @@ class WebContainer(containers.DeclarativeContainer):
         max_concurrency=config.asession.max_concurrency,
         retries=config.asession.retries,
         timeout=config.asession.timeout,
-        metrics=metrics,
     )
 
 

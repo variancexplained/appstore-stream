@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Friday August 16th 2024 01:58:23 pm                                                 #
+# Modified   : Monday August 19th 2024 03:39:09 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -48,26 +48,40 @@ circuit_breaker:
 #                        ASYNCHRONOUS SESSION CONFIG SECTION                                       #
 # ------------------------------------------------------------------------------------------------ #
 asession:
-  max_concurrency: 100
   retries: 3
   timeout: 30
 # ------------------------------------------------------------------------------------------------ #
-#                    ASYNCHRONOUS HTTTP REQUEST THROTTLE CONFIG SECTION                            #
+#                    ASYNCHRONOUS HTTP REQUEST RATE THROTTLE CONFIG SECTION                        #
 # ------------------------------------------------------------------------------------------------ #
 athrottle:
-  burnin_length: 5 # Number of seconds in stage
-  explore_length: 5 # Number of seconds in stage
-  exploit_length: 600 # Number of seconds in stage
-  concurrency: 10
-  min_rate: 5 # Default minimum rate
-  max_rate: 100 # Default maximum Rate
-  rate: 5 # Default rate in requests per second for burnin stage
-  temperature: 0.5 # Scale of random noise in delay.
-  exploration_heatup_step_size: 10 # Number of requests per second to increase in heatup.
-  exploration_cooldown_step_size: -5 # Number of requests per second to decrease in cooldown
-  threshold: 0.2 # Threshold for proportion of change in cv and mean latency
-  k: 0.5 # proportion of change in mean latency to propogate to change in rate.
-  alpha: 0.05 # Significance for hypothesis testing
+  baseline:
+    duration: 1 # Seconds
+    frequency: 5 # Recalibrate baseline every 30 seconds.
+    concurrency: 10 # number of concurrent requests during baseline.
+    delay: 0.2 # Delay between asynchronous requests in seconds.
+  optimization:
+    window_size: 5 # Window size in seconds.
+    k: 0.1 # A 10% change in mean latency would result in a 1% change in delay
+    m: 0.05 # A 10% change in latency CV would result in a 0.5% change in delay
+    min_delay: 0 # Minimum delay between asynchronous requests in seconds
+    max_delay: 1 # Maximum delay between asynchronous requests in seconds
+
+# ------------------------------------------------------------------------------------------------ #
+#                    ASYNCHRONOUS HTTP REQUEST CONCURRENCY CONFIG SECTION                          #
+# ------------------------------------------------------------------------------------------------ #
+concurrency:
+  baseline: # Determines ideal concurrency based on throughput
+    frequency: 5 # Recalibrate baseline concurrency in 5 seconds.
+    steps: 4 # Number of different concurrency values to evaluate
+    step_duration: 1 # Evaluate throughput for each concurrency step for a 1 minute.
+    step_start: 50 # Concurrency at start step
+    step_stop: 200 # Concurrency at final step
+  optimization: # Adjusts concurrency based variation
+    window_size: 5 # Window size in seconds.
+    k: 0.1 # A 10% change in mean throughput would result in a 1% change in concurrency
+    m: 0.05 # A 10% change in throughput CV would result in a 0.5% change in concurrency
+    min_concurrency: 10 # Minimum concurrency value
+    max_concurrency: 300 # Maximum concurrency value
 
 
 

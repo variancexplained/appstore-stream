@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Saturday August 17th 2024 08:30:44 am                                               #
+# Modified   : Saturday August 17th 2024 06:20:03 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,7 +24,7 @@ import numpy as np
 import pytest
 from prometheus_client import CollectorRegistry
 
-from appstorestream.application.metrics.extract import ExtractMetrics
+from appstorestream.application.base.metrics import ExtractMetrics
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
 
@@ -110,16 +110,18 @@ def custom_prometheus_registry():
 
 
 @pytest.fixture(scope="session", autouse=False)
-def extract_metrics():
+def extract_task_metrics(response):
     """Creates an extract metrics object.."""
     RESPONSES = 10
     LATENCY_LOW = 0.1
     LATENCY_HIGH = 2
+    LATENCY = 0.1
     RESPONSE_SIZE_LOW = 100
     RESPONSE_SIZE_HIGH = 1000
     metrics = ExtractMetrics()
     metrics.start()
     for i in range(1, RESPONSES + 1):
+        time.sleep(LATENCY)
         metrics.request_count_total += 1
         metrics.add_latency(np.random.uniform(low=LATENCY_LOW, high=LATENCY_HIGH))
         response.content_length = np.random.randint(
