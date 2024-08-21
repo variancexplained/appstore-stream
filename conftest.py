@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Wednesday August 21st 2024 08:48:44 am                                              #
+# Modified   : Wednesday August 21st 2024 09:11:59 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -101,38 +101,3 @@ def response():
 def custom_prometheus_registry():
     """Creates a custom prometheus metrics registry."""
     return CollectorRegistry()
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                               EXTRACT METRICS                                                    #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@pytest.fixture(scope="session", autouse=False)
-def extract_task_metrics(response):
-    """Creates an extract metrics object.."""
-    RESPONSES = 10
-    LATENCY_LOW = 0.1
-    LATENCY_HIGH = 2
-    LATENCY = 0.1
-    RESPONSE_SIZE_LOW = 100
-    RESPONSE_SIZE_HIGH = 1000
-    metrics = ExtractMetrics()
-    metrics.start()
-    for i in range(1, RESPONSES + 1):
-        time.sleep(LATENCY)
-        metrics.request_count_total += 1
-        metrics.add_latency(np.random.uniform(low=LATENCY_LOW, high=LATENCY_HIGH))
-        response.content_length = np.random.randint(
-            low=RESPONSE_SIZE_LOW, high=RESPONSE_SIZE_HIGH
-        )
-        metrics.add_response(response=response)
-        if i % 5 == 0:
-            metrics.log_http_error(return_code=303)
-            metrics.log_http_error(return_code=404)
-            metrics.log_http_error(return_code=550)
-            metrics.log_http_error(return_code=600)
-            metrics.success_failure_retries_total += 1
-
-    metrics.stop()
-    return metrics

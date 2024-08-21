@@ -11,11 +11,12 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 06:48:22 am                                              #
-# Modified   : Wednesday August 21st 2024 08:40:53 am                                              #
+# Modified   : Wednesday August 21st 2024 11:25:17 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+import logging
 import time
 from collections import deque
 from dataclasses import dataclass, field
@@ -83,7 +84,7 @@ class SessionMetricsCollector(DataClass):
         """
         return self.latencies
 
-    def get_throughput(self) -> deque:
+    def get_throughput(self) -> tuple:
         """Calculate and return the throughput of requests.
 
         The throughput is calculated as the number of requests divided by the duration
@@ -91,11 +92,11 @@ class SessionMetricsCollector(DataClass):
         and the computed throughput.
 
         Returns:
-            deque: A deque containing the send timestamp and the calculated throughput.
-                   If the duration is zero, returns an empty deque.
+            tuple: A tuple containing the send timestamp and the calculated throughput.
+                   If the duration is zero, returns an empty tuple.
         """
         throughput = self.requests / self.duration if self.duration else 0
-        return deque((self.send_timestamp, throughput)) if throughput else deque()
+        return (self.send_timestamp, throughput) if throughput else tuple()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -113,6 +114,16 @@ class SessionMetrics:
         self._latencies = deque()
         self._throughputs = deque()
 
+    @property
+    def requests(self) -> int:
+        """Returns number of requests in hstory"""
+        return len(self._latencies)
+
+    @property
+    def sessions(self) -> int:
+        """Returns the number of async request sessions"""
+        return len(self._throughputs)
+
     def update_metrics(self, collector: SessionMetricsCollector) -> None:
         """Update the metrics with data from the collector.
 
@@ -120,7 +131,7 @@ class SessionMetrics:
             collector (SessionMetricsCollector): The collector containing the latest session metrics.
         """
         self._latencies.extend(collector.get_latencies())
-        self._throughputs.extend(collector.get_throughput())
+        self._throughputs.append(collector.get_throughput())
         self._prune()
 
     def compute_latency_stats(self, time_window: int = None) -> SessionStatistics:
@@ -133,9 +144,9 @@ class SessionMetrics:
             SessionStatistics: The computed statistics for latencies.
         """
         latencies = (
-            list(self._latencies)[-time_window:]
-            if time_window and len(self._latencies) >= time_window
-            else list(self._latencies)
+            [latency for _, latency in self._latencies][-time_window:]
+            if time_window and time_window <= len(self._latencies)
+            else [latency for _, latency in self._latencies]
         )
 
         if latencies:
@@ -158,9 +169,9 @@ class SessionMetrics:
             SessionStatistics: The computed statistics for throughputs.
         """
         throughputs = (
-            list(self._throughputs)[-time_window:]
-            if time_window and len(self._throughputs) >= time_window
-            else list(self._throughputs)
+            [throughput for _, throughput in self._throughputs][-time_window:]
+            if time_window and time_window <= len(self._throughputs)
+            else [throughput for _, throughput in self._throughputs]
         )
 
         if throughputs:
