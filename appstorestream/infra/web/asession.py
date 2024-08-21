@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Monday August 19th 2024 03:39:23 pm                                                 #
+# Modified   : Wednesday August 21st 2024 06:43:00 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,7 +31,7 @@ from appstorestream.domain.base.response import AsyncResponse
 from appstorestream.domain.review.response import ReviewAsyncResponse
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.base.service import InfraService
-from appstorestream.infra.web.throttle import AThrottle
+from appstorestream.infra.web.adapt import AThrottle
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -62,6 +62,7 @@ class ASession(InfraService):
         self._timeout = timeout
         self._timeout_obj = aiohttp.ClientTimeout(total=timeout)
         self._config = config_cls()
+        self._concurrency = max_concurrency
 
         self._proxy = self._config.proxy
 
@@ -77,7 +78,7 @@ class ASession(InfraService):
         """
         connector = aiohttp.TCPConnector()
 
-        concurrency = asyncio.Semaphore(self._max_concurrency)
+        concurrency = asyncio.Semaphore(self._concurrency)
 
         # Create and start (send) metrics object.
         metrics = ExtractMetrics()

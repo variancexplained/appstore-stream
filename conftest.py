@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Saturday August 17th 2024 06:20:03 pm                                               #
+# Modified   : Wednesday August 21st 2024 08:48:44 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -51,7 +51,6 @@ def mode():
 def container():
     container = AppStoreStreamContainer()
     container.init_resources()
-    container.wire(modules=["appstorestream.infra.web.throttle"])
 
     return container
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Monday August 19th 2024 03:39:09 pm                                                 #
+# Modified   : Tuesday August 20th 2024 01:31:55 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -54,34 +54,35 @@ asession:
 #                    ASYNCHRONOUS HTTP REQUEST RATE THROTTLE CONFIG SECTION                        #
 # ------------------------------------------------------------------------------------------------ #
 athrottle:
-  baseline:
-    duration: 1 # Seconds
-    frequency: 5 # Recalibrate baseline every 30 seconds.
-    concurrency: 10 # number of concurrent requests during baseline.
-    delay: 0.2 # Delay between asynchronous requests in seconds.
-  optimization:
-    window_size: 5 # Window size in seconds.
+  temperature: 0.2 # Scale parameter for random noise injection into delay
+  warmup:
+    duration: 300 # Seconds. Equates to 5 minute warmup period.
+    concurrency: 100 # number of concurrent requests during baseline.
+    delay: 1 # Delay between asynchronous requests in seconds.
+  cook:
+    duration:  3600 # Recalibrate baseline every hour.
+    window_size: 60 # Window size in seconds.
     k: 0.1 # A 10% change in mean latency would result in a 1% change in delay
     m: 0.05 # A 10% change in latency CV would result in a 0.5% change in delay
     min_delay: 0 # Minimum delay between asynchronous requests in seconds
-    max_delay: 1 # Maximum delay between asynchronous requests in seconds
+    max_delay: 2 # Maximum delay between asynchronous requests in seconds
 
 # ------------------------------------------------------------------------------------------------ #
 #                    ASYNCHRONOUS HTTP REQUEST CONCURRENCY CONFIG SECTION                          #
 # ------------------------------------------------------------------------------------------------ #
 concurrency:
-  baseline: # Determines ideal concurrency based on throughput
-    frequency: 5 # Recalibrate baseline concurrency in 5 seconds.
-    steps: 4 # Number of different concurrency values to evaluate
-    step_duration: 1 # Evaluate throughput for each concurrency step for a 1 minute.
+  warmup: # Determines ideal concurrency based on throughput
+    frequency: 3600 # Recalibrate baseline concurrency each hour.
+    steps: 20 # Number of different concurrency values to evaluate
+    step_duration: 60 # Evaluate throughput for each concurrency step for a 1 minutes.
     step_start: 50 # Concurrency at start step
-    step_stop: 200 # Concurrency at final step
-  optimization: # Adjusts concurrency based variation
-    window_size: 5 # Window size in seconds.
+    step_stop: 1000 # Concurrency at final step
+  cook: # Adjusts concurrency based variation
+    window_size: 60 # Window size in seconds.
     k: 0.1 # A 10% change in mean throughput would result in a 1% change in concurrency
     m: 0.05 # A 10% change in throughput CV would result in a 0.5% change in concurrency
     min_concurrency: 10 # Minimum concurrency value
-    max_concurrency: 300 # Maximum concurrency value
+    max_concurrency: 1000 # Maximum concurrency value
 
 
 
