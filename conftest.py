@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Wednesday August 21st 2024 09:11:59 am                                              #
+# Modified   : Friday August 23rd 2024 02:54:56 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,24 +19,27 @@
 import json
 import time
 from dataclasses import dataclass
+from typing import Any, Generator
 
 import numpy as np
 import pytest
+from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
-from appstorestream.application.base.metrics import ExtractMetrics
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
+from appstorestream.infra.web.profile import SessionHistory, SessionProfile
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [""]
+# mypy: allow-untyped-calls
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                  SET ENV TO TEST                                                 #
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module", autouse=True)
-def mode():
+def mode() -> Generator[Any, Any, Any]:
     config = Config()
     prior_mode = config.get_environment()
     config.change_environment(new_value="test")
@@ -48,7 +51,7 @@ def mode():
 #                              DEPENDENCY INJECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="function", autouse=True)
-def container():
+def container() -> Container:
     container = AppStoreStreamContainer()
     container.init_resources()
 
@@ -59,45 +62,38 @@ def container():
 #                                       APPDATA                                                    #
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="function", autouse=False)
-def appdata_json():
+def appdata_json() -> Any:
     FP = "tests/data/appdata.json"
     with open(FP, "r") as file:
         return json.load(file)
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                              ATHROTTLE RANDOM LATENCIES                                          #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@pytest.fixture(scope="function", autouse=False)
-def random_latencies():
-    # Provide a list of random latencies for testing
-    return [0.2, 0.5, 1.2, 0.7, 0.8, 1.1, 0.6, 1.0]
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  RESPONSE OBJECT                                                 #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@pytest.fixture(scope="session", autouse=False)
-def response():
-    """Mocks a response object."""
-
-    @dataclass
-    class Response:
-        content_length: int = 0
-
-    return Response()
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                                  CUSTOM REGISTRY                                                 #
 # ------------------------------------------------------------------------------------------------ #
-
-
 @pytest.fixture(scope="session", autouse=False)
-def custom_prometheus_registry():
+def custom_prometheus_registry() -> CollectorRegistry:
     """Creates a custom prometheus metrics registry."""
     return CollectorRegistry()
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 SESSION HISTORY                                                  #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function", autouse=False)
+def session_history() -> SessionHistory:
+    """Creates a session profile object."""
+    history = SessionHistory()
+    for m in range(10):
+        profile = SessionProfile()
+        k = m / 100
+        time.sleep(k)
+        profile.send()
+        for i in range(10):
+            profile.send()
+            j = i / 100
+            time.sleep(j)
+            profile.add_latency(latency=np.random.random())
+        profile.recv()
+        history.add_metrics(profile=profile)
+    return history

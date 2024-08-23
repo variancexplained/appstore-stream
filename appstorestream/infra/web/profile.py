@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 06:48:22 am                                              #
-# Modified   : Thursday August 22nd 2024 11:52:06 pm                                               #
+# Modified   : Friday August 23rd 2024 08:50:40 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -58,7 +58,7 @@ class SessionProfile(DataClass):
     latencies: Deque[Tuple[str, float, float]] = field(default_factory=deque)
 
     def __post_init__(self) -> None:
-        self.session_id = str(uuid4)
+        self.session_id = str(uuid4())
 
     def send(self) -> None:
         """Record the current time as the send timestamp."""
@@ -108,7 +108,7 @@ class SessionProfile(DataClass):
 #                                 SESSION STATISTICS                                               #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class SessionStats:
+class SessionStats(DataClass):
     """Class to encapsulate statistical metrics for a session.
 
     This class holds statistical values such as minimum, maximum, median,

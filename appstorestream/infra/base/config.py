@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Friday August 16th 2024 07:36:16 pm                                                 #
+# Modified   : Friday August 23rd 2024 08:29:32 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -139,7 +139,7 @@ class Config:
         )
 
     #  ------------------------------------------------------------------------------------------- #
-    def get_environment(self):
+    def get_environment(self) -> str:
         """
         Gets the environment variable
 
@@ -149,7 +149,7 @@ class Config:
         return os.getenv("ENV")
 
     #  ------------------------------------------------------------------------------------------- #
-    def load_environment(self):
+    def load_environment(self) -> None:
         """
         Load environment variables from the .env file.
         """

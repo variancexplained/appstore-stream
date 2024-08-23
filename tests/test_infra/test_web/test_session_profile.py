@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /tests/test_infra/test_web/test_session_metrics.py                                  #
+# Filename   : /tests/test_infra/test_web/test_session_profile.py                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Wednesday August 21st 2024 08:36:35 am                                              #
-# Modified   : Friday August 23rd 2024 05:51:55 am                                                 #
+# Created    : Friday August 23rd 2024 08:03:21 am                                                 #
+# Modified   : Friday August 23rd 2024 02:42:57 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,12 +24,13 @@ from datetime import datetime
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from appstorestream.infra.web.profile import (
-    SessionMetrics,
-    SessionMetricsCollector,
-    SessionStatistics,
+    SessionHistory,
+    SessionProfile,
+    SessionStats,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -40,57 +41,53 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 double_line = f"\n{100 * '='}"
 single_line = f"\n{100 * '-'}"
-# ------------------------------------------------------------------------------------------------ #
-NUM_REQUESTS = 5
-NUM_SESSIONS = 2
-MAX_HISTORY = 1  # 1 seconds
-LATENCY_AVE = 2
-LATENCY_CV = 0.707107
-THROUGHPUT_AVE = 0.5
-THROUGHPUT_MIN = 1
-THROUGHPUT_MAX = 10
 
 
-# ------------------------------------------------------------------------------------------------ #
-class MockCollector:
-
-    @staticmethod
-    def get_latencies() -> deque:
-        latencies = deque()
-        for i in range(NUM_REQUESTS):
-            latencies.append((time.time(), i))
-        return latencies
-
-    @staticmethod
-    def get_throughput() -> tuple:
-        return (time.time(), np.random.randint(THROUGHPUT_MIN, THROUGHPUT_MAX))
-
-
-@pytest.mark.metrics
-@pytest.mark.session_metrics
-class TestSessionMetrics:  # pragma: no cover
+@pytest.mark.profile
+class TestSessionProfile:  # pragma: no cover
     # ============================================================================================ #
-    def test_metrics_collector(self, caplog: Any):
+    def test_profile(self, caplog: Any) -> None:
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        collector = SessionMetricsCollector()
-
-        collector.send()
-        for _ in range(NUM_REQUESTS):
-            latency = np.random.randn()
-            collector.add_latency(latency=latency)
+        profile = SessionProfile()
+        profile.send()
+        for i in range(10):
+            profile.add_latency(latency=np.random.random())
             time.sleep(0.01)
-        collector.recv()
+        profile.recv()
 
-        assert isinstance(collector.get_latencies(), deque)
-        assert isinstance(collector.get_throughput(), tuple)
+        assert isinstance(profile.get_latencies(), deque)
+        assert isinstance(profile.get_throughput(), tuple)
 
-        logger.info(collector.get_latencies())
-        logger.info(collector.get_throughput())
+        logging.info(profile.get_latencies())
+        logging.info(profile.get_throughput())
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+        )
+        logger.info(single_line)
+
+
+@pytest.mark.history
+class TestHistory:  # pragma: no cover
+    # ============================================================================================ #
+    def test_add_metrics(self, session_history: SessionHistory, caplog: Any) -> None:
+        start = datetime.now()
+        logger.info(
+            f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        assert session_history.requests == 100
+        assert session_history.sessions == 10
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -102,34 +99,18 @@ class TestSessionMetrics:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_latency(self, monkeypatch, caplog):
+    def test_get_requests(self, session_history: SessionHistory, caplog: Any) -> None:
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(double_line)
-
         # ---------------------------------------------------------------------------------------- #
-        def mock_get_latencies(*args, **kwargs):
-            return MockCollector().get_latencies()
+        assert session_history.get_requests() == 100
+        assert session_history.get_sessions() == 10
 
-        def mock_get_throughput(*args, **kwargs):
-            return MockCollector().get_throughput()
-
-        monkeypatch.setattr(
-            SessionMetricsCollector, "get_latencies", mock_get_latencies
-        )
-        monkeypatch.setattr(
-            SessionMetricsCollector, "get_throughput", mock_get_throughput
-        )
-        collector = SessionMetricsCollector()
-        metrics = SessionMetrics()
-
-        for i in range(NUM_SESSIONS):
-            metrics.update_metrics(collector=collector)
-        stats = metrics.compute_latency_stats()
-        assert stats.average == LATENCY_AVE
-        assert round(stats.cv, 3) == round(LATENCY_CV, 3)
+        assert session_history.get_requests() == 100
+        assert session_history.get_requests(time_window=2) < 100
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -141,36 +122,20 @@ class TestSessionMetrics:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_throughput(self, monkeypatch, caplog):
+    def test_latency_stats(self, session_history: SessionHistory, caplog: Any) -> None:
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(double_line)
-
         # ---------------------------------------------------------------------------------------- #
-        def mock_get_latencies(*args, **kwargs):
-            return MockCollector().get_latencies()
+        latency = session_history.get_latency_stats()
+        assert isinstance(latency, SessionStats)
+        logging.info(latency)
 
-        def mock_get_throughput(*args, **kwargs):
-            return MockCollector().get_throughput()
-
-        monkeypatch.setattr(
-            SessionMetricsCollector, "get_latencies", mock_get_latencies
-        )
-        monkeypatch.setattr(
-            SessionMetricsCollector, "get_throughput", mock_get_throughput
-        )
-        collector = SessionMetricsCollector()
-        metrics = SessionMetrics()
-
-        for i in range(NUM_SESSIONS):
-            metrics.update_metrics(collector=collector)
-        stats = metrics.compute_throughput_stats()
-        assert stats.average <= THROUGHPUT_MAX
-        assert stats.average >= THROUGHPUT_MIN
-        assert stats.cv >= 0
-        assert stats.cv <= 1
+        latency = session_history.get_latency_stats(time_window=3)
+        assert isinstance(latency, SessionStats)
+        logging.info(latency)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -182,43 +147,22 @@ class TestSessionMetrics:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_pruning(self, monkeypatch, caplog):
+    def test_throughput_stats(
+        self, session_history: SessionHistory, caplog: Any
+    ) -> None:
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(double_line)
-
         # ---------------------------------------------------------------------------------------- #
-        def mock_get_latencies(*args, **kwargs):
-            return MockCollector().get_latencies()
+        throughput = session_history.get_throughput_stats()
+        assert isinstance(throughput, SessionStats)
+        logging.info(throughput)
 
-        def mock_get_throughput(*args, **kwargs):
-            return MockCollector().get_throughput()
-
-        monkeypatch.setattr(
-            SessionMetricsCollector, "get_latencies", mock_get_latencies
-        )
-        monkeypatch.setattr(
-            SessionMetricsCollector, "get_throughput", mock_get_throughput
-        )
-        collector = SessionMetricsCollector()
-        metrics = SessionMetrics(max_history=MAX_HISTORY)
-
-        # Maintaining only 1 second of results.
-        for i in range(NUM_SESSIONS):
-            metrics.update_metrics(collector=collector)
-        assert metrics.requests == NUM_SESSIONS * NUM_REQUESTS
-        assert metrics.sessions == NUM_SESSIONS
-
-        time.sleep(1)
-
-        # Adding more metrics should not increase the number of requests and sessions
-        for i in range(NUM_SESSIONS):
-            metrics.update_metrics(collector=collector)
-        assert metrics.requests == NUM_SESSIONS * NUM_REQUESTS
-        assert metrics.sessions == NUM_SESSIONS
-
+        throughput = session_history.get_throughput_stats(time_window=2)
+        assert isinstance(throughput, SessionStats)
+        logging.info(throughput)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
