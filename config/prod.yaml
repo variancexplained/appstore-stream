@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Tuesday August 20th 2024 01:31:41 am                                                #
+# Modified   : Friday August 23rd 2024 05:51:55 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -50,39 +50,55 @@ circuit_breaker:
 asession:
   retries: 3
   timeout: 30
+  stages:
+    baseline: 300
+    explore: 300
+    exploit: 1200
+
+
 # ------------------------------------------------------------------------------------------------ #
 #                    ASYNCHRONOUS HTTP REQUEST RATE THROTTLE CONFIG SECTION                        #
 # ------------------------------------------------------------------------------------------------ #
 athrottle:
-  temperature: 0.2 # Scale parameter for random noise injection into delay
-  warmup:
-    duration: 300 # Seconds. Equates to 5 minute warmup period.
-    concurrency: 100 # number of concurrent requests during baseline.
-    delay: 1 # Delay between asynchronous requests in seconds.
-  cook:
-    duration:  3600 # Recalibrate baseline every hour.
-    window_size: 60 # Window size in seconds.
+  baseline:
+    duration: 300 # Seconds. Equates to 5 minute baseline period.
+    concurrency: 50 # number of concurrent requests during baseline.
+    temperature: 0.05 # Scale parameter for random noise injection into delay
+    rate: 50 # 50 rps
+    min_rate: 50 # 50 Requests per second
+    max_rate: 500 # 500 requests per second
+  explore_rate:
+    duration: 3600 # 1 hour or until convergence
+    concurrency: 50 # number of concurrent requests during baseline.
+    step_increase: 50 # Additive rate increase per step
+    step_decrease: 0.8 # 80% Multiplicative rate during decrease per step
+    step_duration: 60 # 1 minute
+    window_size: 300 # 5 Minutes
+    threshold: 1.2 # 120% of baseline mean and cv latency
+    temperature: 0.05 # Scale parameter for random noise injection into delay
+    min_rate: 50
+    max_rate: 500
+  explore_concurrency:
+    duration: 3600 # 1 hour or until convergence
+    min_rate: 50 # 50 Requests per second
+    max_rate: 500 # 500 requests per second
+    concurrency: 50 # starting concurrency
+    min_concurrency: 50 # Minimum concurrency
+    max_concurrency: 200 # Maximum concurrency
+    step_increase: 10 # Additive increase in concurrency each step
+    step_decrease: 0.2 # 20% Multiplicative concurrency decrease per step
+    step_duration: 120 # 2 minutes allowing system to adjust
+    window_size: 300 # 5 minutes
+    threshold: 1.2 # 120% of baeline mean and cv
+    temperature: 0.05 # Scale parameter for random noise injection into delay
+  exploit:
+    duration:  1800 # Recalibrate baseline every 30 minutes.
+    window_size: 300 # Window size in seconds.
     k: 0.1 # A 10% change in mean latency would result in a 1% change in delay
     m: 0.05 # A 10% change in latency CV would result in a 0.5% change in delay
-    min_delay: 0 # Minimum delay between asynchronous requests in seconds
-    max_delay: 2 # Maximum delay between asynchronous requests in seconds
+    min_rate: 50 # Minimum requests per second
+    max_rate: 500 # Maximum requests per second
 
-# ------------------------------------------------------------------------------------------------ #
-#                    ASYNCHRONOUS HTTP REQUEST CONCURRENCY CONFIG SECTION                          #
-# ------------------------------------------------------------------------------------------------ #
-concurrency:
-  warmup: # Determines ideal concurrency based on throughput
-    frequency: 3600 # Recalibrate baseline concurrency each hour.
-    steps: 20 # Number of different concurrency values to evaluate
-    step_duration: 60 # Evaluate throughput for each concurrency step for a 1 minutes.
-    step_start: 50 # Concurrency at start step
-    step_stop: 1000 # Concurrency at final step
-  cook: # Adjusts concurrency based variation
-    window_size: 60 # Window size in seconds.
-    k: 0.1 # A 10% change in mean throughput would result in a 1% change in concurrency
-    m: 0.05 # A 10% change in throughput CV would result in a 0.5% change in concurrency
-    min_concurrency: 10 # Minimum concurrency value
-    max_concurrency: 1000 # Maximum concurrency value
 # ------------------------------------------------------------------------------------------------ #
 #                                     LOGGING                                                      #
 # ------------------------------------------------------------------------------------------------ #

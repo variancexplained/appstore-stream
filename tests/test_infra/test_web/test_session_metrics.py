@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 08:36:35 am                                              #
-# Modified   : Wednesday August 21st 2024 11:37:57 am                                              #
+# Modified   : Friday August 23rd 2024 05:51:55 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,11 +21,12 @@ import logging
 import time
 from collections import deque
 from datetime import datetime
+from typing import Any
 
 import numpy as np
 import pytest
 
-from appstorestream.infra.web.metrics import (
+from appstorestream.infra.web.profile import (
     SessionMetrics,
     SessionMetricsCollector,
     SessionStatistics,
@@ -69,7 +70,7 @@ class MockCollector:
 @pytest.mark.session_metrics
 class TestSessionMetrics:  # pragma: no cover
     # ============================================================================================ #
-    def test_metrics_collector(self, caplog):
+    def test_metrics_collector(self, caplog: Any):
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"

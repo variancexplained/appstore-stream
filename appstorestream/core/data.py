@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 21st 2024 07:45:11 pm                                                   #
-# Modified   : Friday July 26th 2024 02:57:05 pm                                                   #
+# Modified   : Thursday August 22nd 2024 06:08:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,12 +23,14 @@ from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from types import SimpleNamespace
+from typing import Any, Dict, Mapping, Tuple, TypeVar, Union
 
 import numpy as np
 import pandas as pd
 
+T = TypeVar("T")
 # ------------------------------------------------------------------------------------------------ #
-IMMUTABLE_TYPES: tuple = (
+IMMUTABLE_TYPES: Tuple = (
     str,
     int,
     float,
@@ -43,7 +45,7 @@ IMMUTABLE_TYPES: tuple = (
     np.float64,
     np.float128,
 )
-SEQUENCE_TYPES: tuple = (
+SEQUENCE_TYPES: Tuple = (
     list,
     tuple,
 )
@@ -92,7 +94,7 @@ class DataClass(ABC):  # noqa
         s += "\n\n"
         return s
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> Dict[str, Union[str, int, float, datetime, None]]:
         """Returns a dictionary representation of the the Config object."""
         return {
             k: self._export_config(v)
@@ -101,7 +103,10 @@ class DataClass(ABC):  # noqa
         }
 
     @classmethod
-    def _export_config(cls, v):  # pragma: no cover
+    def _export_config(
+        cls,
+        v: Any,
+    ) -> Any:  # pragma: no cover
         """Returns v with Configs converted to dicts, recursively."""
         if isinstance(v, IMMUTABLE_TYPES):
             return v
@@ -114,19 +119,18 @@ class DataClass(ABC):  # noqa
         elif hasattr(v, "as_dict"):
             return v.as_dict()
         else:
-            """Else nothing. What do you want?"""
+            return dict()
 
-    def as_df(self) -> pd.DataFrame:
+    def as_df(self) -> Any:
         """Returns the project in DataFrame format"""
         d = self.as_dict()
         return pd.DataFrame(data=d, index=[0])
 
 
-
 # ------------------------------------------------------------------------------------------------ #
 class NestedNamespace(SimpleNamespace):
-    def __init__(self, dictionary, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, dictionary: Mapping[str, Union[int, float]]) -> None:
+        super().__init__()
         for key, value in dictionary.items():
             if isinstance(value, dict):
                 self.__setattr__(key, NestedNamespace(value))
