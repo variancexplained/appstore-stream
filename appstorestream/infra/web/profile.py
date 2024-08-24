@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 06:48:22 am                                              #
-# Modified   : Saturday August 24th 2024 06:47:41 am                                               #
+# Modified   : Saturday August 24th 2024 01:16:40 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -116,7 +116,7 @@ class SessionStats(DataClass):
     commonly used for analyzing performance metrics in sessions.
 
     Attributes:
-        requests (int): Number of requests represented by these stats.
+        n (int): Number of observations represented by these stats.
         min (float): The minimum value recorded in the session.
         max (float): The maximum value recorded in the session.
         median (float): The median value of the recorded data.
@@ -126,6 +126,7 @@ class SessionStats(DataClass):
             the standard deviation to the average.
     """
 
+    n: int = 0
     min: float = 0
     max: float = 0
     median: float = 0
@@ -304,6 +305,7 @@ class SessionHistory:
 
         if latencies:
             # Compute statistical metrics for latencies
+            stats.n = len(latencies)
             stats.min = min(latencies)
             stats.max = max(latencies)
             stats.median = statistics.median(latencies)
@@ -336,6 +338,7 @@ class SessionHistory:
 
         if throughputs:
             # Compute statistical metrics for throughputs
+            stats.n = len(throughputs)
             stats.min = min(throughputs)
             stats.max = max(throughputs)
             stats.median = statistics.median(throughputs)
@@ -369,6 +372,7 @@ class SessionHistory:
 
         if rates:
             # Compute statistical metrics for rates
+            stats.n = len(rates)
             stats.min = min(rates)
             stats.max = max(rates)
             stats.median = statistics.median(rates)
@@ -399,6 +403,7 @@ class SessionHistory:
 
         if delays:
             # Compute statistical metrics for delays
+            stats.n = len(delays)
             stats.min = min(delays)
             stats.max = max(delays)
             stats.median = statistics.median(delays)
@@ -430,6 +435,7 @@ class SessionHistory:
 
         if concurrencies:
             # Compute statistical metrics for concurrencies
+            stats.n = len(concurrencies)
             stats.min = min(concurrencies)
             stats.max = max(concurrencies)
             stats.median = statistics.median(concurrencies)

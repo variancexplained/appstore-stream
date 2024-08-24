@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Friday August 23rd 2024 04:55:19 pm                                                 #
+# Modified   : Saturday August 24th 2024 03:22:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,17 +28,23 @@ from prometheus_client import CollectorRegistry
 
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
-from appstorestream.infra.web.profile import SessionHistory, SessionProfile
+from appstorestream.infra.web.adapter import Adapter
+from appstorestream.infra.web.profile import (
+    SessionHistory,
+    SessionProfile,
+    SessionStats,
+)
+from tests.test_infra.test_web.test_adapt import MockSessionHistory
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [""]
-# mypy: allow-untyped-calls
+# mypy: ignore-errors
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                  SET ENV TO TEST                                                 #
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def mode() -> Generator[Any, Any, Any]:
     config = Config()
     prior_mode = config.get_environment()
@@ -97,3 +103,31 @@ def session_history() -> SessionHistory:
         profile.recv()
         history.add_metrics(profile=profile)
     return history
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                     ADAPTER                                                      #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function", autouse=False)
+def adapter(container: AppStoreStreamContainer) -> Adapter:
+
+    baseline = container.session.baseline()
+    rate = container.session.rate()
+    concurrency = container.session.concurrency()
+    exploit = container.session.exploit()
+    adapter = container.session.adapter()
+
+    baseline.next_stage = rate
+    rate.next_stage = concurrency
+    concurrency.next_stage = exploit
+    exploit.next_stage = baseline
+
+    return adapter
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                      MOCK HISTORY                                                #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="session", autouse=False)
+def mock_history(*args, **kwargs) -> MockSessionHistory:
+    return MockSessionHistory().get_latency_stats

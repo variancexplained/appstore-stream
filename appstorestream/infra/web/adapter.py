@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Saturday August 24th 2024 10:22:07 am                                               #
+# Modified   : Saturday August 24th 2024 06:17:59 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,9 +19,7 @@
 """Autothrottle Module"""
 from __future__ import annotations
 
-import asyncio
 import logging
-import statistics
 import time
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -54,7 +52,7 @@ class Clock:
         self._start_time = 0.0
 
     def elapsed(self) -> float:
-        """Returns the time elapsed since the clock was started or last reset."""
+        """Returns the time elapsed since the clock was started."""
         if self._start_time is None:
             raise RuntimeError("Clock has not been started.")
         return time.time() - self._start_time
@@ -115,6 +113,8 @@ class SessionControlValue:
         self._additive_factor = additive_factor
         self._multiplicative_factor = multiplicative_factor
         self._temperature = temperature
+        # Logging object for the class.
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     @property
     def value(self) -> float:
@@ -136,6 +136,7 @@ class SessionControlValue:
         and if the resulting value exceeds the maximum allowable value,
         it is set to the maximum value.
         """
+        prior_value = self._value
         new_value = self._value + self._additive_factor
         if noise:
             new_value += np.random.normal(loc=0, scale=self._temperature)
@@ -148,6 +149,7 @@ class SessionControlValue:
         and if the resulting value falls below the minimum allowable value,
         it is set to the minimum value.
         """
+        prior_value = self._value
         new_value = self._value * self._multiplicative_factor
         if noise:
             new_value += np.random.normal(loc=0, scale=self._temperature)
@@ -177,7 +179,7 @@ class Adapter:
     def __init__(self, initial_stage: AdapterBaselineStage) -> None:
         self._session_history: SessionHistory = SessionHistory()
         self._session_control: SessionControl = SessionControl()
-        self._logger = logging.getLogger(f"{self.__class__.__name__}")
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.transition(stage=initial_stage)
 
     @property
@@ -263,7 +265,7 @@ class AdapterStage(ABC):
             temperature=float(self._config.temperature),
         )
 
-        self._logger = logging.getLogger(f"{self.__class__.__name__}")
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     @property
     @abstractmethod
@@ -501,7 +503,7 @@ class AdapterBaselineStage(AdapterStage):
             raise RuntimeError(msg)
 
         if not isinstance(self.next_stage, AdapterRateExploreStage):
-            msg = f"Expected AdapterRateExploreStage, got {type(self.adapter).__name__}"
+            msg = f"Expected AdapterRateExploreStage, got {type(self.next_stage).__name__}"
             self._logger.exception(msg)
             raise TypeError(msg)
 
@@ -516,13 +518,34 @@ class AdapterExploreExploitStage(AdapterStage):
         super().__init__(config=config)
 
         # Latency statistics and thresholds for stability checks.
-        self._baseline_latency_stats: Optional[SessionStats] = None
+        self._baseline_latency_stats = SessionStats()
         self._baseline_latency_ave_threshold: float = 0.0
         self._baseline_latency_cv_threshold: float = 0.0
+        # Step clock that monitors stabilization periods.
+        self._step_clock = Clock()
+
+        self._stabilization_period: bool = False
+
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+
+    def adapt(self) -> None:
+        super().adapt()
 
     def begin_stage(self) -> None:
         super().begin_stage()
         self.set_baseline_latency_stats()
+
+    def initialize_session_control(self) -> None:
+        super().initialize_session_control()
+
+    def begin_session(self) -> None:
+        super().begin_session()
+
+    def end_session(self, session_control: SessionControl) -> None:
+        super().end_session(session_control=session_control)
+
+    def end_stage(self) -> None:
+        super().end_stage()
 
     def system_stable(self) -> bool:
         """
@@ -533,10 +556,34 @@ class AdapterExploreExploitStage(AdapterStage):
         """
         current_latency_stats = self.get_current_latency_stats()
 
-        return (
+        # Set the latency thresholds for stability checks.
+        self._baseline_latency_ave_threshold = (
+            self._baseline_latency_stats.average * self._config.threshold
+        )
+        self._baseline_latency_cv_threshold = (
+            self._baseline_latency_stats.cv * self._config.threshold
+        )
+
+        stable = (
             current_latency_stats.average <= self._baseline_latency_ave_threshold
             and current_latency_stats.cv <= self._baseline_latency_cv_threshold
         )
+
+        # Compute percent of baseline stats for logging.
+        latency_ave_pct = (
+            (current_latency_stats.average - self._baseline_latency_ave_threshold)
+            / self._baseline_latency_ave_threshold
+        ) * 100
+        latency_cv_pct = (
+            (current_latency_stats.cv - self._baseline_latency_cv_threshold)
+            / self._baseline_latency_cv_threshold
+        ) * 100
+
+        if not stable:
+            self._logger.debug(
+                f"System is not stable. Latency average is {round(latency_ave_pct,4)}% of threshold and latency cv is {round(latency_cv_pct,2)}% of threshold."
+            )
+        return stable
 
     def get_current_latency_stats(
         self, time_window: Optional[int] = None
@@ -560,13 +607,6 @@ class AdapterExploreExploitStage(AdapterStage):
         if isinstance(self._adapter, Adapter):
             # Get the baseline latency statistics.
             self._baseline_latency_stats = self._adapter.get_latency_stats()
-            # Set the latency thresholds for stability checks.
-            self._baseline_latency_ave_threshold = (
-                self._baseline_latency_stats.average * self._config.latency_multiplier
-            )
-            self._latency_cv_threshold = (
-                self._baseline_latency_stats.cv * self._config.cv_multiplier
-            )
         else:
             if not self._adapter:
                 msg = f"Adapter has not be initialized in {self.__class__.__name__}."
@@ -576,6 +616,27 @@ class AdapterExploreExploitStage(AdapterStage):
                 msg = f"Expected Adapter, got {type(self._adapter).__name__}"
                 self._logger.exception(msg)
                 raise TypeError(msg)
+
+        self._logger.debug(f"\nBaseline Latency\n{self._baseline_latency_stats}")
+
+    def _in_stabilization_period(self) -> bool:
+        if (
+            self._step_clock.is_active()
+            and self._step_clock.has_elapsed(self._config.step_duration)
+            or not self._step_clock.is_active()
+        ):
+            if self._stabilization_period:
+                self._logger.info(
+                    f"{self.__class__.__name__} exiting stabilization period."
+                )
+            self._stabilization_period = False
+        else:
+            if not self._stabilization_period:
+                self._logger.info(
+                    f"{self.__class__.__name__} entering stabilization period."
+                )
+            self._stabilization_period = True
+        return self._stabilization_period
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -597,8 +658,6 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
             _next_stage (Optional[AdapterRateExploreStage]): The next stage, initially set to None.
         """
         super().__init__(config=config)
-
-        self._step_clock = Clock()
 
         # Placeholder for the next stage, set later.
         self._next_stage: Optional[AdapterConcurrencyExploreStage] = None
@@ -622,6 +681,9 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
             next_stage (AdapterConcurrencyExploreStage): The stage to transition to after the baseline stage.
         """
         self._next_stage = next_stage
+
+    def adapt(self) -> None:
+        super().adapt()
 
     def begin_stage(self) -> None:
         super().begin_stage()
@@ -652,14 +714,11 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
         """
 
         # Determine whether to adapt or stabilize based on the step clock.
-        if (
-            self._step_clock.is_active()
-            and self._step_clock.has_elapsed(self._config.step_duration)
-            or not self._step_clock.is_active()
-        ):
-            self._adapt()
-        else:
+        if self._in_stabilization_period():
             self._stabilize()
+
+        else:
+            self._adapt()
 
         # Update the adapter with the current session control data.
         return SessionControl(
@@ -701,10 +760,15 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
         else:
             # If the system is unstable, decrease the rate.
             self._rate.decrease_value()
+        # Enter stabilization period
         self._step_clock.start()
+        self._stabilization_period = True
+
+        self._logger.debug(f"\n\n{self.__class__.__name__} in a stabilization period.")
 
     def _stabilize(self) -> None:
         """Apply noise to the rate during the stabilization period."""
+
         self._rate.add_noise()
 
     def _validate_next_stage(self) -> None:
@@ -721,8 +785,8 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
             self._logger.exception(msg)
             raise RuntimeError(msg)
 
-        if not isinstance(self.next_stage, AdapterRateExploreStage):
-            msg = f"Expected AdapterRateExploreStage, got {type(self.adapter).__name__}"
+        if not isinstance(self.next_stage, AdapterConcurrencyExploreStage):
+            msg = f"Expected AdapterConcurrencyExploreStage, got {type(self.next_stage).__name__}"
             self._logger.exception(msg)
             raise TypeError(msg)
 
@@ -747,9 +811,7 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
         """
         super().__init__(config=config)
 
-        self._step_clock = Clock()
-
-        self._duration: float = float(self._config.duration)
+        # Placeholder for the next stage, set later.
         self._next_stage: Optional[AdapterExploitStage] = None
 
     @property
@@ -771,6 +833,9 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
             next_stage (AdapterExploitStage): The stage to transition to after the baseline stage.
         """
         self._next_stage = next_stage
+
+    def adapt(self) -> None:
+        super().adapt()
 
     def begin_stage(self) -> None:
         super().begin_stage()
@@ -808,14 +873,11 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
         """
 
         # Determine whether to adapt or stabilize based on the step clock.
-        if (
-            self._step_clock.is_active()
-            and self._step_clock.has_elapsed(self._config.step_duration)
-            or not self._step_clock.is_active()
-        ):
-            self._adapt()
-        else:
+        if self._in_stabilization_period():
             self._stabilize()
+
+        else:
+            self._adapt()
 
         # Update the adapter with the current session control data.
         return SessionControl(
@@ -858,6 +920,9 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
             # If the system is unstable, decrease the rate.
             self._concurrency.decrease_value()
         self._step_clock.start()
+        self._stabilization_period = True
+
+        self._logger.debug(f"\n\n{self.__class__.__name__} in a stabilization period.")
 
     def _stabilize(self) -> None:
         """Apply noise to the rate during the stabilization period."""
@@ -869,7 +934,7 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
 
         Raises:
             RuntimeError: If the next stage is not initialized.
-            TypeError: If the next stage is not of type AdapterRateExploreStage.
+            TypeError: If the next stage is not of type AdapterExploitStage.
 
         """
         if self.next_stage is None:
@@ -877,8 +942,8 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
             self._logger.exception(msg)
             raise RuntimeError(msg)
 
-        if not isinstance(self.next_stage, AdapterRateExploreStage):
-            msg = f"Expected AdapterRateExploreStage, got {type(self.adapter).__name__}"
+        if not isinstance(self.next_stage, AdapterExploitStage):
+            msg = f"Expected AdapterExploitStage, got {type(self.adapter).__name__}"
             self._logger.exception(msg)
             raise TypeError(msg)
 
@@ -965,6 +1030,7 @@ class AdapterExploitStage(AdapterExploreExploitStage):
         current_latency_stats = self.get_current_latency_stats(
             time_window=self._config.window_size
         )
+
         # Compute Latency and CV Ratio
         if isinstance(self._baseline_latency_stats, SessionStats):
             latency_ratio = (

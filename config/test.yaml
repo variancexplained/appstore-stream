@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Saturday August 24th 2024 10:26:48 am                                               #
+# Modified   : Saturday August 24th 2024 06:10:37 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -57,7 +57,7 @@ adapter:
   defaults: &adapter_defaults
     rate:
       base: 50 # base requests per second
-      min: 50 # Minimum rate in requests per second
+      min: 10 # Minimum rate in requests per second
       max: 500 # Maximum rate in requests per second
     concurrency:
       base: 50 # Base concurrency
@@ -71,14 +71,14 @@ adapter:
     duration: 2 # Seconds. Equates to 5 minute baseline period.
   explore_rate:
     <<: *adapter_defaults
-    duration: 5 # 1 hour or until convergence
+    duration: 2 # 1 hour or until convergence
     step_increase: 50 # Additive rate increase per step
     step_decrease: 0.9 # Multiplicative rate during decrease per step
-    step_duration: .1 # 1 minute
+    step_duration: 1 # 1 minute
     threshold: 1.2 # 120% of baseline mean and cv latency
   explore_concurrency:
     <<: *adapter_defaults
-    duration: 5 # 1 hour or until convergence
+    duration: 2 # 1 hour or until convergence
     step_increase: 10 # Additive increase in concurrency each step
     step_decrease: 0.9 # Multiplicative decrease
     step_duration: .1 # 2 minutes allowing system to adjust
