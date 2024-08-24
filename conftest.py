@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Friday August 23rd 2024 02:54:56 pm                                                 #
+# Modified   : Friday August 23rd 2024 04:55:19 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -54,7 +54,7 @@ def mode() -> Generator[Any, Any, Any]:
 def container() -> Container:
     container = AppStoreStreamContainer()
     container.init_resources()
-
+    container.wire(modules=["appstorestream.infra.web.adapter"])
     return container
 
 

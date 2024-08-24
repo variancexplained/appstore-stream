@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 21st 2024 07:45:11 pm                                                   #
-# Modified   : Thursday August 22nd 2024 06:08:30 pm                                               #
+# Modified   : Friday August 23rd 2024 03:21:25 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,8 +27,10 @@ from typing import Any, Dict, Mapping, Tuple, TypeVar, Union
 
 import numpy as np
 import pandas as pd
+from dependency_injector.providers import ConfigurationOption
 
-T = TypeVar("T")
+# ------------------------------------------------------------------------------------------------ #
+# mypy: allow-any-generics
 # ------------------------------------------------------------------------------------------------ #
 IMMUTABLE_TYPES: Tuple = (
     str,
@@ -129,7 +131,9 @@ class DataClass(ABC):  # noqa
 
 # ------------------------------------------------------------------------------------------------ #
 class NestedNamespace(SimpleNamespace):
-    def __init__(self, dictionary: Mapping[str, Union[int, float]]) -> None:
+    def __init__(
+        self, dictionary: Union[Mapping[str, Union[int, float]], ConfigurationOption]
+    ) -> None:
         super().__init__()
         for key, value in dictionary.items():
             if isinstance(value, dict):

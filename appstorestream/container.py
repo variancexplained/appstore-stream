@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Wednesday August 21st 2024 08:48:08 am                                              #
+# Modified   : Friday August 23rd 2024 05:43:59 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,6 +30,13 @@ from appstorestream.infra.repo.job import JobRepo
 from appstorestream.infra.repo.project import ProjectRepo
 from appstorestream.infra.repo.review import ReviewRepo
 from appstorestream.infra.repo.uow import UoW
+from appstorestream.infra.web.adapter import (
+    Adapter,
+    AdapterBaselineStage,
+    AdapterConcurrencyExploreStage,
+    AdapterExploitStage,
+    AdapterRateExploreStage,
+)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -70,7 +77,27 @@ class PersistenceContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                         STATE                                                    #
+#                                       ADAPTER                                                    #
+# ------------------------------------------------------------------------------------------------ #
+class AdapterContainer(containers.DeclarativeContainer):
+    config = providers.Configuration()
+
+    # Stages
+    baseline = providers.Singleton(AdapterBaselineStage, config=config.adapter.baseline)
+    rate = providers.Singleton(
+        AdapterRateExploreStage, config=config.adapter.explore_rate
+    )
+    concurrency = providers.Singleton(
+        AdapterConcurrencyExploreStage, config=config.adapter.explore_concurrency
+    )
+    exploit = providers.Singleton(AdapterExploitStage, config=config.adapter.exploit)
+
+    # Adapter
+    adapter = providers.Singleton(Adapter, initial_stage=baseline)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                        STATE                                                     #
 # ------------------------------------------------------------------------------------------------ #
 class StateContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
@@ -96,12 +123,12 @@ class StateContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class AppStoreStreamContainer(containers.DeclarativeContainer):
 
-    config_filepath = Config().filepath
-
-    config = providers.Configuration(yaml_files=[config_filepath])
+    config = providers.Configuration(yaml_files=["config/test.yaml"])
 
     logs = providers.Container(LoggingContainer, config=config)
 
     data = providers.Container(PersistenceContainer)
 
     state = providers.Container(StateContainer, config=config)
+
+    session = providers.Container(AdapterContainer, config=config)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Wednesday August 21st 2024 06:43:00 am                                              #
+# Modified   : Friday August 23rd 2024 04:31:22 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,7 +31,7 @@ from appstorestream.domain.base.response import AsyncResponse
 from appstorestream.domain.review.response import ReviewAsyncResponse
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.base.service import InfraService
-from appstorestream.infra.web.adapt import AThrottle
+from appstorestream.infra.web.adapter import AThrottle
 
 
 # ------------------------------------------------------------------------------------------------ #
