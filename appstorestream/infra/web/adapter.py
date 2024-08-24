@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Saturday August 24th 2024 05:27:03 am                                               #
+# Modified   : Saturday August 24th 2024 05:48:59 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -306,11 +306,29 @@ class AdapterStage(ABC):
             history (SessionHistory): The current session history.
         """
         # Begin the stage by validating the history object and initializing the clock
-        self.begin_stage(history=history)
+        self.begin_session(history=history)
         # Perform stage specific logic
-        session_control = self.execute_stage()
+        session_control = self.execute_session()
         # Wrap up the stage, and update the adapter object, and transition as appropriate.
-        self.end_stage(session_control=session_control)
+        self.end_session(session_control=session_control)
+
+    def begin_stage(self) -> None:
+        self._stage_clock.start()
+        self.initialize_session_control()
+
+    def initialize_session_control(self) -> None:
+        """Initializes rate and concurrency for the stage."""
+        self._rate = SessionControlValue(
+            initial_value=float(self._config.rate),
+            min_value=float(self._config.min_rate),
+            max_value=float(self._config.max_rate),
+            temperature=float(self._config.temperature),
+        )
+        self._concurrency = SessionControlValue(
+            initial_value=float(self._config.concurrency),
+            min_value=float(self._config.min_concurrency),
+            max_value=float(self._config.max_concurrency),
+        )
 
     def begin_session(self, history: SessionHistory) -> None:
         """Performs stage startup processes"""
@@ -321,13 +339,9 @@ class AdapterStage(ABC):
         if not self._stage_clock.is_active():
             self.begin_stage()
 
-    def begin_stage(self) -> None:
-        self._stage_clock.start()
-        self.initialize_session_control()
-
     @abstractmethod
-    def initialize_session_control(self) -> None:
-        """Initializes rate and concurrency for the stage."""
+    def execute_session(self) -> SessionControl:
+        """Performs the core logic of the stage."""
 
     def end_session(self, session_control: SessionControl) -> None:
         # Update the Adapter with rate and concurrency
@@ -337,20 +351,12 @@ class AdapterStage(ABC):
         if self._stage_clock.has_elapsed(duration=float(self._config.duration)):
             self.end_stage()
 
-    @abstractmethod
-    def execute_session(self) -> SessionControl:
-        """Performs the core logic of the stage."""
-
     def end_stage(self) -> None:
         """Performs final steps and calls the transition method."""
         # Add the session control object to the adapter
         self._stage_clock.reset()
         self._take_snapshot()
         self.transition()
-
-    @abstractmethod
-    def transition(self) -> None:
-        """Performs transition to the next stage if complete."""
 
     def _take_snapshot(self) -> None:
         """Sets baseline statistics on the adapter."""
@@ -360,6 +366,10 @@ class AdapterStage(ABC):
             self._adapter.snapshot = self._session_history.get_snapshot(
                 time_window=int(self._config.window_size)
             )
+
+    @abstractmethod
+    def transition(self) -> None:
+        """Performs transition to the next stage if complete."""
 
     @abstractmethod
     def _validate_next_stage(self) -> None:
@@ -434,7 +444,7 @@ class AdapterBaselineStage(AdapterStage):
         """
         super().__init__(config=config)
 
-        # Default Rate
+        # Default Rate. Overriden in initialize concurrency
         self._rate = SessionControlValue(
             initial_value=float(self._config.rate),
             min_value=float(self._config.min_rate),
@@ -442,7 +452,12 @@ class AdapterBaselineStage(AdapterStage):
             temperature=float(self._config.temperature),
         )
 
-        self._concurrency: float = float(self._config.concurrency)
+        # Default Concurrency. Overriden in initialize concurrency
+        self._concurrency = SessionControlValue(
+            initial_value=float(self._config.concurrency),
+            min_value=float(self._config.min_concurrency),
+            max_value=float(self._config.max_concurrency),
+        )
         self._duration: float = float(self._config.duration)
         self._next_stage: Optional[AdapterRateExploreStage] = None
 
@@ -466,7 +481,16 @@ class AdapterBaselineStage(AdapterStage):
         """
         self._next_stage = next_stage
 
-    def execute_stage(self) -> SessionControl:
+    def begin_stage(self) -> None:
+        super().begin_stage()
+
+    def initialize_session_control(self) -> None:
+        super().initialize_session_control()
+
+    def begin_session(self, history: SessionHistory) -> None:
+        super().begin_session(history=history)
+
+    def execute_session(self) -> SessionControl:
         """
         Adjusts the session control values based on session history and transitions to the next stage if appropriate.
 
@@ -479,18 +503,11 @@ class AdapterBaselineStage(AdapterStage):
 
         self._rate.add_noise()
         # Create a session control object for the adapter
-        return SessionControl(rate=self._rate.value, concurrency=self._concurrency)
+        return SessionControl(
+            rate=self._rate.value, concurrency=self._concurrency.value
+        )
 
-    def begin_stage(self) -> None:
-        super().begin_stage()
-
-    def end_stage(self) -> None:
-        super().end_stage()
-
-    def begin_session(self, history: SessionHistory) -> None:
-        super().begin_session(history=history)
-
-    def end_stage(self, session_control: SessionControl) -> None:
+    def end_session(self, session_control: SessionControl) -> None:
         """
         Determines if the current stage should end and transitions to the next stage.
 
@@ -500,7 +517,10 @@ class AdapterBaselineStage(AdapterStage):
         Returns:
             bool: True if the stage is complete and ready for transition, False otherwise.
         """
-        super().end_stage(session_control=session_control)
+        super().end_session(session_control=session_control)
+
+    def end_stage(self) -> None:
+        super().end_stage()
 
     def transition(self) -> None:
         """
@@ -538,693 +558,18 @@ class AdapterBaselineStage(AdapterStage):
 #                              ADAPTER RATE EXPLORE STAGE                                          #
 # ------------------------------------------------------------------------------------------------ #
 class AdapterRateExploreStage(AdapterStage):
-    """
-    Represents the request rate exploration stage of an adapter in a session control mechanism.
-
-    During this stage, the adapter seeks to maximize the request rate while keeping the
-    latency within baseline range. A hill-climbing algorithm repeatedly and additively increases
-    the request rate. When a threshold is met, the algorithm multiplicatively decreases the rate
-    until stability has returned. The process repeats for the duration of the stage, and
-    the median rate observed during the stage is set for subsequent stages.
-
-    Attributes:
-        _rate (SessionControlValue): Manages and adjusts the rate with noise.
-        _concurrency (float): Fixed concurrency level during the baseline stage.
-        _duration (float): Duration of the baseline stage.
-        _next_stage (Optional[AdapterRateExploreStage]): The next stage to transition to.
-        _latency_stats (Optional[SessionStats]): Stores latency statistics for the stage.
-        _latency_ave_threshold (float): Threshold for average latency used to determine stability.
-        _latency_cv_threshold (float): Threshold for latency coefficient of variation.
-        _step_duration (float): Duration for each step in the hill-climbing algorithm.
-        _stabilization_period (bool): Indicates whether the system is in a stabilization period.
-        _step_clock (Clock): Tracks time to manage stabilization periods.
-    """
-
-    def __init__(self, config: ConfigurationOption) -> None:
-        """
-        Initializes the AdapterRateExploreStage with the provided configuration.
-
-        Args:
-            config (ConfigurationOption): Configuration dictionary containing
-                rate, min_rate, max_rate, temperature, concurrency, and duration settings.
-
-        Initializes:
-            _rate (SessionControlValue): Session control object for rate with noise adjustment.
-            _concurrency (float): Concurrency value during this stage.
-            _duration (float): Duration of the baseline stage.
-            _next_stage (Optional[AdapterConcurrencyExploreStage]): The next stage, initially set to None.
-            _latency_stats (Optional[SessionStats]): Latency statistics, initialized to None.
-            _latency_ave_threshold (float): Latency average threshold for stability checks.
-            _latency_cv_threshold (float): Latency coefficient of variation threshold.
-            _step_duration (float): Duration of each rate adjustment step.
-            _stabilization_period (bool): Flag to manage stabilization, starts as False.
-            _step_clock (Clock): Clock instance to track stabilization periods.
-        """
-        super().__init__(config=config)
-
-        # Default rate
-        self._rate = SessionControlValue(
-            initial_value=float(self._config.rate),
-            min_value=float(self._config.min_rate),
-            max_value=float(self._config.max_rate),
-            temperature=float(self._config.temperature),
-        )
-        # Configuration of concurrency and stage duration.
-        self._concurrency: float = self._config.concurrency
-        self._duration: float = self._config.duration
-
-        # Placeholder for the next stage, set later.
-        self._next_stage: Optional[AdapterConcurrencyExploreStage] = None
-
-        # Latency statistics and thresholds for stability checks.
-        self._latency_stats: Optional[SessionStats] = None
-        self._latency_ave_threshold: float = 0.0
-        self._latency_cv_threshold: float = 0.0
-
-        # Duration of the steps that adjust the rate.
-        self._step_duration: float = self._config.step_duration
-
-        # Stabilization flag, true when no rate changes occur.
-        self._stabilization_period = False
-
-        # Clock to manage step stabilization periods.
-        self._step_clock = Clock()
-
-    @property
-    def next_stage(self) -> Optional[AdapterConcurrencyExploreStage]:
-        """
-        Gets the next stage of the adapter.
-
-        Returns:
-            Optional[AdapterConcurrencyExploreStage]: The next stage to transition to, or None if not set.
-        """
-        return self._next_stage
-
-    @next_stage.setter
-    def next_stage(self, next_stage: AdapterConcurrencyExploreStage) -> None:
-        """
-        Sets the next stage of the adapter.
-
-        Args:
-            next_stage (AdapterConcurrencyExploreStage): The stage to transition to after the baseline stage.
-        """
-        self._next_stage = next_stage
-
-    def execute_stage(self) -> SessionControl:
-        """"""
-        # Determine whether to adapt or stabilize based on the step clock.
-        if (
-            self._step_clock.is_active()
-            and self._step_clock.has_elapsed(self._config.step_duration)
-            or not self._step_clock.is_active()
-        ):
-            self._adapt()
-        else:
-            self._stabilize()
-
-        # Update the adapter with the current session control data.
-        return SessionControl(
-            rate=self._rate.median_value, concurrency=self._concurrency
-        )
-
-    def begin_stage(self, history: SessionHistory) -> None:
-        """Starts the stage clock and obtains baseline latency statistics from the adapter."""
-        super().begin_stage(history=history)
-        # Obtain baseline stats from the adapter
-        if not isinstance(self._latency_stats, SessionStats):
-            self._get_baseline_stats()
-
-    def end_stage(self, session_control: SessionControl) -> None:
-        """
-        Determines if the current stage should end and transitions to the next stage.
-
-        Checks if the baseline stage is complete and if so, takes a snapshot of the session history
-        and prepares for transition.
-        """
-        super().end_stage(session_control=session_control)
-        if not self._step_clock.is_active():
-            self._step_clock.start()
-
-    def transition(self) -> None:
-        """
-        Transitions to the next stage if the current stage has ended.
-
-        If the baseline stage is complete and the next stage is properly set,
-        this method will trigger the adapter to transition to the next stage.
-        """
-        if isinstance(self._adapter, Adapter) and isinstance(
-            self.next_stage, AdapterConcurrencyExploreStage
-        ):
-            self._adapter.transition(self.next_stage)
-
-    def _adapt(self) -> None:
-        """Conduct adaptation by adjusting the rate based on system stability."""
-        if self._system_stable():
-            # If the system is stable, increase the rate.
-            self._rate.increase_value()
-        else:
-            # If the system is unstable, decrease the rate.
-            self._rate.decrease_value()
-
-    def _stabilize(self) -> None:
-        """Apply noise to the rate during the stabilization period."""
-        self._rate.add_noise()
-
-    def _validate_next_stage(self) -> None:
-        """
-        Validates that the next stage is correctly initialized and of the expected type.
-
-        Raises:
-            RuntimeError: If the next stage is not initialized.
-            TypeError: If the next stage is not of type AdapterRateExploreStage.
-        """
-        if self.next_stage is None:
-            msg = "Next stage is not initialized."
-            self._logger.exception(msg)
-            raise RuntimeError(msg)
-
-        if not isinstance(self.next_stage, AdapterConcurrencyExploreStage):
-            msg = f"Expected AdapterConcurrencyExploreStage, got {type(self.adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _update_adapter(self) -> None:
-        """Updates the session control on the adapter."""
-        if isinstance(self._adapter, Adapter):
-            self._adapter.session_control = SessionControl(
-                rate=self._rate.median_value,
-                concurrency=self._concurrency,
-            )
-        else:
-            msg = f"Expected Adapter, got {type(self.adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _system_stable(self) -> bool:
-        """
-        Evaluates system stability based on latency statistics.
-
-        This method checks the latency average and coefficient of variation, and
-        returns True if the values are under the thresholds set by the configuration.
-        """
-        if isinstance(self._session_history, SessionHistory):
-            latency_stats = self._session_history.get_latency_stats(
-                time_window=self._config.window_size
-            )
-            return (
-                latency_stats.average <= self._latency_ave_threshold
-                and latency_stats.cv <= self._latency_cv_threshold
-            )
-        else:
-            msg = f"Expected SessionHistory, got {type(self._session_history).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _get_baseline_stats(self) -> None:
-        """Obtains baseline latency statistics from the adapter."""
-        if isinstance(self._adapter, Adapter):
-            if isinstance(self._adapter.snapshot, StatisticalSnapshot):
-                if isinstance(self._adapter.snapshot.latency_stats, SessionStats):
-                    # Get the baseline latency statistics.
-                    self._latency_stats = self._adapter.snapshot.latency_stats
-                    # Set the latency thresholds for stability checks.
-                    self._latency_ave_threshold = (
-                        self._latency_stats.average * self._config.latency_multiplier
-                    )
-                    self._latency_cv_threshold = (
-                        self._latency_stats.cv * self._config.cv_multiplier
-                    )
+    pass
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                              ADAPTER CONCURRENCY EXPLORE STAGE                                   #
 # ------------------------------------------------------------------------------------------------ #
 class AdapterConcurrencyExploreStage(AdapterStage):
-    """
-    Represents the request concurrency exploration stage of an adapter in a session control mechanism.
-
-    During this stage, the adapter seeks to maximize the concurrency while keeping the
-    latency within baseline range. A hill-climbing algorithm repeatedly and additively increases
-    the request currency. When a threshold is met, the algorithm multiplicatively decreases the
-    concurrency until stability has returned. The process repeats for the duration of the stage,
-    and the median rate observed during the stage is set for subsequent stages.
-
-    Attributes:
-        _rate (SessionControlValue): Manages and adjusts the rate with noise.
-        _concurrency (float): Concurrency level during the baseline stage.
-        _duration (float): Duration of the concurrency exploration stage.
-        _next_stage (Optional[AdapterConcurrencyExploreStage]): The next stage to transition to.
-        _latency_stats (Optional[SessionStats]): Stores latency statistics for the stage.
-        _latency_ave_threshold (float): Threshold for average latency used to determine stability.
-        _latency_cv_threshold (float): Threshold for latency coefficient of variation.
-        _step_duration (float): Duration for each step in the hill-climbing algorithm.
-        _stabilization_period (bool): Indicates whether the system is in a stabilization period.
-        _step_clock (Clock): Tracks time to manage stabilization periods.
-    """
-
-    def __init__(self, config: ConfigurationOption) -> None:
-        """
-        Initializes the AdapterConcurrencyExploreStage with the provided configuration.
-
-        Args:
-            config (ConfigurationOption): Configuration dictionary containing
-                rate, min_rate, max_rate, temperature, concurrency, and duration settings.
-
-        Initializes:
-            _rate (SessionControlValue): Session control object for rate with noise adjustment.
-            _concurrency (float): Concurrency value during this stage.
-            _duration (float): Duration of the baseline stage.
-            _next_stage (Optional[AdapterConcurrencyExploreStage]): The next stage, initially set to None.
-            _latency_stats (Optional[SessionStats]): Latency statistics, initialized to None.
-            _latency_ave_threshold (float): Latency average threshold for stability checks.
-            _latency_cv_threshold (float): Latency coefficient of variation threshold.
-            _step_duration (float): Duration of each rate adjustment step.
-            _stabilization_period (bool): Flag to manage stabilization, starts as False.
-            _step_clock (Clock): Clock instance to track stabilization periods.
-        """
-        super().__init__(config=config)
-
-        # Configuration of stage duration.
-        self._duration: float = self._config.duration
-
-        # Placeholder for the next stage, set later.
-        self._next_stage: Optional[AdapterExploitStage] = None
-
-        # Latency statistics and thresholds for stability checks.
-        self._latency_stats: Optional[SessionStats] = None
-        self._latency_ave_threshold: float = 0.0
-        self._latency_cv_threshold: float = 0.0
-
-        # Duration of the steps that adjust the rate.
-        self._step_duration: float = self._config.step_duration
-
-        # Stabilization flag, true when no rate changes occur.
-        self._stabilization_period = False
-
-        # Clock to manage step stabilization periods.
-        self._step_clock = Clock()
-
-    @property
-    def next_stage(self) -> Optional[AdapterExploitStage]:
-        """
-        Gets the next stage of the adapter.
-
-        Returns:
-            Optional[AdapterExploitStage]: The next stage to transition to, or None if not set.
-        """
-        return self._next_stage
-
-    @next_stage.setter
-    def next_stage(self, next_stage: AdapterExploitStage) -> None:
-        """
-        Sets the next stage of the adapter.
-
-        Args:
-            next_stage (AdapterExploitStage): The stage to transition to after the baseline stage.
-        """
-        self._next_stage = next_stage
-
-    def adapt(self, history: SessionHistory) -> None:
-        """
-        Adjusts the session control values based on session history and transitions to the next stage if appropriate.
-
-        This method adds noise to the rate, creates a session control object, and sets it to the adapter.
-        It also checks if the stage should transition to the next one.
-
-        Args:
-            history (SessionHistory): Historical data of the session used for validation and adaptation.
-        """
-        # Start the stage and set the timer.
-        self.begin_stage(history=history)
-
-        # Determine whether to adapt or stabilize based on the step clock.
-        if (
-            self._step_clock.is_active()
-            and self._step_clock.has_elapsed(self._config.step_duration)
-            or not self._step_clock.is_active()
-        ):
-            self._adapt()
-        else:
-            self._stabilize()
-
-        # Update the adapter with the current session control data.
-        self._update_adapter()
-
-        # Check if the stage should end and transition if ready.
-        self.end_stage()
-
-    def _adapt(self) -> None:
-        """Conduct adaptation by adjusting the rate based on system stability."""
-        if self._system_stable():
-            # If the system is stable, increase the rate.
-            self._concurrency.increase_value()
-        else:
-            # If the system is unstable, decrease the rate.
-            self._concurrency.decrease_value()
-        # Add noise to the rate
-        self._rate.add_noise()
-        # Restart the clock
-        self._stage_clock.start()
-
-    def begin_stage(self, history: SessionHistory) -> None:
-        """Starts the stage clock and obtains baseline latency statistics from the adapter."""
-        super().begin_stage(history=history)
-        if not isinstance(self._latency_stats, SessionStats):
-            self._get_baseline_stats()
-
-    def end_stage(self) -> None:
-        """
-        Determines if the current stage should end and transitions to the next stage.
-
-        Checks if the baseline stage is complete and if so, takes a snapshot of the session history
-        and prepares for transition.
-        """
-        if not self._step_clock.is_active():
-            self._step_clock.start()
-        if self._stage_clock.has_elapsed(duration=self._config.duration):
-            self._set_baseline_statistics()
-            self.transition()
-
-    def transition(self) -> None:
-        """
-        Transitions to the next stage if the current stage has ended.
-
-        If the baseline stage is complete and the next stage is properly set,
-        this method will trigger the adapter to transition to the next stage.
-        """
-        if isinstance(self._adapter, Adapter) and isinstance(
-            self.next_stage, AdapterConcurrencyExploreStage
-        ):
-            self._adapter.transition(self.next_stage)
-
-    def _validate_next_stage(self) -> None:
-        """
-        Validates that the next stage is correctly initialized and of the expected type.
-
-        Raises:
-            RuntimeError: If the next stage is not initialized.
-            TypeError: If the next stage is not of type AdapterConcurrencyExploreStage.
-        """
-        if self.next_stage is None:
-            msg = "Next stage is not initialized."
-            self._logger.exception(msg)
-            raise RuntimeError(msg)
-
-        if not isinstance(self.next_stage, AdapterConcurrencyExploreStage):
-            msg = f"Expected AdapterConcurrencyExploreStage, got {type(self.adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _stabilize(self) -> None:
-        """Apply noise to the rate during the stabilization period."""
-        self._rate.add_noise()
-
-    def _update_adapter(self) -> None:
-        """Updates the session control on the adapter."""
-        if isinstance(self._adapter, Adapter):
-            self._adapter.session_control = SessionControl(
-                rate=self._rate.median_value,
-                concurrency=self._concurrency.value,
-            )
-        else:
-            msg = f"Expected Adapter, got {type(self.adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _system_stable(self) -> bool:
-        """
-        Evaluates system stability based on latency statistics.
-
-        This method checks the latency average and coefficient of variation, and
-        returns True if the values are under the thresholds set by the configuration.
-        """
-        if isinstance(self._session_history, SessionHistory):
-            latency_stats = self._session_history.get_latency_stats(
-                time_window=self._config.window_size
-            )
-            return (
-                latency_stats.average <= self._latency_ave_threshold
-                and latency_stats.cv <= self._latency_cv_threshold
-            )
-        else:
-            msg = f"Expected SessionHistory, got {type(self._session_history).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _get_baseline_stats(self) -> None:
-        """Obtains baseline latency statistics from the adapter."""
-        if isinstance(self._adapter, Adapter):
-            if isinstance(self._adapter.snapshot, StatisticalSnapshot):
-                if isinstance(self._adapter.snapshot.latency_stats, SessionStats):
-                    # Get the baseline latency statistics.
-                    self._latency_stats = self._adapter.snapshot.latency_stats
-                    # Set the latency thresholds for stability checks.
-                    self._latency_ave_threshold = (
-                        self._latency_stats.average * self._config.latency_multiplier
-                    )
-                    self._latency_cv_threshold = (
-                        self._latency_stats.cv * self._config.cv_multiplier
-                    )
-
-    def _initialize_rate_concurrency(self) -> None:
-        # Rate control object initialized with noise management parameters.
-        if isinstance(self._adapter, Adapter):
-            self._rate = SessionControlValue(
-                initial_value=float(self._adapter.session_control.rate),
-                min_value=float(self._config.min_rate),
-                max_value=float(self._config.max_rate),
-                temperature=float(self._config.temperature),
-            )
-        else:
-            msg = f"Expected Adapter, got {type(self._adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-        # Concurrency control object.
-        self._concurrency = SessionControlValue(
-            initial_value=float(self._config.concurrency),
-            min_value=float(self._config.min_concurrency),
-            max_value=float(self._config.max_concurrency),
-        )
+    pass
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                ADAPTER EXPLOIT STAGE                                             #
 # ------------------------------------------------------------------------------------------------ #
 class AdapterExploitStage(AdapterStage):
-    """
-    Represents the exploitation stage where concurrency is fixed at the previous stage
-    level and rate is adjusted based upon changes in latency average and the variation.
-
-    Attributes:
-        _rate (SessionControlValue): Manages and adjusts the rate with noise.
-        _concurrency (float): Fixed concurrency level during the baseline stage.
-        _duration (float): Duration of the exploitation stage.
-        _next_stage (Optional[AdapterRateBaselineStage]): The next stage to transition to.
-        _latency_stats (Optional[SessionStats]): Stores latency statistics for the stage.
-        _latency_ave_threshold (float): Threshold for average latency used to determine stability.
-        _latency_cv_threshold (float): Threshold for latency coefficient of variation.
-        _step_duration (float): Duration for each step in the hill-climbing algorithm.
-        _stabilization_period (bool): Indicates whether the system is in a stabilization period.
-        _step_clock (Clock): Tracks time to manage stabilization periods.
-    """
-
-    def __init__(self, config: ConfigurationOption) -> None:
-        """
-        Initializes the AdapterExploitStage with the provided configuration.
-
-        Args:
-            config (ConfigurationOption): Configuration dictionary containing
-                rate, min_rate, max_rate, temperature, concurrency, and duration settings.
-
-        Initializes:
-            _rate (SessionControlValue): Session control object for rate with noise adjustment.
-            _concurrency (float): Concurrency value during this stage.
-            _duration (float): Duration of the baseline stage.
-            _next_stage (Optional[AdapterExploitStage]): The next stage, initially set to None.
-            _latency_stats (Optional[SessionStats]): Latency statistics, initialized to None.
-            _latency_ave_threshold (float): Latency average threshold for stability checks.
-            _latency_cv_threshold (float): Latency coefficient of variation threshold.
-            _step_duration (float): Duration of each rate adjustment step.
-            - k (float): Sensitivity parameter for latency adjustments.
-            - m (float): Sensitivity parameter for CV adjustments.
-            _step_clock (Clock): Clock instance to track stabilization periods.
-        """
-        super().__init__(config=config)
-
-        # Rate
-        self._rate: float = 0.0
-        # Concurrency
-        self._concurrency: float = 0.0
-        # Configuration of stage duration.
-        self._duration: float = self._config.duration
-
-        # Parameters for rate adjustment
-        self._k = self._config.k
-        self._m = self._config.m
-
-        # Placeholder for the next stage, set later.
-        self._next_stage: Optional[AdapterBaselineStage] = None
-
-        # Latency statistics and thresholds for stability checks.
-        self._latency_stats: Optional[SessionStats] = None
-        self._latency_ave_threshold: float = 0.0
-        self._latency_cv_threshold: float = 0.0
-
-        # Duration of the steps that adjust the rate.
-        self._step_duration: float = self._config.step_duration
-
-        # Stabilization flag, true when no rate changes occur.
-        self._stabilization_period = False
-
-        # Clock to manage step stabilization periods.
-        self._step_clock = Clock()
-
-    @property
-    def next_stage(self) -> Optional[AdapterBaselineStage]:
-        """
-        Gets the next stage of the adapter.
-
-        Returns:
-            Optional[AdapterBaselineStage]: The next stage to transition to, or None if not set.
-        """
-        return self._next_stage
-
-    @next_stage.setter
-    def next_stage(self, next_stage: AdapterBaselineStage) -> None:
-        """
-        Sets the next stage of the adapter.
-
-        Args:
-            next_stage (AdapterBaselineStage): The stage to transition to after the baseline stage.
-        """
-        self._next_stage = next_stage
-
-    def adapt(self, history: SessionHistory) -> None:
-        """
-        Adjusts the session control values based on session history and transitions to the next stage if appropriate.
-
-        This method adds noise to the rate, creates a session control object, and sets it to the adapter.
-        It also checks if the stage should transition to the next one.
-
-        Args:
-            history (SessionHistory): Historical data of the session used for validation and adaptation.
-        """
-        # Start the stage and set the timer.
-        self.begin_stage(history=history)
-
-        self._adapt()
-
-        # Update the adapter with the current session control data.
-        self._update_adapter()
-
-        # Check if the stage should end and transition if ready.
-        self.end_stage()
-
-    def _adapt(self) -> None:
-        """Conduct adaptation by adjusting the rate based on system stability."""
-        # Get current statistics
-        if isinstance(self._session_history, SessionHistory):
-            latency_stats = self._session_history.get_latency_stats(
-                time_window=self._config.window_size
-            )
-        latency_mean = latency_stats.average
-        latency_cv = latency_stats.cv
-        # Compute Latency and CV Ratio
-        if isinstance(self._latency_stats, SessionStats):
-            latency_ratio = latency_mean / self._latency_stats.average
-            cv_ratio = latency_cv / self._latency_stats.cv
-        # Compute new request rate
-        self._rate = (
-            self._rate
-            * (1 - self._k * (latency_ratio - 1))
-            * (1 - self._m * (cv_ratio - 1))
-        )
-
-    def begin_stage(self, history: SessionHistory) -> None:
-        """Starts the stage clock and obtains baseline latency statistics from the adapter."""
-        super().begin_stage(history=history)
-        if not isinstance(self._latency_stats, SessionStats):
-            self._get_baseline_stats()
-
-    def end_stage(self) -> None:
-        """
-        Determines if the current stage should end and transitions to the next stage.
-
-        Checks if the baseline stage is complete and if so, takes a snapshot of the session history
-        and prepares for transition.
-        """
-        if not self._step_clock.is_active():
-            self._step_clock.start()
-        if self._stage_clock.has_elapsed(duration=self._config.duration):
-            self.transition()
-
-    def transition(self) -> None:
-        """
-        Transitions to the next stage if the current stage has ended.
-
-        If the baseline stage is complete and the next stage is properly set,
-        this method will trigger the adapter to transition to the next stage.
-        """
-        if isinstance(self._adapter, Adapter) and isinstance(
-            self.next_stage, AdapterExploitStage
-        ):
-            self._adapter.transition(self.next_stage)
-
-    def _validate_next_stage(self) -> None:
-        """
-        Validates that the next stage is correctly initialized and of the expected type.
-
-        Raises:
-            RuntimeError: If the next stage is not initialized.
-            TypeError: If the next stage is not of type AdapterExploitStage.
-        """
-        if self.next_stage is None:
-            msg = "Next stage is not initialized."
-            self._logger.exception(msg)
-            raise RuntimeError(msg)
-
-        if not isinstance(self.next_stage, AdapterExploitStage):
-            msg = f"Expected AdapterExploitStage, got {type(self.adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _update_adapter(self) -> None:
-        """Updates the session control on the adapter."""
-        if isinstance(self._adapter, Adapter):
-            self._adapter.session_control = SessionControl(
-                rate=self._rate,
-                concurrency=self._adapter.session_control.concurrency,
-            )
-        else:
-            msg = f"Expected Adapter, got {type(self.adapter).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _system_stable(self) -> bool:
-        """
-        Evaluates system stability based on latency statistics.
-
-        This method checks the latency average and coefficient of variation, and
-        returns True if the values are under the thresholds set by the configuration.
-        """
-        if isinstance(self._session_history, SessionHistory):
-            latency_stats = self._session_history.get_latency_stats(
-                time_window=self._config.window_size
-            )
-            return (
-                latency_stats.average <= self._latency_ave_threshold
-                and latency_stats.cv <= self._latency_cv_threshold
-            )
-        else:
-            msg = f"Expected SessionHistory, got {type(self._session_history).__name__}"
-            self._logger.exception(msg)
-            raise TypeError(msg)
-
-    def _get_baseline_stats(self) -> None:
-        """Obtains baseline latency statistics from the adapter."""
-        if isinstance(self._adapter, Adapter):
-            if isinstance(self._adapter.snapshot, StatisticalSnapshot):
-                if isinstance(self._adapter.snapshot.latency_stats, SessionStats):
-                    # Get the baseline latency statistics.
-                    self._latency_stats = self._adapter.snapshot.latency_stats
+    pass
