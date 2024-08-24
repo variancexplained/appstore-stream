@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Friday August 23rd 2024 07:43:48 pm                                                 #
+# Modified   : Saturday August 24th 2024 10:26:48 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -54,46 +54,40 @@ asession:
 #                    ASYNCHRONOUS HTTP REQUEST RATE THROTTLE CONFIG SECTION                        #
 # ------------------------------------------------------------------------------------------------ #
 adapter:
+  defaults: &adapter_defaults
+    rate:
+      base: 50 # base requests per second
+      min: 50 # Minimum rate in requests per second
+      max: 500 # Maximum rate in requests per second
+    concurrency:
+      base: 50 # Base concurrency
+      min: 50 # Minimum concurrency
+      max: 200 # Maximum concurrency
+    window_size: 300
+    temperature: 0.1
+
   baseline:
-    duration: 5 # Seconds. Equates to 5 minute baseline period.
-    concurrency: 50 # number of concurrent requests during baseline.
-    window_size: 300 # Five minute window
-    temperature: 0.05 # Scale parameter for random noise injection into delay
-    rate: 50 # 50 rps
-    min_rate: 50 # 50 Requests per second
-    max_rate: 500 # 500 requests per second
+    <<: *adapter_defaults
+    duration: 2 # Seconds. Equates to 5 minute baseline period.
   explore_rate:
+    <<: *adapter_defaults
     duration: 5 # 1 hour or until convergence
-    concurrency: 50 # number of concurrent requests during baseline.
     step_increase: 50 # Additive rate increase per step
-    step_decrease: 0.8 # 80% Multiplicative rate during decrease per step
+    step_decrease: 0.9 # Multiplicative rate during decrease per step
     step_duration: .1 # 1 minute
-    window_size: 300 # 5 Minutes
     threshold: 1.2 # 120% of baseline mean and cv latency
-    temperature: 0.05 # Scale parameter for random noise injection into delay
-    rate: 50 # 50 rps
-    min_rate: 50 # 50 Requests per second
-    max_rate: 500 # 500 requests per second
   explore_concurrency:
+    <<: *adapter_defaults
     duration: 5 # 1 hour or until convergence
-    min_rate: 50 # 50 Requests per second
-    max_rate: 500 # 500 requests per second
-    concurrency: 50 # starting concurrency
-    min_concurrency: 50 # Minimum concurrency
-    max_concurrency: 200 # Maximum concurrency
     step_increase: 10 # Additive increase in concurrency each step
-    step_decrease: 0.2 # 20% Multiplicative concurrency decrease per step
+    step_decrease: 0.9 # Multiplicative decrease
     step_duration: .1 # 2 minutes allowing system to adjust
-    window_size: 300 # 5 minutes
     threshold: 1.2 # 120% of baeline mean and cv
-    temperature: 0.05 # Scale parameter for random noise injection into delay
   exploit:
+    <<: *adapter_defaults
     duration:  5 # Recalibrate baseline every 30 minutes.
-    window_size: 300 # Window size in seconds.
     k: 0.1 # A 10% change in mean latency would result in a 1% change in delay
     m: 0.05 # A 10% change in latency CV would result in a 0.5% change in delay
-    min_rate: 50 # Minimum requests per second
-    max_rate: 500 # Maximum requests per second
 
 
 

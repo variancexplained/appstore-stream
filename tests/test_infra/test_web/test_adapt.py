@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 03:02:47 pm                                                 #
-# Modified   : Friday August 23rd 2024 07:39:31 pm                                                 #
+# Modified   : Saturday August 24th 2024 10:25:25 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -70,13 +70,13 @@ class TestAdapter:  # pragma: no cover
         rate = container.session.rate()
         concurrency = container.session.concurrency()
         exploit = container.session.exploit()
+        adapter = container.session.adapter()
 
         baseline.next_stage = rate
         rate.next_stage = concurrency
         concurrency.next_stage = exploit
         exploit.next_stage = baseline
 
-        adapter = container.session().adapter
         # Validate instantiation
         assert isinstance(adapter, Adapter)
         assert isinstance(adapter.stage, AdapterBaselineStage)
@@ -84,69 +84,9 @@ class TestAdapter:  # pragma: no cover
         for i in range(NUM_SESSIONS):
             adapter.adapt(history=session_history)
             assert isinstance(adapter.session_control, SessionControl)
-            assert adapter.session_control.rate == 50
-            assert adapter.session_control.delay == 1
-            assert adapter.session_control.concurrency == 50
-
-        # Validate Baseline Statistical Snapshot
-        assert isinstance(adapter.snapshot, StatisticalSnapshot)
-        assert isinstance(adapter.snapshot.latency_stats, SessionStats)
-        assert isinstance(adapter.snapshot.throughput_stats, SessionStats)
-        assert isinstance(adapter.snapshot.rate_stats, SessionStats)
-        assert isinstance(adapter.snapshot.delay_stats, SessionStats)
-        assert isinstance(adapter.snapshot.concurrency_stats, SessionStats)
-        assert isinstance(adapter.snapshot.requests, int)
-        assert isinstance(adapter.snapshot.sessions, int)
-        assert adapter.snapshot.requests == 100
-        assert adapter.snapshot.sessions == 10
-
-        ## Check SessionStats
-        assert isinstance(adapter.snapshot.latency_stats.min, float)
-        assert isinstance(adapter.snapshot.latency_stats.max, float)
-        assert isinstance(adapter.snapshot.latency_stats.median, float)
-        assert isinstance(adapter.snapshot.latency_stats.average, float)
-        assert isinstance(adapter.snapshot.latency_stats.std, float)
-        assert isinstance(adapter.snapshot.latency_stats.cv, float)
-
-        ## Latency
-        assert adapter.snapshot.latency_stats.min > 0
-        assert adapter.snapshot.latency_stats.max > 0
-        assert adapter.snapshot.latency_stats.median > 0
-        assert adapter.snapshot.latency_stats.std > 0
-        assert adapter.snapshot.latency_stats.average > 0
-        assert adapter.snapshot.latency_stats.cv > 0
-
-        ## Throughput
-        assert adapter.snapshot.throughput_stats.min > 0
-        assert adapter.snapshot.throughput_stats.max > 0
-        assert adapter.snapshot.throughput_stats.median > 0
-        assert adapter.snapshot.throughput_stats.std > 0
-        assert adapter.snapshot.throughput_stats.average > 0
-        assert adapter.snapshot.throughput_stats.cv > 0
-
-        ## Rate
-        assert adapter.snapshot.rate_stats.min > 0
-        assert adapter.snapshot.rate_stats.max > 0
-        assert adapter.snapshot.rate_stats.median > 0
-        assert adapter.snapshot.rate_stats.std > 0
-        assert adapter.snapshot.rate_stats.average > 0
-        assert adapter.snapshot.rate_stats.cv > 0
-
-        # Delay
-        assert adapter.snapshot.delay_stats.min > 0
-        assert adapter.snapshot.delay_stats.max > 0
-        assert adapter.snapshot.delay_stats.median > 0
-        assert adapter.snapshot.delay_stats.std > 0
-        assert adapter.snapshot.delay_stats.average > 0
-        assert adapter.snapshot.delay_stats.cv > 0
-
-        # Concurrency
-        assert adapter.snapshot.concurrency_stats.min == 50
-        assert adapter.snapshot.concurrency_stats.max == 50
-        assert adapter.snapshot.concurrency_stats.median == 50
-        assert adapter.snapshot.concurrency_stats.std == 0
-        assert adapter.snapshot.concurrency_stats.average == 50
-        assert adapter.snapshot.concurrency_stats.cv == 0
+            assert round(adapter.session_control.rate, 0) == 50
+            assert round(adapter.session_control.delay, 0) == 1
+            assert round(adapter.session_control.concurrency, 0) == 50
 
         # Check transition
         time.sleep(2)
