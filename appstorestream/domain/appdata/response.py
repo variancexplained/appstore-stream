@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 05:53:12 am                                                   #
-# Modified   : Tuesday July 30th 2024 12:13:20 am                                                  #
+# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,24 +26,23 @@ from pytz import timezone
 from appstorestream.domain.base.response import AsyncResponse
 
 # ------------------------------------------------------------------------------------------------ #
+# mypy: ignore_errors
+# ------------------------------------------------------------------------------------------------ #
 tz = timezone("EST")
 # ------------------------------------------------------------------------------------------------ #
 
 
-class AppDataAsyncResponse(AsyncResponse):
+class AppDataResponse(AsyncResponse):
 
-    def parse_results(self, results: list) -> None:
+    def parse_results(self) -> None:
         """Parse the results into a list of dictionaries."""
 
         # Get timezone aware current datetime.
         current_dt = datetime.now(tz)
 
-        for result in results:
+        for result in self._results:
             try:
-                self._metrics.response_count += 1
                 for record in result["results"]:
-
-                    self._metrics.record_count += 1
 
                     appdata = {}
                     # required fields
@@ -84,7 +83,7 @@ class AppDataAsyncResponse(AsyncResponse):
                         record["currentVersionReleaseDate"], "%Y-%m-%dT%H:%M:%f%z"
                     )
 
-                    appdata["software_lifecycle_duration"] = (
+                    appdata["software_lifecycle_response_time"] = (
                         appdata["release_date_current_version"]
                         - appdata["release_date"]
                     ).days

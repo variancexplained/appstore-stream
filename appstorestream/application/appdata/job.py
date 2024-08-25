@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Friday August 16th 2024 11:28:56 am                                                 #
+# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -29,8 +29,8 @@ from appstorestream.application.metrics.extract import Metrics
 from appstorestream.container import AppStoreStreamContainer
 from appstorestream.core.enum import JobStatus
 from appstorestream.core.service import NestedNamespace
-from appstorestream.domain.appdata.request import AppDataAsyncRequestGen, AppDataRequest
-from appstorestream.domain.appdata.response import AppDataAsyncResponse
+from appstorestream.domain.appdata.request import AppDataRequest, AppDataRequestGen
+from appstorestream.domain.appdata.response import AppDataResponse
 from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.repo.appdata import AppDataRepo
 from appstorestream.infra.web.asession import ASessionAppData
@@ -50,7 +50,7 @@ class AppDataJob(Job):
         project (Project): The project associated with this job.
         max_requests (int): Maximum number of requests to be made during the job. Defaults to `sys.maxsize`.
         batch_size (int): Number of items to process in a single batch. Defaults to 100.
-        request_gen_cls (type[AppDataAsyncRequestGen]): Class used to generate requests asynchronously. Defaults to `AppDataAsyncRequestGen`.
+        request_gen_cls (type[AppDataRequestGen]): Class used to generate requests asynchronously. Defaults to `AppDataRequestGen`.
         appdata_repo (AppDataRepo): Repository for handling app data persistence. Defaults to `Provide[AppStoreStreamContainer.data.appdata_repo]`.
         asession (ASessionAppData): Asynchronous session for making requests. Defaults to `Provide[AppStoreStreamContainer.web.asession_appdata]`.
         circuit_breaker (CircuitBreaker): Circuit breaker for managing request failures. Defaults to `Provide[AppStoreStreamContainer.state.circuit_breaker]`.
@@ -59,7 +59,7 @@ class AppDataJob(Job):
             project (Project): The project associated with this job.
             max_requests (int, optional): Maximum number of requests to be made. Defaults to `sys.maxsize`.
             batch_size (int, optional): Number of items to process in each batch. Defaults to 100.
-            request_gen_cls (type[AppDataAsyncRequestGen], optional): Class for generating asynchronous requests. Defaults to `AppDataAsyncRequestGen`.
+            request_gen_cls (type[AppDataRequestGen], optional): Class for generating asynchronous requests. Defaults to `AppDataRequestGen`.
             appdata_repo (AppDataRepo, optional): Repository for app data persistence. Defaults to `Provide[AppStoreStreamContainer.data.appdata_repo]`.
             asession (ASessionAppData, optional): Asynchronous session for requests. Defaults to `Provide[AppStoreStreamContainer.web.asession_appdata]`.
             circuit_breaker (CircuitBreaker, optional): Circuit breaker for managing request failures. Defaults to `Provide[AppStoreStreamContainer.state.circuit_breaker]`.
@@ -70,7 +70,7 @@ class AppDataJob(Job):
     def __init__(
         self,
         project: Project,
-        request_gen_cls: type[AppDataAsyncRequestGen] = AppDataAsyncRequestGen,
+        request_gen_cls: type[AppDataRequestGen] = AppDataRequestGen,
         appdata_repo: AppDataRepo = Provide[AppStoreStreamContainer.data.appdata_repo],
         asession: ASessionAppData = Provide[
             AppStoreStreamContainer.web.asession_appdata
@@ -179,15 +179,13 @@ class AppDataJob(Job):
         self._jobmeta.start()
         self._circuit_breaker.start(job=self)
 
-    def _update_job(
-        self, request: AppDataRequest, response: AppDataAsyncResponse
-    ) -> None:
+    def _update_job(self, request: AppDataRequest, response: AppDataResponse) -> None:
         self._jobmeta.update(request=request, response=response)
 
-    def _update_metrics(self, response: AppDataAsyncResponse) -> None:
+    def _update_metrics(self, response: AppDataResponse) -> None:
 
-        # Set request duration
-        self.metrics.duration.inc(response.duration)
+        # Set request response_time
+        self.metrics.response_time.inc(response.response_time)
 
         # Progress Metrics
         self._metrics.request_count.inc(response.request_count)

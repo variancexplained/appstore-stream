@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Saturday August 24th 2024 09:05:26 pm                                               #
+# Modified   : Sunday August 25th 2024 12:11:49 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -81,17 +81,17 @@ class Clock:
             raise RuntimeError("Clock has not been started.")
         return time.time() - self._start_time
 
-    def has_elapsed(self, duration: float) -> bool:
-        """Checks if a given duration has elapsed.
+    def has_elapsed(self, response_time: float) -> bool:
+        """Checks if a given response_time has elapsed.
 
         Args:
-            duration (float): The duration to check against, in seconds.
+            response_time (float): The response_time to check against, in seconds.
 
         Returns:
-            bool: True if the specified duration has elapsed since the clock was started,
+            bool: True if the specified response_time has elapsed since the clock was started,
             False otherwise.
         """
-        return self.elapsed() >= duration
+        return self.elapsed() >= response_time
 
     def is_active(self) -> bool:
         """Checks if the clock is active.
@@ -365,7 +365,7 @@ class AdapterStage(ABC):
     Attributes:
         _config (NestedNamespace): A nested namespace object containing the configuration parameters.
         _adapter (Optional[Adapter]): The current adapter associated with the stage, initially None.
-        _stage_clock (Clock): A clock object used to track the duration of the stage.
+        _stage_clock (Clock): A clock object used to track the response_time of the stage.
         _rate (SessionControlValue): The current rate control value.
         _concurrency (SessionControlValue): The current concurrency control value.
         _logger (logging.Logger): Logger instance for the class.
@@ -493,7 +493,7 @@ class AdapterStage(ABC):
         """Finalizes the session and checks for stage transitions.
 
         This method updates the adapter with the current session control values and determines
-        if the stage duration has elapsed, triggering a transition if necessary.
+        if the stage response_time has elapsed, triggering a transition if necessary.
 
         Args:
             session_control (SessionControl): The session control object containing the updated rate and concurrency.
@@ -501,7 +501,9 @@ class AdapterStage(ABC):
         if isinstance(self._adapter, Adapter):
             self._adapter.session_control = session_control
 
-        if self._stage_clock.has_elapsed(duration=float(self._config.duration)):
+        if self._stage_clock.has_elapsed(
+            response_time=float(self._config.response_time)
+        ):
             self.end_stage()
 
     def end_stage(self) -> None:
@@ -567,7 +569,7 @@ class AdapterBaselineStage(AdapterStage):
     Attributes:
         _rate (SessionControlValue): Manages and adjusts the rate with noise.
         _concurrency (float): Fixed concurrency level during the baseline stage.
-        _duration (float): Duration of the baseline stage.
+        _response_time (float): Duration of the baseline stage.
         _next_stage (Optional[AdapterRateExploreStage]): The next stage to transition to.
     """
 
@@ -577,17 +579,17 @@ class AdapterBaselineStage(AdapterStage):
 
         Args:
             config (ConfigurationOption): Configuration dictionary containing
-                rate, min_rate, max_rate, temperature, concurrency, and duration settings.
+                rate, min_rate, max_rate, temperature, concurrency, and response_time settings.
 
         Initializes:
             _rate (SessionControlValue): Session control object for rate with noise adjustment.
             _concurrency (float): Concurrency value during this stage.
-            _duration (float): Duration of the baseline stage.
+            _response_time (float): Duration of the baseline stage.
             _next_stage (Optional[AdapterRateExploreStage]): The next stage, initially set to None.
         """
         super().__init__(config=config)
 
-        self._duration: float = float(self._config.duration)
+        self._response_time: float = float(self._config.response_time)
         self._next_stage: Optional[AdapterRateExploreStage] = None
 
     @property
@@ -774,7 +776,9 @@ class AdapterExploreExploitStage(AdapterStage, ABC):
     def set_baseline_latency_stats(self) -> None:
         """Obtains baseline latency statistics from the adapter."""
         if isinstance(self._adapter, Adapter):
-            self._baseline_latency_stats = self._adapter.get_latency_stats()
+            self._baseline_latency_stats = self._adapter.get_latency_stats(
+                time_window=self._config.window_size
+            )
         else:
             if not self._adapter:
                 msg = f"Adapter has not been initialized in {self.__class__.__name__}."
@@ -833,7 +837,7 @@ class AdapterExploreExploitStage(AdapterStage, ABC):
     def _should_exit_stabilization(self) -> bool:
         return (
             self._step_clock.is_active()
-            and self._step_clock.has_elapsed(self._config.step_duration)
+            and self._step_clock.has_elapsed(self._config.step_response_time)
             or not self._step_clock.is_active()
         )
 
@@ -860,7 +864,7 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
 
         Args:
             config (ConfigurationOption): Configuration dictionary containing rate,
-                min_rate, max_rate, temperature, concurrency, and duration settings.
+                min_rate, max_rate, temperature, concurrency, and response_time settings.
 
         Initializes:
             _rate (SessionControlValue): Session control object for rate with noise adjustment.
@@ -1057,12 +1061,12 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
 
         Args:
             config (ConfigurationOption): Configuration dictionary containing rate,
-                min_rate, max_rate, temperature, concurrency, and duration settings.
+                min_rate, max_rate, temperature, concurrency, and response_time settings.
 
         Initializes:
             _concurrency (SessionControlValue): Session control object for concurrency
                 with noise adjustment.
-            _duration (float): Duration of the concurrency exploration stage.
+            _response_time (float): Duration of the concurrency exploration stage.
             _next_stage (Optional[AdapterExploitStage]): The next stage, initially set to None.
         """
         super().__init__(config=config)
@@ -1249,13 +1253,13 @@ class AdapterExploitStage(AdapterExploreExploitStage):
 
         Args:
             config (ConfigurationOption): Configuration dictionary containing settings for
-                rate, min_rate, max_rate, temperature, concurrency, and duration.
+                rate, min_rate, max_rate, temperature, concurrency, and response_time.
 
         Initializes:
             _rate (SessionControlValue): Session control object for rate with noise adjustment.
             _concurrency (SessionControlValue): Concurrency value during this stage,
                 initialized from the previous stage.
-            _duration (float): Duration of the exploit stage, specified in the configuration.
+            _response_time (float): Duration of the exploit stage, specified in the configuration.
             _next_stage (Optional[AdapterBaselineStage]): The next stage to transition to,
                 initially set to None.
 
@@ -1268,7 +1272,7 @@ class AdapterExploitStage(AdapterExploreExploitStage):
         # Placeholder for the next stage, set later.
         self._next_stage: Optional[AdapterBaselineStage] = None
 
-        self._duration: float = float(self._config.duration)
+        self._response_time: float = float(self._config.response_time)
 
     @property
     def next_stage(self) -> Optional[AdapterBaselineStage]:

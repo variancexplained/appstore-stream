@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 03:02:47 pm                                                 #
-# Modified   : Saturday August 24th 2024 08:52:06 pm                                               #
+# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -125,10 +125,10 @@ class TestAdapt:  # pragma: no cover
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        response_time = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)
 
@@ -159,10 +159,10 @@ class TestAdapt:  # pragma: no cover
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        response_time = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)
 
@@ -194,10 +194,10 @@ class TestAdapt:  # pragma: no cover
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        response_time = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)
 
@@ -227,9 +227,9 @@ class TestAdapt:  # pragma: no cover
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        response_time = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)

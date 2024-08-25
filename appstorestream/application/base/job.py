@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 02:15:42 am                                                   #
-# Modified   : Monday July 29th 2024 11:33:57 pm                                                   #
+# Modified   : Sunday August 25th 2024 12:11:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -53,8 +53,8 @@ class JobMeta(DataClass):
         max_requests (int, optional): The maximum number of requests. Defaults to sys.maxsize.
         batch_size (int, optional): The batch size. Defaults to 100.
         bookmark (int, optional): The bookmark. Defaults to 0.
-        runtime (int, optional): The runtime duration in seconds. Defaults to 0.
-        duration (int, optional): The duration of concurrent requests. Defaults to 0.
+        runtime (int, optional): The runtime response_time in seconds. Defaults to 0.
+        response_time (int, optional): The response_time of concurrent requests. Defaults to 0.
         request_count (int, optional): The number of requests made. Defaults to 0.
         response_count (int, optional): The number of responses received. Defaults to 0.
         record_count (int, optional): The number of records processed. Defaults to 0.
@@ -92,7 +92,7 @@ class JobMeta(DataClass):
     batch_size: int = 100
     bookmark: int = 0
     runtime: int = 0
-    duration: int = 0
+    response_time: int = 0
     request_count: int = 0
     response_count: int = 0
     record_count: int = 0
@@ -152,7 +152,7 @@ class JobMeta(DataClass):
             response (AsyncResponse): The asynchronous response object.
         """
         self.bookmark = request.bookmark + 1
-        self.duration += response.duration
+        self.response_time += response.response_time
         self.request_count += response.request_count
         self.response_count += response.response_count
         self.record_count += response.record_count
@@ -169,9 +169,9 @@ class JobMeta(DataClass):
         self.dt_ended = datetime.now()
         self.runtime = (self.dt_ended - self.dt_started).total_seconds()
 
-        self.request_throughput = self.request_count / self.duration
-        self.response_throughput = self.response_count / self.duration
-        self.record_throughput = self.record_count / self.duration
+        self.request_throughput = self.request_count / self.response_time
+        self.response_throughput = self.response_count / self.response_time
+        self.record_throughput = self.record_count / self.response_time
 
         self.total_error_rate = self.total_errors / self.request_count
         self.redirect_error_rate = self.redirect_errors / self.request_count

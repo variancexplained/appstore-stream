@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 17th 2024 01:26:17 pm                                               #
-# Modified   : Saturday August 17th 2024 06:16:22 pm                                               #
+# Modified   : Sunday August 25th 2024 12:11:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -48,7 +48,7 @@ class ExtractMetrics(DataClass):
     level: str = None  # Either 'job', or 'task'. Defined in subclasses.
     runtime_start_timestamp_seconds: float = 0.0
     runtime_stop_timestamp_seconds: float = 0.0
-    runtime_duration_seconds: float = 0.0
+    runtime_response_time_seconds: float = 0.0
     request_count_total: int = 0
     request_per_second_ratio: float = 0.0
     response_count_total: int = 0
@@ -74,7 +74,7 @@ class TransformMetrics(DataClass):
     level: str = None  # Either 'job', or 'task'. Defined in subclasses.
     runtime_start_timestamp_seconds: float = 0.0
     runtime_stop_timestamp_seconds: float = 0.0
-    runtime_duration_seconds: float = 0.0
+    runtime_response_time_seconds: float = 0.0
     record_count: int = 0
     record_size_bytes_total: int = 0
     record_average_size_bytes: int = 0
@@ -91,7 +91,7 @@ class LoadMetrics(DataClass):
     level: str = None  # Either 'job', or 'task'. Defined in subclasses.
     runtime_start_timestamp_seconds: float = 0.0
     runtime_stop_timestamp_seconds: float = 0.0
-    runtime_duration_seconds: float = 0.0
+    runtime_response_time_seconds: float = 0.0
     record_count: int = 0
     record_average_size_bytes: int = 0
     record_size_bytes_total: int = 0

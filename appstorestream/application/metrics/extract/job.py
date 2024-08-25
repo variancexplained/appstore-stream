@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 17th 2024 11:14:17 am                                               #
-# Modified   : Saturday August 17th 2024 02:41:47 pm                                               #
+# Modified   : Sunday August 25th 2024 12:11:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -32,7 +32,7 @@ from appstorestream.core.metrics import Metrics, MetricsExporter
 class ExtractJobMetrics(Metrics):
     extract_job_runtime_start_timestamp_seconds: float = 0.0
     extract_job_runtime_stop_timestamp_seconds: float = 0.0
-    extract_job_runtime_duration_seconds_total: float = 0.0
+    extract_job_runtime_response_time_seconds_total: float = 0.0
 
     extract_job_request_session_count_total: float = 0.0
     extract_job_request_count_total: int = 0
@@ -67,9 +67,9 @@ class ExtractJobMetrics(Metrics):
         self.extract_job_runtime_stop_timestamp_seconds = (
             task_metrics.extract_task_runtime_stop_timestamp_seconds
         )
-        # Increment job duration
-        self.extract_job_runtime_duration_seconds_total += (
-            task_metrics.extract_task_runtime_duration_seconds
+        # Increment job response_time
+        self.extract_job_runtime_response_time_seconds_total += (
+            task_metrics.extract_task_runtime_response_time_seconds
         )
 
     def _update_request_metrics(self, task_metrics: Metrics) -> None:
@@ -82,7 +82,7 @@ class ExtractJobMetrics(Metrics):
         # Requests per Second
         self.extract_job_request_per_second_ratio = (
             self.extract_job_request_count_total
-            / self.extract_job_runtime_duration_seconds_total
+            / self.extract_job_runtime_response_time_seconds_total
         )
 
     def _update_response_metrics(self, task_metrics: Metrics) -> None:
@@ -93,7 +93,7 @@ class ExtractJobMetrics(Metrics):
         # Responses per Second
         self.extract_job_response_per_second_ratio = (
             self.extract_job_response_count_total
-            / self.extract_job_runtime_duration_seconds_total
+            / self.extract_job_runtime_response_time_seconds_total
         )
 
         # Total Latency

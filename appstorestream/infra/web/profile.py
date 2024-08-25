@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 06:48:22 am                                              #
-# Modified   : Saturday August 24th 2024 01:16:40 pm                                               #
+# Modified   : Sunday August 25th 2024 01:46:31 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,12 +23,16 @@ import statistics
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, Optional, Tuple
+from typing import Deque, List, Optional, Tuple
 from uuid import uuid4
+
+import numpy as np
 
 from appstorestream.core.data import DataClass
 
 
+# ------------------------------------------------------------------------------------------------ #
+# mypy: ignore-errors
 # ------------------------------------------------------------------------------------------------ #
 #                                   SESSION PROFILE                                                #
 # ------------------------------------------------------------------------------------------------ #
@@ -36,41 +40,66 @@ from appstorestream.core.data import DataClass
 class SessionProfile(DataClass):
     """A class encapsulating session performance metrics.
 
-    This class records the timestamps for requests and responses, calculates durations,
+    This class records the timestamps for requests and responses, calculates response_times,
     and maintains a history of latencies and requests to compute throughput.
 
     Attributes:
         session_id (str): A string formatted uuid4 id.
         send_timestamp (float): The timestamp when a request is sent.
         recv_timestamp (float): The timestamp when a response is received.
-        duration (float): The duration of the request-response cycle.
+        response_time (float): The response_time of the request-response cycle.
         requests (int): The total number of requests sent during the session.
         throughput (float): The calculated throughput of requests per second.
         latencies (deque): A deque to store latencies associated with each request.
     """
 
     session_id: str = ""
+    requests: int = 0
+    responses: int = 0
+    retries: int = 0
+    errors: int = 0
+    error_codes: List[int] = field(default_factory=list)
     send_timestamp: float = 0
     recv_timestamp: float = 0
-    duration: float = 0
-    requests: int = 0
-    throughput: float = 0
     latencies: Deque[Tuple[str, float, float]] = field(default_factory=deque)
 
     def __post_init__(self) -> None:
         self.session_id = str(uuid4())
+
+    @property
+    def response_time(self) -> float:
+        return self.recv_timestamp - self.send_timestamp
+
+    @property
+    def throughtput(self) -> float:
+        return self.responses / self.response_time
+
+    @property
+    def failed_requests(self) -> int:
+        return self.requests - self.responses
+
+    @property
+    def latency_ave(self) -> float:
+        return np.mean(list([latency for _, _, latency in self.latencies]))
+
+    @property
+    def latency_total(self) -> float:
+        return np.sum(list([latency for _, _, latency in self.latencies]))
+
+    @property
+    def speedup(self) -> float:
+        return self.latency_total / self.response_time
 
     def send(self) -> None:
         """Record the current time as the send timestamp."""
         self.send_timestamp = time.time()
 
     def recv(self) -> None:
-        """Record the current time as the receive timestamp and calculate duration.
+        """Record the current time as the receive timestamp and calculate response_time.
 
-        The duration is calculated as the difference between the receive and send timestamps.
+        The response_time is calculated as the difference between the receive and send timestamps.
         """
         self.recv_timestamp = time.time()
-        self.duration = self.recv_timestamp - self.send_timestamp
 
     def add_latency(self, latency: float) -> None:
         """Add a latency value to the latencies deque.
@@ -79,7 +108,7 @@ class SessionProfile(DataClass):
             latency (float): The latency of the current request.
         """
         self.latencies.append((self.session_id, self.send_timestamp, latency))
-        self.requests += 1
+        self.responses += 1
 
     def get_latencies(self) -> Deque[Tuple[str, float, float]]:
         """Return the deque of latencies recorded.
@@ -92,16 +121,22 @@ class SessionProfile(DataClass):
     def get_throughput(self) -> Tuple[str, float, float]:
         """Calculate and return the throughput of requests.
 
-        The throughput is calculated as the number of requests divided by the duration
+        The throughput is calculated as the number of requests divided by the response_time
         of the request-response cycle. Returns a deque containing the send timestamp
         and the computed throughput.
 
         Returns:
             Tuple: A Tuple containing the send timestamp and the calculated throughput.
-                   If the duration is zero, returns an empty Tuple.
+                   If the response_time is zero, returns an empty Tuple.
         """
-        self.throughput = self.requests / self.duration if self.duration else 0
+        self.throughput = (
+            self.requests / self.response_time if self.response_time else 0
+        )
         return (self.session_id, self.send_timestamp, self.throughput)
+
+    def log_error(self, return_code: int) -> None:
+        self.error_codes.append(return_code)
+        self.errors += 1
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -204,8 +239,8 @@ class SessionHistory:
         """Returns the number of async request sessions."""
         return len(self._throughputs)
 
-    def add_metrics(self, profile: SessionProfile) -> None:
-        """Update the metrics with data from the collector.
+    def add_profile(self, profile: SessionProfile) -> None:
+        """Update the metrics with data from the profile.
 
         Args:
             profile (SessionProfile): The session profile containing the latest session metrics.

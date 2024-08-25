@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 17th 2024 11:14:24 am                                               #
-# Modified   : Saturday August 17th 2024 02:41:48 pm                                               #
+# Modified   : Sunday August 25th 2024 12:11:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,7 +31,7 @@ from appstorestream.core.metrics import Metrics
 class ExtractMetrics(Metrics):
     extract_job_runtime_start_timestamp_seconds: float = 0.0
     extract_job_runtime_stop_timestamp_seconds: float = 0.0
-    extract_job_runtime_duration_seconds_total: float = 0.0
+    extract_job_runtime_response_time_seconds_total: float = 0.0
 
     extract_job_request_session_count_total: float = 0.0
     extract_job_request_count_total: int = 0
@@ -50,7 +50,7 @@ class ExtractMetrics(Metrics):
 
     extract_task_runtime_start_timestamp_seconds: float = 0.0
     extract_task_runtime_stop_timestamp_seconds: float = 0.0
-    extract_task_runtime_duration_seconds: float = 0.0
+    extract_task_runtime_response_time_seconds: float = 0.0
 
     extract_task_request_count_total: int = 0
     extract_task_request_per_second_ratio: float = 0.0
@@ -88,7 +88,7 @@ class ExtractMetrics(Metrics):
     def stop(self) -> None:
         self.extract_job_runtime_stop_timestamp_seconds = time.time()
         self.extract_task_runtime_stop_timestamp_seconds = time.time()
-        self.runtime_duration_seconds = (
+        self.runtime_response_time_seconds = (
             self.runtime_stop_timestamp_seconds - self.runtime_start_timestamp_seconds
         )
         self._compute_request_metrics()
@@ -118,16 +118,16 @@ class ExtractMetrics(Metrics):
 
         # Requests per second
         self.request_per_second_ratio = (
-            (self.request_count_total / self.runtime_duration_seconds)
-            if self.runtime_duration_seconds > 0
+            (self.request_count_total / self.runtime_response_time_seconds)
+            if self.runtime_response_time_seconds > 0
             else 0
         )
 
     def _compute_response_metrics(self) -> None:
         # Responses per second
         self.response_per_second_ratio = (
-            (self.response_count_total / self.runtime_duration_seconds)
-            if self.runtime_duration_seconds > 0
+            (self.response_count_total / self.runtime_response_time_seconds)
+            if self.runtime_response_time_seconds > 0
             else 0
         )
 
@@ -158,23 +158,23 @@ class ExtractMetrics(Metrics):
         self.throttle_concurrency_efficiency_ratio = (
             (
                 self.response_average_latency_seconds
-                / self.runtime_duration_seconds
+                / self.runtime_response_time_seconds
                 / self.request_count_total
             )
-            if self.runtime_duration_seconds > 0
+            if self.runtime_response_time_seconds > 0
             else 0
         )
 
         # Average latency efficiency
         self.throttle_average_latency_efficiency_ratio = (
-            (self.response_average_latency_seconds / self.runtime_duration_seconds)
-            if self.runtime_duration_seconds > 0
+            (self.response_average_latency_seconds / self.runtime_response_time_seconds)
+            if self.runtime_response_time_seconds > 0
             else 0
         )
 
         # Total latency Efficiency
         self.throttle_total_latency_efficiency_ratio = (
-            (self.response_latency_seconds_total / self.runtime_duration_seconds)
-            if self.runtime_duration_seconds > 0
+            (self.response_latency_seconds_total / self.runtime_response_time_seconds)
+            if self.runtime_response_time_seconds > 0
             else 0
         )

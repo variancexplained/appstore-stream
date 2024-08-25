@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday August 15th 2024 04:31:15 pm                                               #
-# Modified   : Saturday August 17th 2024 02:37:08 pm                                               #
+# Modified   : Sunday August 25th 2024 12:11:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -40,7 +40,7 @@ class TransformTaskMetrics(TaskMetrics, TransformMetrics):
 
     def stop(self) -> None:
         self.runtime_stop_timestamp_seconds = time.time()
-        self.runtime_duration_seconds = (
+        self.runtime_response_time_seconds = (
             self.runtime_stop_timestamp_seconds - self.runtime_start_timestamp_seconds
         )
         self._compute_record_metrics()
@@ -57,8 +57,8 @@ class TransformTaskMetrics(TaskMetrics, TransformMetrics):
     def _compute_record_metrics(self) -> None:
         # Records per second
         self.record_per_second_ratio = (
-            (self.record_count / self.runtime_duration_seconds)
-            if self.runtime_duration_seconds > 0
+            (self.record_count / self.runtime_response_time_seconds)
+            if self.runtime_response_time_seconds > 0
             else 0
         )
         # Average Record Size
@@ -100,8 +100,8 @@ class TransformJobMetrics(JobMetrics, TransformMetrics):
         self.runtime_stop_timestamp_seconds = (
             task_metrics.runtime_stop_timestamp_seconds
         )
-        # Set duration
-        self.runtime_duration_seconds += task_metrics.runtime_duration_seconds
+        # Set response_time
+        self.runtime_response_time_seconds += task_metrics.runtime_response_time_seconds
 
     def _update_record_metrics(self, task_metrics: TransformTaskMetrics) -> None:
         # Record count
@@ -113,7 +113,9 @@ class TransformJobMetrics(JobMetrics, TransformMetrics):
             self.record_size_bytes_total / self.record_count
         )
         # Records processed per second
-        self.record_per_second_ratio = self.record_count / self.runtime_duration_seconds
+        self.record_per_second_ratio = (
+            self.record_count / self.runtime_response_time_seconds
+        )
 
     def _update_success_failure_metrics(
         self, task_metrics: TransformTaskMetrics

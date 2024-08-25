@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 06:56:32 am                                                   #
-# Modified   : Monday July 29th 2024 02:52:22 pm                                                   #
+# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,7 +24,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from appstorestream.domain.appdata.response import AppDataAsyncResponse
+from appstorestream.domain.appdata.response import AppDataResponse
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long
@@ -47,7 +47,7 @@ class TestAppDataResponse:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        response = AppDataAsyncResponse()
+        response = AppDataResponse()
         response.send()
         time.sleep(2)
         response.recv(results=appdata_json)
@@ -68,9 +68,9 @@ class TestAppDataResponse:  # pragma: no cover
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        response_time = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)

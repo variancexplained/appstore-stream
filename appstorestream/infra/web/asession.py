@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Friday August 23rd 2024 04:31:22 pm                                                 #
+# Modified   : Sunday August 25th 2024 03:11:05 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,17 +21,22 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
 
-from appstorestream.domain.appdata.response import AppDataAsyncResponse
+from appstorestream.domain.appdata.request import AppDataRequest
+from appstorestream.domain.appdata.response import AppDataResponse
 from appstorestream.domain.base.request import AsyncRequest
 from appstorestream.domain.base.response import AsyncResponse
-from appstorestream.domain.review.response import ReviewAsyncResponse
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.base.service import InfraService
-from appstorestream.infra.web.adapter import AThrottle
+from appstorestream.infra.web.adapter import Adapter
+from appstorestream.infra.web.profile import SessionHistory, SessionProfile
+
+# ------------------------------------------------------------------------------------------------ #
+CUSTOM_CLIENT_ERROR_RETURN_CODE = 400
+CUSTOM_EXCEPTION_RETURN_CODE = 499
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -50,23 +55,22 @@ class ASession(InfraService):
 
     def __init__(
         self,
-        throttle: AThrottle,
-        max_concurrency: int = 100,
+        adapter: Adapter,
+        history: SessionHistory,
         retries: int = 3,
         timeout: int = 30,
+        concurrency: int = 50,
         config_cls: type[Config] = Config,
     ) -> None:
-        self._throttle = throttle
-        self._max_concurrency = max(max_concurrency, throttle.max_rate)
+        self._adapter = adapter
+        self._history = history
         self._retries = retries
         self._timeout = timeout
         self._timeout_obj = aiohttp.ClientTimeout(total=timeout)
+        self._concurrency = concurrency
         self._config = config_cls()
-        self._concurrency = max_concurrency
 
         self._proxy = self._config.proxy
-
-        self._latency = []
 
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
@@ -80,24 +84,31 @@ class ASession(InfraService):
 
         concurrency = asyncio.Semaphore(self._concurrency)
 
-        # Create and start (send) metrics object.
-        metrics = ExtractMetrics()
-        metrics.start()
+        # Create and start (send) profile object.
+        profile = SessionProfile()
+        profile.send()
         # Get response using method defined in subclass.
-        results = await self.get_response(
+        response = await self.get_response(
             request=request,
             connector=connector,
             timeout=self._timeout_obj,
-            metrics=metrics,
+            profile=profile,
             concurrency=concurrency,
             trust_env=True,
             raise_for_status=True,
         )
-        # Computes average, total latency and duration
-        metrics.stop()
-        # Throttle the next request
-        await self._throttle.throttle(latency=metrics.latencies)
-        response = AppDataAsyncResponse(results=results, metrics=metrics)
+        # Computes average, total latency and response_time
+        profile.recv()
+        # Add the profile to the history object
+        self._history.add_profile(profile=profile)
+        # Engage the adapter.
+        self._adapter.adapt_requests(history=self._history)
+        # Obtain delay and concurrency
+        delay = self._adapter.session_control.delay
+        self._concurrency = int(self._adapter.session_control.concurrency)
+        # Execute the wait.
+        await asyncio.sleep(delay)
+        # Return results
         return response
 
     @abstractmethod
@@ -106,7 +117,7 @@ class ASession(InfraService):
         request: AsyncRequest,
         connector: aiohttp.TCPConnector,
         timeout: aiohttp.ClientTimeout,
-        metrics: ExtractMetrics,
+        profile: SessionProfile,
         concurrency: asyncio.Semaphore,
         trust_env: bool = True,
         raise_for_status: bool = True,
@@ -117,22 +128,14 @@ class ASession(InfraService):
             request (AsyncRequest): An Asyncronous HTTP Request
         """
 
-    def as_dict(self) -> dict:
-        return {
-            "throttle": self._throttle.as_dict(),
-            "max_concurrency": self._max_concurrency,
-            "retries": self._retries,
-            "timeout": self._timeout,
-        }
-
     async def make_request(
         self,
         client: aiohttp.ClientSession,
         url: str,
         concurrency: asyncio.Semaphore,
-        metrics: ExtractMetrics,
-        params: Optional[Dict] = None,
-    ) -> Dict[str, any]:
+        profile: SessionProfile,
+        params: Optional[Dict[str, object]] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Executes the HTTP request and returns a JSON response.
 
         Args:
@@ -142,12 +145,12 @@ class ASession(InfraService):
             params (Optional[Dict]): URL parameters. Optional.
 
         Returns:
-            Dict[str, any]: The JSON response or an error dictionary.
+            Optional[Dict[str, Any]]: The JSON response or None if all retries fail.
         """
-        metrics.counts_requests_total += 1
+        profile.requests += 1
 
         async with concurrency:
-            while metrics.success_failure_retries_total < self._retries:
+            while profile.retries < self._retries:
                 try:
                     start_time = time.time()
                     async with client.get(
@@ -155,51 +158,45 @@ class ASession(InfraService):
                     ) as response:
                         response.raise_for_status()
                         latency = time.time() - start_time
-                        metrics.add_latency(latency=latency)
-                        metrics.add_response(response)
-                        return await response.json(encoding="UTF-8", content_type=None)
+                        profile.add_latency(latency=latency)
+                        profile.responses += 1
+                        result: Dict[str, Any] = await response.json(encoding="UTF-8")
+                        return result  # Only return after a successful request
 
                 except aiohttp.ClientResponseError as e:
-                    if metrics.success_failure_retries_total == self._retries - 1:
-                        metrics.log_http_error(return_code=e.status)
+                    if profile.retries == self._retries - 1:
+                        profile.log_error(return_code=e.status)
                     if 400 <= e.status < 500:
                         self._logger.warning(
-                            f"ClientResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
+                            f"ClientResponseError: Response code: {e.status} - {e}. Retry #{profile.retries}."
                         )
 
                     elif 500 <= e.status < 600:
                         self._logger.warning(
-                            f"ServerResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
+                            f"ServerResponseError: Response code: {e.status} - {e}. Retry #{profile.retries}."
                         )
                     else:
                         self._logger.warning(
-                            f"UnexpectedResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
+                            f"UnexpectedResponseError: Response code: {e.status} - {e}. Retry #{profile.retries}."
                         )
 
                 except aiohttp.ClientError as e:
-                    metrics.log_http_error(return_code=e.status)
-                    self._logger.warning(f"ClientError: {e}. Retry #{metrics.retries}.")
+                    profile.log_error(return_code=CUSTOM_CLIENT_ERROR_RETURN_CODE)
+                    self._logger.warning(f"ClientError: {e}. Retry #{profile.retries}.")
 
                 except Exception as e:
-                    metrics.log_http_error(return_code=e.status)
+                    profile.log_error(return_code=CUSTOM_EXCEPTION_RETURN_CODE)
                     self._logger.warning(
-                        f"Unknown Error: {e}. Retry #{metrics.retries}."
+                        f"Unknown Error: {e}. Retry #{profile.retries}."
                     )
 
-                metrics.success_failure_retries_total += 1
+                finally:
+                    profile.retries += 1
+                    await asyncio.sleep(2**profile.retries)  # Exponential backoff
 
-                await asyncio.sleep(2**metrics.retries)  # Exponential backoff
-
+            # If all retries are exhausted, log and return None
             self._logger.error("Exhausted retries. Returning to calling environment.")
-            return
-
-    def _get_proxy(self) -> dict:
-        dns = os.getenv("WEBSHARE_DNS")
-        username = os.getenv("WEBSHARE_USER")
-        pwd = os.getenv("WEBSHARE_PWD")
-        port = os.getenv("WEBSHARE_PORT")
-        proxy = f"http://{username}:{pwd}@{dns}:{port}"
-        return proxy
+            return None
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -214,16 +211,32 @@ class ASessionAppData(ASession):
         headers (dict): Header dictionary. Optional
     """
 
+    def __init__(
+        self,
+        adapter: Adapter,
+        history: SessionHistory,
+        retries: int = 3,
+        timeout: int = 30,
+        concurrency: int = 50,
+    ) -> None:
+        super().__init__(
+            adapter=adapter,
+            history=history,
+            retries=retries,
+            timeout=timeout,
+            concurrency=concurrency,
+        )
+
     async def get_response(
         self,
-        request: AsyncRequest,
+        request: AppDataRequest,  # type: ignore
         connector: aiohttp.TCPConnector,
         timeout: aiohttp.ClientTimeout,
-        metrics: ExtractMetrics,
+        profile: SessionProfile,
         concurrency: asyncio.Semaphore,
         trust_env: bool = True,
         raise_for_status: bool = True,
-    ) -> AsyncResponse:
+    ) -> AppDataResponse:
         """Formats and executes asynchronous get commands.
 
         Args:
@@ -242,50 +255,67 @@ class ASessionAppData(ASession):
                 self.make_request(
                     client=client,
                     url=request.baseurl,
-                    params=param_dict,
                     concurrency=concurrency,
-                    metrics=metrics,
+                    profile=profile,
+                    params=param_dict,
                 )
                 for param_dict in request.param_list
             ]
-            return await asyncio.gather(*tasks)
+            result = await asyncio.gather(*tasks)
+            return AppDataResponse(results=result, profile=profile)
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                      ASESSION REVIEW                                             #
 # ------------------------------------------------------------------------------------------------ #
-class ASessionReview(ASession):
+# class ASessionReview(ASession):
 
-    async def get_response(
-        self,
-        request: AsyncRequest,
-        connector: aiohttp.TCPConnector,
-        timeout: aiohttp.ClientTimeout,
-        metrics: ExtractMetrics,
-        concurrency: asyncio.Semaphore,
-        trust_env: bool = True,
-        raise_for_status: bool = True,
-    ) -> ReviewAsyncResponse:
-        """Formats and executes asyncronous get commands.
+#     def __init__(
+#         self,
+#         adapter: Adapter,
+#         history: SessionHistory,
+#         retries: int = 3,
+#         timeout: int = 30,
+#         concurrency: int = 50,
+#     ) -> None:
+#         super().__init__(
+#             adapter=adapter,
+#             history=history,
+#             retries=retries,
+#             timeout=timeout,
+#             concurrency=concurrency,
+#         )
 
-        Args:
-            request (AsyncRequest): An Asyncronous HTTP Request
-        """
+#     async def get_response(
+#         self,
+#         request: AsyncRequest,
+#         connector: aiohttp.TCPConnector,
+#         timeout: aiohttp.ClientTimeout,
+#         profile: SessionProfile,
+#         concurrency: asyncio.Semaphore,
+#         trust_env: bool = True,
+#         raise_for_status: bool = True,
+#     ) -> ReviewAsyncResponse:
+#         """Formats and executes asyncronous get commands.
 
-        async with aiohttp.ClientSession(
-            headers=request.header,
-            connector=connector,
-            trust_env=trust_env,
-            raise_for_status=raise_for_status,
-            timeout=timeout,
-        ) as client:
-            tasks = [
-                self.make_request(
-                    client=client,
-                    url=url,
-                    concurrency=concurrency,
-                    metrics=metrics,
-                )
-                for url in request.urls
-            ]
-            return await asyncio.gather(*tasks)
+#         Args:
+#             request (AsyncRequest): An Asyncronous HTTP Request
+#         """
+
+#         async with aiohttp.ClientSession(
+#             headers=request.header,
+#             connector=connector,
+#             trust_env=trust_env,
+#             raise_for_status=raise_for_status,
+#             timeout=timeout,
+#         ) as client:
+#             tasks = [
+#                 self.make_request(
+#                     client=client,
+#                     url=url,
+#                     concurrency=concurrency,
+#                     profile=profile,
+#                 )
+#                 for url in request.urls
+#             ]
+#             return await asyncio.gather(*tasks)

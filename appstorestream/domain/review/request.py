@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/domain/appdata/request.py                                           #
+# Filename   : /appstorestream/domain/review/request.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday July 20th 2024 03:02:29 am                                                 #
-# Modified   : Sunday August 25th 2024 02:49:38 am                                                 #
+# Modified   : Sunday August 25th 2024 03:09:34 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,32 +22,33 @@ from __future__ import annotations
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import DefaultDict, Dict
+from typing import Any, Collection, DefaultDict, Dict
 
 from appstorestream.core.data import DataClass
 from appstorestream.domain.base.request import AsyncRequest, AsyncRequestGen
-from appstorestream.infra.web.header import BrowserHeader
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class AppDataRequestParams(DataClass):
-    """Encapsulates the request parameters for the app data request."""
+class ReviewRequestParams(DataClass):
+    """Encapsulates the request parameters for the reviews request."""
 
-    scheme: str = "https"
-    host: str = "itunes.apple.com"
-    term: str = "app"
-    command: str = "search?"
-    media: str = "software"
-    country: str = "us"
-    lang: str = "en-us"
-    explicit: str = "yes"
-    limit: int = 200
+    app_id: str
+    start_index: int
+    end_index: int
+    header: dict[str, str] = field(default_factory=lambda: defaultdict(str))
+
+    def __post_init__(self) -> None:
+        self.header: dict[str, str] = {"X-Apple-Store-Front": "143441-1,29"}
+
+    @property
+    def url(self) -> str:
+        return f"https://itunes.apple.com/WebObjects/MZStore.woa/wa/userReviewsRow?id={self.app.id}&displayable-kind=11&startIndex={self.start_index}&endIndex={self.end_index}&sort=1"
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class AppDataRequest(AsyncRequest):
+class ReviewRequest(AsyncRequest):
     """Represents an asynchronous request for AppData.
 
     Attributes:
@@ -77,21 +78,21 @@ class AppDataRequestGen(AsyncRequestGen):  # type: ignore
 
     def __init__(
         self,
+        app_id: str,
         category_id: int,
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
         start_page: int = 0,
-        request_params_cls: type[AppDataRequestParams] = AppDataRequestParams,
-        browser_header_cls: type[BrowserHeader] = BrowserHeader,
+        request_params_cls: type[ReviewRequestParams] = ReviewRequestParams,
     ) -> None:
-        self._category_id = category_id
-        self._max_requests = max_requests
-        self._batch_size = batch_size
-        self._start_page = start_page
-        self._current_page = start_page
+        self._app_id: str = app_id
+        self._category_id: int = category_id
+        self._max_requests: int = max_requests
+        self._batch_size: int = batch_size
+        self._start_page: int = start_page
+        self._current_page: int = start_page
 
         self._request_params = request_params_cls()
-        self._browser_header = browser_header_cls()
 
         self._request_count = 0
 

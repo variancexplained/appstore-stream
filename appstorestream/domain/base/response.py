@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 03:50:26 am                                                   #
-# Modified   : Saturday August 17th 2024 06:47:09 pm                                               #
+# Modified   : Sunday August 25th 2024 01:03:39 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,16 +20,23 @@
 import logging
 import time
 from abc import ABC, abstractmethod
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
+
+from appstorestream.infra.web.profile import SessionProfile
 
 
 # ------------------------------------------------------------------------------------------------ #
 class AsyncResponse(ABC):
-    def __init__(self, results: list) -> None:
-        self._results = results
-        self._content = []
-        self._finalized = False
+
+    def __init__(
+        self, results: list[Dict[str, Union[str, int, float]]], profile: SessionProfile
+    ) -> None:
+        self._results: List[Dict[str, Union[str, int, float]]] = results
+        self._content: List[Dict[str, Union[str, int, float]]] = []
+        self._finalized: bool = False
+        self._profile: SessionProfile = profile
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     @property
@@ -38,18 +45,24 @@ class AsyncResponse(ABC):
 
     @property
     def content(self) -> pd.DataFrame:
+        df = pd.DataFrame()
         if not self._finalized:
             self._not_finalized()
         else:
-            return pd.DataFrame(self._content)
+            df = pd.DataFrame(self._content)
+        return df
 
-    def process_response(self) -> pd.DataFrame:
+    @property
+    def profile(self) -> SessionProfile:
+        return self._profile
+
+    def process_response(self) -> None:
         """Returns the content from the AsyncRequest as a pandas dictionary"""
-        self.parse_results(results=self._results)
+        self.parse_results()
         self._finalized = True
 
     @abstractmethod
-    def parse_results(self, results: list) -> None:
+    def parse_results(self) -> None:
         """Parse the results"""
 
     def _not_finalized(self) -> None:

@@ -4,14 +4,14 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /tests/test_appdata/test_infra/test_web/test_appdata_asession.py                    #
+# Filename   : /tests/test_infra/test_web/test_appdata_asession.py                                 #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday July 29th 2024 01:09:08 pm                                                   #
-# Modified   : Tuesday July 30th 2024 12:48:08 am                                                  #
+# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,7 +24,7 @@ import aiohttp
 import pandas as pd
 import pytest
 
-from appstorestream.domain.appdata.request import AppDataAsyncRequestGen
+from appstorestream.domain.appdata.request import AppDataRequestGen
 
 CATEGORY = 6018
 MAX_REQUESTS = 10
@@ -54,7 +54,7 @@ class TestAppDataAsession:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         session = container.web.asession_appdata()
-        rgen = AppDataAsyncRequestGen(
+        rgen = AppDataRequestGen(
             category_id=CATEGORY,
             max_requests=MAX_REQUESTS,
             batch_size=BATCH_SIZE,
@@ -76,9 +76,9 @@ class TestAppDataAsession:  # pragma: no cover
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        response_time = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)

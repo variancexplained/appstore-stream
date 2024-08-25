@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Friday August 23rd 2024 05:43:59 pm                                                 #
+# Modified   : Saturday August 24th 2024 09:52:31 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -37,6 +37,8 @@ from appstorestream.infra.web.adapter import (
     AdapterExploitStage,
     AdapterRateExploreStage,
 )
+from appstorestream.infra.web.asession import ASession
+from appstorestream.infra.web.profile import SessionHistory
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -77,9 +79,10 @@ class PersistenceContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                       ADAPTER                                                    #
+#                                       ASESSION                                                   #
 # ------------------------------------------------------------------------------------------------ #
 class AdapterContainer(containers.DeclarativeContainer):
+
     config = providers.Configuration()
 
     # Stages
@@ -95,11 +98,25 @@ class AdapterContainer(containers.DeclarativeContainer):
     # Adapter
     adapter = providers.Singleton(Adapter, initial_stage=baseline)
 
+    # Session History
+    history = providers.Singleton(SessionHistory, max_history=config.asession.history)
+
+    # Asynchronous Session
+    asession = providers.Singleton(
+        ASession,
+        adapter=adapter,
+        history=history,
+        retries=config.asession.retries,
+        timeout=config.asession.timeout,
+        concurrency=config.asession.concurrency.base,
+    )
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        STATE                                                     #
 # ------------------------------------------------------------------------------------------------ #
 class StateContainer(containers.DeclarativeContainer):
+
     config = providers.Configuration()
 
     circuit_breaker = providers.Singleton(
@@ -123,7 +140,9 @@ class StateContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class AppStoreStreamContainer(containers.DeclarativeContainer):
 
-    config = providers.Configuration(yaml_files=["config/test.yaml"])
+    config_filepath = Config().filepath
+
+    config = providers.Configuration(yaml_files=[config_filepath])
 
     logs = providers.Container(LoggingContainer, config=config)
 

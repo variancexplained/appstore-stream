@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Monday July 29th 2024 01:55:21 pm                                                   #
+# Modified   : Sunday August 25th 2024 12:11:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -49,7 +49,7 @@ DTYPE = {
     "release_date": DATETIME,
     "release_date_current_version": DATETIME,
     "app_version": VARCHAR,
-    "software_lifecycle_duration": INTEGER,
+    "software_lifecycle_response_time": INTEGER,
     "days_since_release": INTEGER,
     "days_since_current_version": INTEGER,
     "extract_date": DATETIME,
@@ -136,7 +136,7 @@ class AppDataRepo(DomainLayerRepo):
             release_date,
             release_date_current_version,
             app_version,
-            software_lifecycle_duration,
+            software_lifecycle_response_time,
             days_since_release,
             days_since_current_version,
             extract_date
@@ -166,7 +166,7 @@ class AppDataRepo(DomainLayerRepo):
             :release_date,
             :release_date_current_version,
             :app_version,
-            :software_lifecycle_duration,
+            :software_lifecycle_response_time,
             :days_since_release,
             :days_since_current_version,
             :extract_date
@@ -195,7 +195,7 @@ class AppDataRepo(DomainLayerRepo):
             release_date = VALUES(release_date),
             release_date_current_version = VALUES(release_date_current_version),
             app_version = VALUES(app_version),
-            software_lifecycle_duration = VALUES(software_lifecycle_duration),
+            software_lifecycle_response_time = VALUES(software_lifecycle_response_time),
             days_since_release = VALUES(days_since_release),
             days_since_current_version = VALUES(days_since_current_version),
             extract_date = VALUES(extract_date);
