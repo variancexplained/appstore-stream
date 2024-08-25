@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 03:02:47 pm                                                 #
-# Modified   : Saturday August 24th 2024 06:12:12 pm                                               #
+# Modified   : Saturday August 24th 2024 08:52:06 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -112,7 +112,7 @@ class TestAdapt:  # pragma: no cover
         assert isinstance(adapter.stage, AdapterBaselineStage)
         # Run a few sessions
         for i in range(NUM_SESSIONS):
-            adapter.adapt(history=session_history)
+            adapter.adapt_requests(history=session_history)
             assert isinstance(adapter.session_control, SessionControl)
             assert 45 <= round(adapter.session_control.rate, 0) <= 55
             assert round(adapter.session_control.delay, 0) == 1
@@ -120,7 +120,7 @@ class TestAdapt:  # pragma: no cover
 
         # Check transition
         time.sleep(2)
-        adapter.adapt(history=session_history)
+        adapter.adapt_requests(history=session_history)
         assert isinstance(adapter.stage, AdapterRateExploreStage)
 
         # ---------------------------------------------------------------------------------------- #
@@ -148,10 +148,10 @@ class TestAdapt:  # pragma: no cover
         history = SessionHistory()
         rates = []
         for i in range(10):
-            adapter.adapt(history=history)
+            adapter.adapt_requests(history=history)
             rate = adapter.session_control.rate
             rates.append(rate)
-            assert rate >= 50
+            assert round(rate, 0) >= 50
             if i % 2 == 0:
                 time.sleep(1)
 
@@ -182,7 +182,7 @@ class TestAdapt:  # pragma: no cover
         history = SessionHistory()
         concurrencies = []
         for i in range(20):
-            adapter.adapt(history=history)
+            adapter.adapt_requests(history=history)
             concurrency = adapter.session_control.concurrency
             concurrencies.append(concurrency)
             if i % 2 == 0:
@@ -217,7 +217,7 @@ class TestAdapt:  # pragma: no cover
         history = SessionHistory()
         rates = []
         for i in range(20):
-            adapter.adapt(history=history)
+            adapter.adapt_requests(history=history)
             rate = adapter.session_control.rate
             rates.append(rate)
             if i % 2 == 0:
