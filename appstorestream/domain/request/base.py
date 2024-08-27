@@ -11,14 +11,14 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Tuesday August 27th 2024 12:20:22 am                                                #
+# Modified   : Tuesday August 27th 2024 12:37:52 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Dict
 
 from appstorestream.core.data import DataClass
 
@@ -32,8 +32,3 @@ class Request(DataClass):
     @abstractmethod
     def baseurl(self) -> str:
         """Base URL for requests"""
-
-    @property
-    @abstractmethod
-    def params(self) -> Dict[str, object]:
-        """List of HTTP parameters for requests"""

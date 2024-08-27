@@ -4,28 +4,28 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/domain/request/appdata.py                                           #
+# Filename   : /appstorestream/domain/request/review.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Tuesday August 27th 2024 12:37:34 am                                                #
+# Created    : Tuesday August 27th 2024 12:26:33 am                                                #
+# Modified   : Tuesday August 27th 2024 01:36:49 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from dataclasses import dataclass
-from typing import Any, Dict
+from dataclasses import dataclass, field
+from typing import Any, Collection, Dict
 
 from appstorestream.domain.request.base import Request
-from appstorestream.infra.web.header import BrowserHeaders
+from appstorestream.infra.web.header import STOREFRONT
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class RequestAppData(Request):
+class RequestReview(Request):
     """Represents a request for AppData.
 
     Attributes:
@@ -34,37 +34,14 @@ class RequestAppData(Request):
         header DefaultDict[str, str]: Header parameters
     """
 
-    genreId: int  # Category id
-    current_page: int
-    media: str = "software"
-    scheme: str = "https"
-    host: str = "itunes.apple.com"
-    term: str = "app"
-    command: str = "search?"
-    country: str = "us"
-    lang: str = "en-us"
-    explicit: str = "yes"
-    limit: int = 200
-    headers: BrowserHeaders = BrowserHeaders()
+    app_id: str
+    start_index: int
+    end_index: int
+
+    @property
+    def header(self) -> Collection[str]:
+        return STOREFRONT["headers"]
 
     @property
     def baseurl(self) -> str:
-        return f"{self.scheme}://{self.host}/{self.command}"
-
-    @property
-    def header(self) -> Dict[str, Any]:
-        return next(self.headers)
-
-    @property
-    def params(self) -> Dict[str, object]:
-        params = {
-            "media": self.media,
-            "genreId": self.genreId,
-            "term": self.term,
-            "country": self.country,
-            "lang": self.lang,
-            "explicit": self.explicit,
-            "limit": self.limit,
-            "offset": self.current_page * self.limit,
-        }
-        return params
+        return f"https://itunes.apple.com/WebObjects/MZStore.woa/wa/userReviewsRow?id={self.app_id}&displayable-kind=11&startIndex={self.start_index}&endIndex={self.end_index}&sort=1"
