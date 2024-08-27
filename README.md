@@ -1,27 +1,26 @@
-# AppStoreStream
+# AppVoCAI - Acquire
 
-[![PyPI](https://img.shields.io/pypi/v/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appstorestream/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appstorestream/)
-[![PyPI - License](https://img.shields.io/pypi/l/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appstorestream/)
-[![Coookiecutter - Wolt](https://img.shields.io/badge/cookiecutter-Wolt-00c2e8?style=flat-square&logo=cookiecutter&logoColor=D4AA00&link=https://github.com/woltapp/wolt-python-package-cookiecutter)](https://github.com/woltapp/wolt-python-package-cookiecutter)
+[![PyPI](https://img.shields.io/pypi/v/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
+[![PyPI - License](https://img.shields.io/pypi/l/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
 
-
----
-
-**Documentation**: [https://variancexplained.github.io/appstorestream](https://variancexplained.github.io/appstorestream)
-
-**Source Code**: [https://github.com/variancexplained/appstorestream](https://github.com/variancexplained/appstorestream)
-
-**PyPI**: [https://pypi.org/project/appstorestream/](https://pypi.org/project/appstorestream/)
 
 ---
 
-AppStoreStream: App Data and Reviews, Delivered!
+**Documentation**: [https://variancexplained.github.io/appstorestream](https://variancexplained.github.io/appvocai-acquire)
+
+**Source Code**: [https://github.com/variancexplained/appstorestream](https://github.com/variancexplained/appvocai-acquire)
+
+**PyPI**: [https://pypi.org/project/appstorestream/](https://pypi.org/project/appvocai-acquire/)
+
+---
+
+AppVoCAI - Acquire: Acquiring the Apple App Voice of the Customer
 
 ## Installation
 
 ```sh
-pip install appstorestream
+pip install appvocai-acquire
 ```
 
 ## Development

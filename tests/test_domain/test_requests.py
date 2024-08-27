@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 03:27:58 am                                                #
-# Modified   : Tuesday August 27th 2024 03:45:41 am                                                #
+# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,12 +24,12 @@ from typing import Any, Optional
 import pandas as pd
 import pytest
 
-from appstorestream.domain.request.appdata import (
+from appvocai.domain.request.appdata import (
     RequestAppData,
     RequestAppDataGen,
     RequestAsyncAppData,
 )
-from appstorestream.domain.request.review import (
+from appvocai.domain.request.review import (
     RequestAppReview,
     RequestAppReviewGen,
     RequestAsyncAppReview,

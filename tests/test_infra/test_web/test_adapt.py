@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 03:02:47 pm                                                 #
-# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
+# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,15 +25,15 @@ from typing import Any, Optional
 import pytest
 from dependency_injector.containers import Container
 
-from appstorestream.container import AppStoreStreamContainer
-from appstorestream.infra.web.adapter import (
+from appvocai.container import AppStoreStreamContainer
+from appvocai.infra.web.adapter import (
     Adapter,
     AdapterBaselineStage,
     AdapterConcurrencyExploreStage,
     AdapterExploitStage,
     AdapterRateExploreStage,
 )
-from appstorestream.infra.web.profile import (
+from appvocai.infra.web.profile import (
     SessionControl,
     SessionHistory,
     SessionStats,

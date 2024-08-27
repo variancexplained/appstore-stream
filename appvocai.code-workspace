@@ -1,0 +1,31 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"psi-header.variables": [
+			[
+				"projectCreationYear",
+				"2024"
+			],
+			[
+				"url",
+				"https://github.com/variancexplained/appvocai-acquire"
+			],
+			[
+				"projectname",
+				"AppVoCAI - Acquire"
+			],
+			[
+				"version",
+				"0.2.0"
+			],
+			[
+				"pythonversion",
+				"3.10.14"
+			]
+		],
+	}
+}

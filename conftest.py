@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Monday August 26th 2024 11:50:06 pm                                                 #
+# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,9 +27,9 @@ from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
 # from appstorestream.container import AppStoreStreamContainer
-from appstorestream.infra.base.config import Config
-from appstorestream.infra.web.adapter import Adapter
-from appstorestream.infra.web.profile import (
+from appvocai.infra.base.config import Config
+from appvocai.infra.web.adapter import Adapter
+from appvocai.infra.web.profile import (
     SessionHistory,
     SessionProfile,
     SessionStats,

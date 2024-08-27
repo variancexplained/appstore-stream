@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 08:03:21 am                                                 #
-# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
+# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from appstorestream.infra.web.profile import (
+from appvocai.infra.web.profile import (
     SessionHistory,
     SessionProfile,
     SessionStats,
