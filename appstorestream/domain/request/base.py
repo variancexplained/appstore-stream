@@ -11,14 +11,16 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Tuesday August 27th 2024 02:01:27 am                                                #
+# Modified   : Tuesday August 27th 2024 02:18:02 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from abc import abstractmethod
-from dataclasses import dataclass
-from typing import Dict
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import List
 
 from appstorestream.core.data import DataClass
 from appstorestream.infra.base.config import Config
@@ -37,3 +39,21 @@ class Request(DataClass):
     @abstractmethod
     def baseurl(self) -> str:
         """Base URL for requests"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class RequestAsync(DataClass):
+    """Encapsulates a list of requests"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+class RequestGen(ABC):
+
+    @abstractmethod
+    def __iter__(self) -> RequestGen:
+        """Initalizes the generation of Requests"""
+
+    @abstractmethod
+    def __next__(self) -> RequestAsync:
+        """Generates the next request"""
