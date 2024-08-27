@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Saturday August 24th 2024 09:52:31 pm                                               #
+# Modified   : Monday August 26th 2024 11:50:31 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,14 +22,7 @@ import logging.config  # pragma: no cover
 
 from dependency_injector import containers, providers
 
-from appstorestream.domain.base.state import CircuitBreaker
 from appstorestream.infra.base.config import Config
-from appstorestream.infra.database.mysql import MySQLDatabase
-from appstorestream.infra.repo.appdata import AppDataRepo
-from appstorestream.infra.repo.job import JobRepo
-from appstorestream.infra.repo.project import ProjectRepo
-from appstorestream.infra.repo.review import ReviewRepo
-from appstorestream.infra.repo.uow import UoW
 from appstorestream.infra.web.adapter import (
     Adapter,
     AdapterBaselineStage,
@@ -37,7 +30,8 @@ from appstorestream.infra.web.adapter import (
     AdapterExploitStage,
     AdapterRateExploreStage,
 )
-from appstorestream.infra.web.asession import ASession
+
+# from appstorestream.infra.web.asession import ASession
 from appstorestream.infra.web.profile import SessionHistory
 
 
@@ -54,85 +48,37 @@ class LoggingContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                      PERSISTENCE                                                 #
-# ------------------------------------------------------------------------------------------------ #
-class PersistenceContainer(containers.DeclarativeContainer):
-
-    database = providers.Singleton(MySQLDatabase)
-
-    appdata_repo = providers.Singleton(AppDataRepo, database=database)
-
-    review_repo = providers.Singleton(ReviewRepo, database=database)
-
-    job_repo = providers.Singleton(JobRepo, database=database)
-
-    project_repo = providers.Singleton(ProjectRepo, database=database)
-
-    uow = providers.Singleton(
-        UoW,
-        database=database,
-        appdata_repo=appdata_repo,
-        review_repo=review_repo,
-        job_repo=job_repo,
-        project_repo=project_repo,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                                       ASESSION                                                   #
 # ------------------------------------------------------------------------------------------------ #
-class AdapterContainer(containers.DeclarativeContainer):
+# class AdapterContainer(containers.DeclarativeContainer):
 
-    config = providers.Configuration()
+#     config = providers.Configuration()
 
-    # Stages
-    baseline = providers.Singleton(AdapterBaselineStage, config=config.adapter.baseline)
-    rate = providers.Singleton(
-        AdapterRateExploreStage, config=config.adapter.explore_rate
-    )
-    concurrency = providers.Singleton(
-        AdapterConcurrencyExploreStage, config=config.adapter.explore_concurrency
-    )
-    exploit = providers.Singleton(AdapterExploitStage, config=config.adapter.exploit)
+#     # Stages
+#     baseline = providers.Singleton(AdapterBaselineStage, config=config.adapter.baseline)
+#     rate = providers.Singleton(
+#         AdapterRateExploreStage, config=config.adapter.explore_rate
+#     )
+#     concurrency = providers.Singleton(
+#         AdapterConcurrencyExploreStage, config=config.adapter.explore_concurrency
+#     )
+#     exploit = providers.Singleton(AdapterExploitStage, config=config.adapter.exploit)
 
-    # Adapter
-    adapter = providers.Singleton(Adapter, initial_stage=baseline)
+#     # Adapter
+#     adapter = providers.Singleton(Adapter, initial_stage=baseline)
 
-    # Session History
-    history = providers.Singleton(SessionHistory, max_history=config.asession.history)
+#     # Session History
+#     history = providers.Singleton(SessionHistory, max_history=config.asession.history)
 
-    # Asynchronous Session
-    asession = providers.Singleton(
-        ASession,
-        adapter=adapter,
-        history=history,
-        retries=config.asession.retries,
-        timeout=config.asession.timeout,
-        concurrency=config.asession.concurrency.base,
-    )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                        STATE                                                     #
-# ------------------------------------------------------------------------------------------------ #
-class StateContainer(containers.DeclarativeContainer):
-
-    config = providers.Configuration()
-
-    circuit_breaker = providers.Singleton(
-        CircuitBreaker,
-        closed_window_size=config.circuit_breaker.closed_window_size,
-        closed_burnin_period=config.circuit_breaker.closed_burnin_period,
-        closed_failure_rate_threshold=config.circuit_breaker.closed_failure_rate_threshold,
-        half_open_window_size=config.circuit_breaker.half_open_window_size,
-        half_open_failure_rate_threshold=config.circuit_breaker.half_open_failure_rate_threshold,
-        half_open_delay=config.circuit_breaker.half_open_delay,
-        short_circuit_errors_window_size=config.circuit_breaker.short_circuit_errors_window_size,
-        short_circuit_errors_failure_rate_threshold=config.circuit_breaker.short_circuit_errors_failure_rate_threshold,
-        short_circuit_404s_window_size=config.circuit_breaker.short_circuit_404s_window_size,
-        short_circuit_404s_failure_rate_threshold=config.circuit_breaker.short_circuit_404s_failure_rate_threshold,
-        open_cooldown_period=config.circuit_breaker.open_cooldown_period,
-    )
+#     # Asynchronous Session
+#     asession = providers.Singleton(
+#         ASession,
+#         adapter=adapter,
+#         history=history,
+#         retries=config.asession.retries,
+#         timeout=config.asession.timeout,
+#         concurrency=config.asession.concurrency.base,
+#     )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -146,8 +92,4 @@ class AppStoreStreamContainer(containers.DeclarativeContainer):
 
     logs = providers.Container(LoggingContainer, config=config)
 
-    data = providers.Container(PersistenceContainer)
-
-    state = providers.Container(StateContainer, config=config)
-
-    session = providers.Container(AdapterContainer, config=config)
+    # session = providers.Container(AdapterContainer, config=config)

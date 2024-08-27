@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Saturday August 24th 2024 03:22:23 pm                                               #
+# Modified   : Monday August 26th 2024 11:50:06 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,7 +26,7 @@ import pytest
 from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
-from appstorestream.container import AppStoreStreamContainer
+# from appstorestream.container import AppStoreStreamContainer
 from appstorestream.infra.base.config import Config
 from appstorestream.infra.web.adapter import Adapter
 from appstorestream.infra.web.profile import (
@@ -37,7 +37,7 @@ from appstorestream.infra.web.profile import (
 from tests.test_infra.test_web.test_adapt import MockSessionHistory
 
 # ------------------------------------------------------------------------------------------------ #
-collect_ignore = [""]
+collect_ignore = ["appstorestream/infra/web/asession.py"]
 # mypy: ignore-errors
 
 
@@ -56,12 +56,12 @@ def mode() -> Generator[Any, Any, Any]:
 # ------------------------------------------------------------------------------------------------ #
 #                              DEPENDENCY INJECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=True)
-def container() -> Container:
-    container = AppStoreStreamContainer()
-    container.init_resources()
-    container.wire(modules=["appstorestream.infra.web.adapter"])
-    return container
+# @pytest.fixture(scope="function", autouse=True)
+# def container() -> Container:
+#     container = AppStoreStreamContainer()
+#     container.init_resources()
+#     container.wire(modules=["appstorestream.infra.web.adapter"])
+#     return container
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -108,21 +108,21 @@ def session_history() -> SessionHistory:
 # ------------------------------------------------------------------------------------------------ #
 #                                     ADAPTER                                                      #
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=False)
-def adapter(container: AppStoreStreamContainer) -> Adapter:
+# @pytest.fixture(scope="function", autouse=False)
+# def adapter(container: AppStoreStreamContainer) -> Adapter:
 
-    baseline = container.session.baseline()
-    rate = container.session.rate()
-    concurrency = container.session.concurrency()
-    exploit = container.session.exploit()
-    adapter = container.session.adapter()
+#     baseline = container.session.baseline()
+#     rate = container.session.rate()
+#     concurrency = container.session.concurrency()
+#     exploit = container.session.exploit()
+#     adapter = container.session.adapter()
 
-    baseline.next_stage = rate
-    rate.next_stage = concurrency
-    concurrency.next_stage = exploit
-    exploit.next_stage = baseline
+#     baseline.next_stage = rate
+#     rate.next_stage = concurrency
+#     concurrency.next_stage = exploit
+#     exploit.next_stage = baseline
 
-    return adapter
+#     return adapter
 
 
 # ------------------------------------------------------------------------------------------------ #

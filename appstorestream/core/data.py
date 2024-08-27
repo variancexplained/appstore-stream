@@ -10,8 +10,8 @@
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Sunday July 21st 2024 07:45:11 pm                                                   #
-# Modified   : Friday August 23rd 2024 03:21:25 pm                                                 #
+# Created    : Monday August 26th 2024 10:17:42 pm                                                 #
+# Modified   : Monday August 26th 2024 10:17:58 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any, Dict, Mapping, Tuple, TypeVar, Union
+from typing import Any, Dict, Mapping, Tuple, Union
 
 import numpy as np
 import pandas as pd

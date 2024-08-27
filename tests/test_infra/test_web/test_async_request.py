@@ -4,32 +4,31 @@
 # Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /tests/test_appdata/test_domain/test_request_gen.py                                 #
+# Filename   : /tests/test_infra/test_web/test_async_request.py                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday July 29th 2024 12:32:14 pm                                                   #
-# Modified   : Sunday August 25th 2024 12:11:47 am                                                 #
+# Created    : Monday August 26th 2024 11:13:46 pm                                                 #
+# Modified   : Tuesday August 27th 2024 12:18:59 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+import asyncio
 import inspect
+import json
 import logging
 from datetime import datetime
+from typing import Any
 
+import aiohttp
 import pandas as pd
 import pytest
 
-from appstorestream.domain.appdata.request import AppDataRequestGen
+from appstorestream.domain.request.appdata import RequestAppData
 
-CATEGORY = 6018
-MAX_REQUESTS = 10
-BATCH_SIZE = 2
-START_PAGE = 0
-RESULTS_PER_PAGE = 200
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long
 # ------------------------------------------------------------------------------------------------ #
@@ -39,54 +38,36 @@ logger = logging.getLogger(__name__)
 double_line = f"\n{100 * '='}"
 single_line = f"\n{100 * '-'}"
 
+CATEGORY = 6018
+PAGE = 2
+LIMIT = 10
+OFFSET = 0
 
-@pytest.mark.appdata
-@pytest.mark.rgen
-class TestAppDataRequestGen:  # pragma: no cover
+
+@pytest.mark.asyncio
+@pytest.mark.request
+class TestRequestAppData:  # pragma: no cover
     # ============================================================================================ #
-    def test_request_gen(self, caplog):
+    async def test_request_appdata(self, caplog: Any) -> None:
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        rgen = AppDataRequestGen(
-            category_id=CATEGORY,
-            max_requests=MAX_REQUESTS,
-            batch_size=BATCH_SIZE,
-            start_page=START_PAGE,
-        )
-        assert rgen.bookmark == START_PAGE
-        assert rgen.batchsize == BATCH_SIZE
-        assert rgen.max_requests == MAX_REQUESTS
 
-        requests = iter(rgen)
+        request = RequestAppData(genreId=CATEGORY, current_page=PAGE, limit=LIMIT)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(request.baseurl, params=request.params) as response:
+                result = await response.json(content_type=None)
+                assert len(result["results"]) == LIMIT
+                assert isinstance(result["results"], list)
 
-        page = START_PAGE
-        batch = 0
-        for request in requests:
-            assert len(request.param_list) == BATCH_SIZE
-            assert isinstance(request.param_list, list)
-            batch += 1
-            logger.debug(f"\n\nGenerating Batch: {batch}")
-            for param in request.param_list:
-                logger.debug(f"Printing Page: {page}")
-                assert param["offset"] == page * RESULTS_PER_PAGE
-                assert "media" in param.keys()
-                assert "explicit" in param.keys()
-                assert "country" in param.keys()
-                assert "term" in param.keys()
-                assert "genreId" in param.keys()
-                page += 1
-                logger.debug(param)
-
-        assert requests.bookmark == 10
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
-        response_time = round((end - start).total_seconds(), 1)
+        duration = round((end - start).total_seconds(), 1)
 
         logger.info(
-            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {response_time} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
         )
         logger.info(single_line)

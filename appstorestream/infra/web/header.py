@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:43:55 am                                                   #
-# Modified   : Monday July 29th 2024 03:42:47 am                                                   #
+# Modified   : Monday August 26th 2024 11:02:44 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,12 +20,13 @@
 from __future__ import annotations
 
 import random
+from typing import Any, Dict, Optional
 
 from appstorestream.infra.web.base import Header
 
 
 # ------------------------------------------------------------------------------------------------ #
-class BrowserHeader:
+class BrowserHeaders:
     """Iteratively and randomly returns HTTP Browser headers
 
     Args:
@@ -34,13 +35,13 @@ class BrowserHeader:
 
     def __init__(self) -> None:
         self._headers = HEADERS
-        self._header = None
+        self._header: Optional[Dict[str, str]] = None
 
-    def __iter__(self):
+    def __iter__(self) -> BrowserHeaders:
         """Initializes the iteration"""
         return self
 
-    def __next__(self):
+    def __next__(self) -> Dict[str, str]:
         """Returns a randomly selected header."""
 
         while True:
@@ -61,11 +62,11 @@ class AppleStoreFrontHeader(Header):
     def __init__(self) -> None:
         self._headers = STOREFRONT
 
-    def __iter__(self):
+    def __iter__(self) -> AppleStoreFrontHeader:
         """Initializes the iteration"""
         return self
 
-    def __next__(self):
+    def __next__(self) -> Dict[str, Any]:
         """Returns an apple storefront header."""
         return self._headers
 

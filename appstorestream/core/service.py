@@ -10,22 +10,23 @@
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday July 29th 2024 02:22:30 pm                                                   #
-# Modified   : Monday July 29th 2024 02:22:55 pm                                                   #
+# Created    : Monday August 26th 2024 11:33:51 pm                                                 #
+# Modified   : Monday August 26th 2024 11:41:12 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Service Module"""
 from abc import ABC
 from datetime import datetime
-from types import SimpleNamespace
+from typing import Any, Dict, Union
 
 import pandas as pd
 
-from appstorestream.core.data import IMMUTABLE_TYPES, SEQUENCE_TYPES, NestedNamespace
+from appstorestream.core.data import IMMUTABLE_TYPES, SEQUENCE_TYPES
 
 
+# ------------------------------------------------------------------------------------------------ #
+# mypy: allow-any-generics
 # ------------------------------------------------------------------------------------------------ #
 class Service(ABC):
     """Abstract base class for application, domain, and infrastructure services."""
@@ -51,7 +52,7 @@ class Service(ABC):
         s += "\n\n"
         return s
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> Dict[str, Union[str, int, float, datetime, None]]:
         """Returns a dictionary representation of the the Config object."""
         return {
             k: self._export_config(v)
@@ -60,7 +61,10 @@ class Service(ABC):
         }
 
     @classmethod
-    def _export_config(cls, v):  # pragma: no cover
+    def _export_config(
+        cls,
+        v: Any,
+    ) -> Any:  # pragma: no cover
         """Returns v with Configs converted to dicts, recursively."""
         if isinstance(v, IMMUTABLE_TYPES):
             return v
@@ -73,13 +77,9 @@ class Service(ABC):
         elif hasattr(v, "as_dict"):
             return v.as_dict()
         else:
-            """Else nothing. What do you want?"""
+            return dict()
 
-    def as_df(self) -> pd.DataFrame:
+    def as_df(self) -> Any:
         """Returns the project in DataFrame format"""
         d = self.as_dict()
         return pd.DataFrame(data=d, index=[0])
-
-    def as_namespace(self) -> SimpleNamespace:
-        """Returns the attributes as a namespace."""
-        return NestedNamespace(self.as_dict())
