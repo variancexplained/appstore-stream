@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Tuesday August 27th 2024 03:44:40 pm                                                #
+# Modified   : Tuesday August 27th 2024 05:04:24 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -39,6 +39,7 @@ class RequestAppData(Request):
 
     genreId: int = 0
     page: int = 0
+    request_type: str = "appdata"
     media: str = "software"
     scheme: str = "https"
     host: str = "itunes.apple.com"
@@ -110,6 +111,7 @@ class RequestAppDataGen(RequestGen):
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
         start_page: int = 0,
+        limit: int = 200,
         request_cls: type[RequestAppData] = RequestAppData,
     ) -> None:
         self._category_id = category_id
@@ -117,6 +119,7 @@ class RequestAppDataGen(RequestGen):
         self._batch_size = batch_size
         self._start_page = start_page
         self._page = start_page
+        self._limit = limit
 
         self._request_cls = request_cls
 
@@ -163,16 +166,16 @@ class RequestAppDataGen(RequestGen):
         batch_start_page = self._page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
-        requests = []
+        async_requests = RequestAsyncAppData()
 
         for page in range(batch_start_page, batch_stop_page):
             request = RequestAppData(
-                genreId=self._category_id, page=page
+                genreId=self._category_id, page=page, limit=self._limit,
             )
-            requests.append(request)
+            async_requests.requests.append(request)
             self._page += 1
 
             self._request_count += 1
 
         # Create the Request Object
-        return RequestAsyncAppData(requests=requests)
+        return async_requests

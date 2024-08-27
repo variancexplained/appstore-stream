@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 02:00:33 pm                                                #
-# Modified   : Tuesday August 27th 2024 02:48:31 pm                                                #
+# Modified   : Tuesday August 27th 2024 06:44:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,27 +23,21 @@ from typing import Any, Dict, List
 
 from aiohttp import ClientResponse
 
+from appvocai.domain.request.base import Request
 from appvocai.domain.response.base import Response
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class ResponseAppData(Response):
+class ResponseAppReview(Response):
 
+    def parse_request(self, request: Request) -> None:
+        super().parse_request(request)
+        self.request_type = "review"
 
-    def __post_init__(self) -> None:
-        super().__init__()
-
-    def parse_response(self, response: ClientResponse) -> None:
-        """Parses the response object and sets the response-related member variables.
-
-        Args:
-            response (ClientResponse): The response object containing relevant metadata.
-        """
-        # Call the base class method to set default values
-        super().parse_response(response)
-
-        # Set response metadata
-        content = response.json()
-        self.n = len(content["userReviewList"])  # Assuming response.data holds the records
+    async def parse_response(self, response: ClientResponse) -> None:
+        """Parses the response and populates member variables."""
+        await super().parse_response(response=response)
+        content = await response.json(content_type=None)
+        self.n = len(content.get("userReviewList",0))
 

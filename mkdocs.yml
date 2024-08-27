@@ -1,5 +1,5 @@
-site_name: "AppStoreStream"
-repo_url: https://github.com/variancexplained/appstorestream
+site_name: "appvocai"
+repo_url: https://github.com/variancexplained/appvocai
 
 theme:
   name: material

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/web/__init__.py                                               #
+# Filename   : /appvocai/infra/web/__init__.py                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 08:20:44 am                                                   #
-# Modified   : Friday August 16th 2024 03:35:04 am                                                 #
+# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #

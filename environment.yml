@@ -1,4 +1,4 @@
-name: appstorestream
+name: appvocai
 channels:
   - conda-forge
   - defaults
@@ -108,4 +108,4 @@ dependencies:
       - typer==0.12.3
       - types-python-dateutil==2.9.0.20240316
       - typing-extensions==4.12.2
-prefix: /home/john/miniconda3/envs/appstorestream
+prefix: /home/john/miniconda3/envs/appvocai

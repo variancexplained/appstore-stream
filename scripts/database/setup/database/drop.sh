@@ -1,17 +1,17 @@
 #!/usr/bin/bash
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /scripts/database/setup/database/drop.sh                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 03:27:27 am                                                 #
-# Modified   : Thursday July 25th 2024 02:37:15 pm                                                 #
+# Modified   : Tuesday August 27th 2024 06:27:48 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #

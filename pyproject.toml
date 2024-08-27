@@ -1,16 +1,16 @@
 [tool.poetry]
-name = "appstorestream"
+name = "appvocai"
 version = "0.0.1"
-description = "AppStoreStream: App Data and Reviews, Delivered!"
+description = "appvocai: App Data and Reviews, Delivered!"
 authors = [
     "John James <john@variancexplained.com>",
 ]
 license = "MIT"
 readme = "README.md"
 
-documentation = "https://variancexplained.github.io/appstorestream"
-homepage = "https://variancexplained.github.io/appstorestream"
-repository = "https://github.com/variancexplained/appstorestream"
+documentation = "https://variancexplained.github.io/appvocai"
+homepage = "https://variancexplained.github.io/appvocai"
+repository = "https://github.com/variancexplained/appvocai"
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 packages = [
-    { include = "appstorestream", from = "src" }
+    { include = "appvocai", from = "src" }
 ]
 
 [tool.poetry.dependencies]
@@ -87,7 +87,7 @@ log_cli_level = "DEBUG"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 addopts = """\
-    --cov appstorestream \
+    --cov appvocai \
     --cov tests \
     --cov-report term-missing \
     --no-cov-on-fail \

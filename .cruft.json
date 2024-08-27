@@ -7,10 +7,10 @@
       "author_name": "John James",
       "author_email": "john@variancexplained.com",
       "github_username": "variancexplained",
-      "project_name": "AppStoreStream",
-      "project_slug": "appstorestream",
-      "package_name": "appstorestream",
-      "project_short_description": "AppStoreStream: App Data and Reviews, Delivered!",
+      "project_name": "appvocai",
+      "project_slug": "appvocai",
+      "package_name": "appvocai",
+      "project_short_description": "appvocai: App Data and Reviews, Delivered!",
       "_template": "https://github.com/woltapp/wolt-python-package-cookiecutter"
     }
   },

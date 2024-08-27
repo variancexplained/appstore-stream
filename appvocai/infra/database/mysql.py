@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/database/mysql.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
+# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -47,7 +47,7 @@ class MySQLDatabase(Database):
         config_cls (Type[Config]): System configuration class.
     """
 
-    __dbname = "appstorestream"
+    __dbname = "appvocai"
 
     def __init__(self, config_cls: Type[Config] = Config) -> None:
         super().__init__()

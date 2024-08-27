@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Tuesday August 27th 2024 03:05:11 pm                                                #
+# Modified   : Tuesday August 27th 2024 04:54:33 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -32,9 +32,8 @@ from appvocai.infra.base.config import Config
 @dataclass
 class Request(DataClass):
     """Abstract base class for batch HTTP requests"""
-    id: str = ""  # System generated UUID (default: "")
+    id: str = None  # System generated UUID (default: "")
     date_time: datetime = None # Datetime the request was sent.
-    index: int = 0  # The index or offset requested (default: 0)
     method: str = 'GET'  # The HTTP method used (GET, POST, etc.) (default: 'GET')
 
 

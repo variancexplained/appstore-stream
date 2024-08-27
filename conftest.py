@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /conftest.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
+# Modified   : Tuesday August 27th 2024 06:26:22 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+
 import json
 import time
 from dataclasses import dataclass
@@ -26,18 +27,15 @@ import pytest
 from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
-# from appstorestream.container import AppStoreStreamContainer
+# from appvocai.container import appvocaiContainer
 from appvocai.infra.base.config import Config
 from appvocai.infra.web.adapter import Adapter
-from appvocai.infra.web.profile import (
-    SessionHistory,
-    SessionProfile,
-    SessionStats,
-)
+from appvocai.infra.web.profile import (SessionHistory, SessionProfile,
+                                        SessionStats)
 from tests.test_infra.test_web.test_adapt import MockSessionHistory
 
 # ------------------------------------------------------------------------------------------------ #
-collect_ignore = ["appstorestream/infra/web/asession.py"]
+collect_ignore = ["appvocai/infra/web/asession.py"]
 # mypy: ignore-errors
 
 
@@ -58,9 +56,9 @@ def mode() -> Generator[Any, Any, Any]:
 # ------------------------------------------------------------------------------------------------ #
 # @pytest.fixture(scope="function", autouse=True)
 # def container() -> Container:
-#     container = AppStoreStreamContainer()
+#     container = appvocaiContainer()
 #     container.init_resources()
-#     container.wire(modules=["appstorestream.infra.web.adapter"])
+#     container.wire(modules=["appvocai.infra.web.adapter"])
 #     return container
 
 
@@ -109,7 +107,7 @@ def session_history() -> SessionHistory:
 #                                     ADAPTER                                                      #
 # ------------------------------------------------------------------------------------------------ #
 # @pytest.fixture(scope="function", autouse=False)
-# def adapter(container: AppStoreStreamContainer) -> Adapter:
+# def adapter(container: appvocaiContainer) -> Adapter:
 
 #     baseline = container.session.baseline()
 #     rate = container.session.rate()

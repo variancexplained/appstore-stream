@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /tests/test_infra/test_web/test_adapt.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 03:02:47 pm                                                 #
-# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
+# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ from typing import Any, Optional
 import pytest
 from dependency_injector.containers import Container
 
-from appvocai.container import AppStoreStreamContainer
+from appvocai.container import appvocaiContainer
 from appvocai.infra.web.adapter import (
     Adapter,
     AdapterBaselineStage,
@@ -80,7 +80,7 @@ class TestAdapt:  # pragma: no cover
     # ============================================================================================ #
     def test_baseline(
         self,
-        container: AppStoreStreamContainer,
+        container: appvocaiContainer,
         monkeypatch,
         caplog: Any,
     ) -> None:  # type: ignore[no-untyped-def]

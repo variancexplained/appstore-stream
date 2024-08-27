@@ -1,3 +1,3 @@
-DROP DATABASE IF EXISTS appstorestream_dev --;
-DROP DATABASE IF EXISTS appstorestream_test --;
-DROP DATABASE IF EXISTS appstorestream_prod --;
+DROP DATABASE IF EXISTS appvocai_dev --;
+DROP DATABASE IF EXISTS appvocai_test --;
+DROP DATABASE IF EXISTS appvocai_prod --;

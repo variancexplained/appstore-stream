@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 11:13:46 pm                                                 #
-# Modified   : Tuesday August 27th 2024 03:49:55 pm                                                #
+# Modified   : Tuesday August 27th 2024 04:51:01 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -46,6 +46,7 @@ LIMIT = 10
 OFFSET = 0
 START_IDX = 0
 END_IDX = LIMIT
+APP_ID = 544007664
 
 
 @pytest.mark.asyncio
@@ -109,7 +110,7 @@ class TestRequestAppData:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
 
         request = RequestAppReview(
-            app_id=544007664, page=0, limit=LIMIT
+            app_id=APP_ID, page=0, limit=LIMIT
         )
         async with aiohttp.ClientSession() as session:
             async with session.get(

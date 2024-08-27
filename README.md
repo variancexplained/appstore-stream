@@ -1,17 +1,17 @@
 # AppVoCAI - Acquire
 
-[![PyPI](https://img.shields.io/pypi/v/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
-[![PyPI - License](https://img.shields.io/pypi/l/appstorestream?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
+[![PyPI](https://img.shields.io/pypi/v/appvocai?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/appvocai?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
+[![PyPI - License](https://img.shields.io/pypi/l/appvocai?style=flat-square)](https://pypi.python.org/pypi/appvocai-acquire/)
 
 
 ---
 
-**Documentation**: [https://variancexplained.github.io/appstorestream](https://variancexplained.github.io/appvocai-acquire)
+**Documentation**: [https://variancexplained.github.io/appvocai](https://variancexplained.github.io/appvocai-acquire)
 
-**Source Code**: [https://github.com/variancexplained/appstorestream](https://github.com/variancexplained/appvocai-acquire)
+**Source Code**: [https://github.com/variancexplained/appvocai](https://github.com/variancexplained/appvocai-acquire)
 
-**PyPI**: [https://pypi.org/project/appstorestream/](https://pypi.org/project/appvocai-acquire/)
+**PyPI**: [https://pypi.org/project/appvocai/](https://pypi.org/project/appvocai-acquire/)
 
 ---
 
@@ -49,17 +49,17 @@ pytest
 
 ### Documentation
 
-The documentation is automatically generated from the content of the [docs directory](https://github.com/variancexplained/appstorestream/tree/master/docs) and from the docstrings
+The documentation is automatically generated from the content of the [docs directory](https://github.com/variancexplained/appvocai/tree/master/docs) and from the docstrings
  of the public signatures of the source code. The documentation is updated and published as a [Github Pages page](https://pages.github.com/) automatically as part each release.
 
 ### Releasing
 
-Trigger the [Draft release workflow](https://github.com/variancexplained/appstorestream/actions/workflows/draft_release.yml)
+Trigger the [Draft release workflow](https://github.com/variancexplained/appvocai/actions/workflows/draft_release.yml)
 (press _Run workflow_). This will update the changelog & version and create a GitHub release which is in _Draft_ state.
 
 Find the draft release from the
-[GitHub releases](https://github.com/variancexplained/appstorestream/releases) and publish it. When
- a release is published, it'll trigger [release](https://github.com/variancexplained/appstorestream/blob/master/.github/workflows/release.yml) workflow which creates PyPI
+[GitHub releases](https://github.com/variancexplained/appvocai/releases) and publish it. When
+ a release is published, it'll trigger [release](https://github.com/variancexplained/appvocai/blob/master/.github/workflows/release.yml) workflow which creates PyPI
  release and deploys updated documentation.
 
 ### Pre-commit

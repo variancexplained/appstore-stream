@@ -11,15 +11,16 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Tuesday August 27th 2024 02:42:35 pm                                                #
+# Modified   : Tuesday August 27th 2024 06:39:44 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+import asyncio
+import logging
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Generic, TypeVar
+from typing import TypeVar
 from uuid import uuid4
 
 from aiohttp import ClientResponse
@@ -36,7 +37,7 @@ from uuid import uuid4
 
 
 @dataclass
-class Response:
+class Response(DataClass):
     """Abstract base class for Responses.
 
     Attributes:
@@ -105,12 +106,12 @@ class Response:
         # Set request metadata
         self.request_uuid = request.id
         self.request_datetime = request.date_time
-        self.request_type = request.__class__.__name__
+        self.request_type = "override_in_baseclass"
         self.endpoint = request.baseurl
         self.start_index = request.start_index
         self.end_index = request.end_index
 
-    def parse_response(self, response: ClientResponse) -> None:
+    async def parse_response(self, response: ClientResponse) -> None:
         """Parses the response object from aiohttp and sets the member variables.
 
         Args:
@@ -152,6 +153,11 @@ class Response:
         self.encoding = response.headers.get('Content-Encoding', self.encoding)
         self.response_datetime = datetime.now(timezone.utc)  # Current datetime in GMT
         self.latency = self.calculate_latency()
+
+        # Logging the values after parsing
+        logging.debug(f"Parsed Response - Status: {self.status}, n: {self.n}, Content-Type: {self.content_type}, "
+                    f"Response Datetime: {self.response_datetime}, Server: {self.server}, "
+                    f"Request UUID: {self.request_uuid}, Cache-Control: {self.cache_control}")
 
     def parse_date(self, date_str: str) -> datetime:
         """Helper method to parse the date from the response headers."""

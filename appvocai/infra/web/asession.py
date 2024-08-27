@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appstorestream/infra/web/asession.py                                               #
+# Filename   : /appvocai/infra/web/asession.py                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Monday August 26th 2024 11:48:40 pm                                                 #
+# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,11 +24,11 @@
 # from typing import Any, Dict, Optional
 
 # import aiohttp
-# from appstorestream.domain.request.base import Request
-# from appstorestream.infra.base.config import Config
-# from appstorestream.infra.base.service import InfraService
-# from appstorestream.infra.web.adapter import Adapter
-# from appstorestream.infra.web.profile import SessionHistory, SessionProfile
+# from appvocai.domain.request.base import Request
+# from appvocai.infra.base.config import Config
+# from appvocai.infra.base.service import InfraService
+# from appvocai.infra.web.adapter import Adapter
+# from appvocai.infra.web.profile import SessionHistory, SessionProfile
 
 # # ------------------------------------------------------------------------------------------------ #
 # CUSTOM_CLIENT_ERROR_RETURN_CODE = 400

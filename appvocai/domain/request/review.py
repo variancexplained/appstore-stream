@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 12:26:33 am                                                #
-# Modified   : Tuesday August 27th 2024 03:49:10 pm                                                #
+# Modified   : Tuesday August 27th 2024 04:58:21 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -40,6 +40,7 @@ class RequestAppReview(Request):
     app_id: int = 0
     page: int = 0
     limit: int = 400
+    request_type: str = "review"
 
     @property
     def start_index(self) -> int:
@@ -89,15 +90,15 @@ class RequestAppReviewGen(RequestGen):
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
         start_page: int = 0,
-        max_results_per_page: int = 400,
+        limit: int = 400,
         request_cls: type[RequestAppReview] = RequestAppReview,
     ) -> None:
         self._app_id = app_id
         self._max_requests = max_requests
         self._batch_size = batch_size
         self._start_page = start_page
-        self._current_page = start_page
-        self._max_results_per_page = max_results_per_page
+        self._page = start_page
+        self._limit = limit
 
         self._request_cls = request_cls
 
@@ -105,7 +106,7 @@ class RequestAppReviewGen(RequestGen):
 
     @property
     def bookmark(self) -> int:
-        return self._current_page
+        return self._page
 
     @property
     def batchsize(self) -> int:
@@ -141,18 +142,15 @@ class RequestAppReviewGen(RequestGen):
         requests_remaining = self._max_requests - self._request_count
         current_batch_size = min(self._batch_size, requests_remaining)
         # Get batch start and stop indices
-        batch_start_page = self._current_page
+        batch_start_page = self._page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
         requests = []
 
-        for current_page in range(batch_start_page, batch_stop_page):
-            end_index = current_page + self._max_results_per_page
-            request = RequestAppReview(
-                app_id=self._app_id, start_index=self._start_page, end_index=end_index
-            )
+        for page in range(batch_start_page, batch_stop_page):
+            request = RequestAppReview(app_id=self._app_id, page=page, limit=self._limit)
             requests.append(request)
-            self._current_page += 1
+            self._page += 1
 
             self._request_count += 1
 

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppStoreStream: Apple App Data and Reviews, Delivered!                              #
-# Version    : 0.1.0                                                                               #
+# Project    : AppVoCAI - Acquire                                                                  #
+# Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/setup.py                                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appstore-stream.git                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Tuesday August 27th 2024 10:23:58 am                                                #
+# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ import pandas as pd
 from dependency_injector.wiring import Provide, inject
 from sqlalchemy.types import DATETIME, INTEGER, VARCHAR
 
-from appvocai.container import AppStoreStreamContainer
+from appvocai.container import appvocaiContainer
 from appvocai.infra.base.config import Config
 from appvocai.infra.database.mysql import MySQLDBA
 from appvocai.infra.repo.project import ProjectRepo
@@ -36,7 +36,7 @@ from appvocai.infra.repo.project import ProjectRepo
 def setup_database(
     env: str,
     config: Config,
-    repo: ProjectRepo = Provide[AppStoreStreamContainer.data.project_repo],
+    repo: ProjectRepo = Provide[appvocaiContainer.data.project_repo],
 ) -> None:
     """
     Sets up the database based on the given environment name.
@@ -94,7 +94,7 @@ def setup_database(
 
 
 def setup_dependencies():
-    container = AppStoreStreamContainer()
+    container = appvocaiContainer()
     container.init_resources()
     container.wire(modules=[__name__])
     print("Dependency Container Created and Wired")

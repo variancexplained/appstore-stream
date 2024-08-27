@@ -11,15 +11,17 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 11:13:39 am                                                #
-# Modified   : Tuesday August 27th 2024 02:48:25 pm                                                #
+# Modified   : Tuesday August 27th 2024 06:40:38 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+import asyncio
 from dataclasses import dataclass
 
 from aiohttp import ClientResponse
 
+from appvocai.domain.request.base import Request
 from appvocai.domain.response.base import Response
 
 
@@ -27,13 +29,14 @@ from appvocai.domain.response.base import Response
 @dataclass
 class ResponseAppData(Response):
 
-    def __post_init__(self) -> None:
-        super().__init__()
+    def parse_request(self, request: Request) -> None:
+        super().parse_request(request)
+        self.request_type = "appdata"
 
-    def parse_response(self, response: ClientResponse) -> None:
+    async def parse_response(self, response: ClientResponse) -> None:
         """Parses the response and populates member variables."""
-        super().parse_response()
-        content = response.json(content_type=None)
-        self.n = content["resultCount"]
+        await super().parse_response(response=response)
+        content = await response.json(content_type=None)
+        self.n = content.get("resultCount",0)
 
 # ------------------------------------------------------------------------------------------------ #
