@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 12:26:33 am                                                #
-# Modified   : Tuesday August 27th 2024 01:36:49 am                                                #
+# Modified   : Tuesday August 27th 2024 02:02:00 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -39,7 +39,7 @@ class RequestReview(Request):
     end_index: int
 
     @property
-    def header(self) -> Collection[str]:
+    def headers(self) -> Collection[str]:
         return STOREFRONT["headers"]
 
     @property

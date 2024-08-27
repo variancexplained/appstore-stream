@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 11:13:46 pm                                                 #
-# Modified   : Tuesday August 27th 2024 01:40:46 am                                                #
+# Modified   : Tuesday August 27th 2024 02:02:40 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -52,7 +52,7 @@ END_IDX = 20
 @pytest.mark.request
 class TestRequestAppData:  # pragma: no cover
     # ============================================================================================ #
-    @pytest.mark.skip(reason="working")
+    # @pytest.mark.skip(reason="working")
     async def test_request_appdata(self, caplog: Any) -> None:
         start = datetime.now()
         logger.info(
@@ -63,7 +63,12 @@ class TestRequestAppData:  # pragma: no cover
 
         request = RequestAppData(genreId=CATEGORY, current_page=PAGE, limit=LIMIT)
         async with aiohttp.ClientSession() as session:
-            async with session.get(request.baseurl, params=request.params) as response:
+            async with session.get(
+                request.baseurl,
+                headers=request.headers,
+                proxy=request.proxy,
+                params=request.params,
+            ) as response:
                 result = await response.json(content_type=None)
                 assert len(result["results"]) == LIMIT
                 assert isinstance(result["results"], list)
@@ -91,7 +96,9 @@ class TestRequestAppData:  # pragma: no cover
         )
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                url=request.baseurl, headers=request.header
+                url=request.baseurl,
+                headers=request.headers,
+                proxy=request.proxy,
             ) as response:
                 result = await response.json()
                 assert len(result["userReviewList"]) == END_IDX

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Tuesday August 27th 2024 12:37:52 am                                                #
+# Modified   : Tuesday August 27th 2024 02:01:27 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,12 +21,17 @@ from dataclasses import dataclass
 from typing import Dict
 
 from appstorestream.core.data import DataClass
+from appstorestream.infra.base.config import Config
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class Request(DataClass):
     """Abstract base class for batch HTTP requests"""
+
+    @property
+    def proxy(self) -> str:
+        return Config().proxy
 
     @property
     @abstractmethod

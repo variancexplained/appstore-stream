@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Friday August 23rd 2024 08:29:32 am                                                 #
+# Modified   : Tuesday August 27th 2024 01:59:06 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -91,7 +91,7 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def proxy(self) -> Union[dict, NestedNamespace]:
+    def proxy(self) -> str:
         """
         Returns proxy server configuration.
         """

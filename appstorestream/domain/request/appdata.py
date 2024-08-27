@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appstore-stream.git                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Tuesday August 27th 2024 12:37:34 am                                                #
+# Modified   : Tuesday August 27th 2024 01:57:03 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -45,15 +45,15 @@ class RequestAppData(Request):
     lang: str = "en-us"
     explicit: str = "yes"
     limit: int = 200
-    headers: BrowserHeaders = BrowserHeaders()
+    header_list: BrowserHeaders = BrowserHeaders()
 
     @property
     def baseurl(self) -> str:
         return f"{self.scheme}://{self.host}/{self.command}"
 
     @property
-    def header(self) -> Dict[str, Any]:
-        return next(self.headers)
+    def headers(self) -> Dict[str, Any]:
+        return next(self.header_list)
 
     @property
     def params(self) -> Dict[str, object]:
