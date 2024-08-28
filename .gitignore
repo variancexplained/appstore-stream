@@ -13,6 +13,9 @@ data/**/*/
 data/*/
 **/data/*.*
 
+
+# Notes
+notes/
 # Pytest plots
 plots/*.*
 
