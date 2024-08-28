@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Tuesday August 27th 2024 06:39:44 pm                                                #
+# Modified   : Wednesday August 28th 2024 04:34:31 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,14 +28,16 @@ from aiohttp import ClientResponse
 from appvocai.core.data import DataClass
 from appvocai.domain.request.base import Request
 
-# ------------------------------------------------------------------------------------------------ #
-T = TypeVar('T', bound='Response')
-# ------------------------------------------------------------------------------------------------ #
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from uuid import uuid4
 
+# TODO: create collection of response objects
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class ResponseAsync(DataClass):
+    """Collection of Response objects as part of an asynchronous request."""
 
+# ------------------------------------------------------------------------------------------------ #
+T = TypeVar('T', bound='Request')
+# ------------------------------------------------------------------------------------------------ #
 @dataclass
 class Response(DataClass):
     """Abstract base class for Responses.
@@ -97,7 +99,7 @@ class Response(DataClass):
     def __post_init__(self) -> None:
         self.id = str(uuid4())
 
-    def parse_request(self, request: Request) -> None:
+    def parse_request(self, request: T) -> None:
         """Parses the request object and sets the request-related member variables.
 
         Args:

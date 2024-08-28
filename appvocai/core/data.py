@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : set in workspace folder                                                             #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/core/data.py                                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : https://github.com/variancexplained/appvocai-acquire                                #
+# URL        : set in workspace folder                                                             #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:17:42 pm                                                 #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Wednesday August 28th 2024 03:50:15 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,6 +22,7 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from types import SimpleNamespace
 from typing import Any, Dict, Mapping, Tuple, Union
 
@@ -114,12 +115,14 @@ class DataClass(ABC):  # noqa
             return v
         elif isinstance(v, SEQUENCE_TYPES):
             return type(v)(map(cls._export_config, v))
-        elif isinstance(v, datetime):
-            return v
         elif isinstance(v, dict):
             return v
         elif hasattr(v, "as_dict"):
             return v.as_dict()
+        elif isinstance(v, Enum):
+            return v.value
+        elif isinstance(v,datetime):
+            return v.isoformat() + "Z"
         else:
             return dict()
 

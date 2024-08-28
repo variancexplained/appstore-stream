@@ -4,75 +4,71 @@
 # Project    : AppVoCAI - Acquire                                                                  #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/request/base.py                                                    #
+# Filename   : /appvocai/core/enum.py                                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Wednesday August 28th 2024 04:26:20 pm                                              #
+# Created    : Wednesday August 28th 2024 02:31:31 pm                                              #
+# Modified   : Wednesday August 28th 2024 05:21:23 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from __future__ import annotations
-
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict
-from uuid import uuid4
-
-from appvocai.core.data import DataClass
-from appvocai.infra.base.config import Config
+from enum import Enum
 
 
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-class Entity(DataClass):
-    """Defines a base class for appdata and appreview classes."""
+class Category(Enum):
+    BUSINESS = 6000
+    WEATHER = 6001
+    UTILITIES = 6002
+    TRAVEL = 6003
+    SPORTS = 6004
+    SOCIAL_NETWORKING = 6005
+    REFERENCE = 6006
+    PRODUCTIVITY = 6007
+    PHOTO_VIDEO = 6008
+    NEWS = 6009
+    NAVIGATION = 6010
+    MUSIC = 6011
+    LIFESTYLE = 6012
+    HEALTH_FITNESS = 6013
+    GAMES = 6014
+    FINANCE = 6015
+    ENTERTAINMENT = 6016
+    EDUCATION = 6017
+    BOOKS = 6018
+    MEDICAL = 6020
+    NEWSSTAND = 6021
+    CATALOGS = 6022
+    FOOD_DRINK = 6023
+    SHOPPING = 6024
+    DEVELOPER_TOOLS = 6026
+    GRAPHICS_DESIGN = 6027
 
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-class Request(DataClass):
-    """Abstract base class for batch HTTP requests"""
-    id: str = None  # System generated UUID (default: "")
-    date_time: datetime = None # Datetime the request was sent.
-    method: str = 'GET'  # The HTTP method used (GET, POST, etc.) (default: 'GET')
-
-
-    def __post_init__(self) -> None:
-        self.id = str(uuid4())
-
-    @property
-    def proxy(self) -> str:
-        return Config().proxy
-
-    @property
-    @abstractmethod
-    def baseurl(self) -> str:
-        """Base URL for requests"""
-
-    @property
-    @abstractmethod
-    def params(self) -> str:
-        """HTTP REquest Parameters"""
-
+class ContentType(Enum):
+    APPDATA = "AppData"
+    APPREVIEW = "AppReview"
 
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-class RequestAsync(DataClass):
-    """Encapsulates a list of requests"""
-
+class ProjectStatus(Enum):
+    ACTIVE = "Active"
+    IDLE = "Idle"
 
 # ------------------------------------------------------------------------------------------------ #
-class RequestGen(ABC):
+class JobStatus(Enum):
+    CREATED = "Created"
+    SCHEDULED = "Scheduled"
+    RUNNING = "Running"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+    CANCELED = "Canceled"
 
-    @abstractmethod
-    def __iter__(self) -> RequestGen:
-        """Initalizes the generation of Requests"""
-
-    @abstractmethod
-    def __next__(self) -> RequestAsync:
-        """Generates the next request"""
+# ------------------------------------------------------------------------------------------------ #
+class ProjectFrequency(Enum):
+    DAILY = "Daily"
+    WEEKLY = "Weekly"
+    MONTHLY = "Monthly"
