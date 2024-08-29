@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/database/mysql.py                                                   #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Thursday August 29th 2024 07:47:43 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,6 +30,7 @@ import sqlalchemy
 from dotenv import load_dotenv
 from sqlalchemy.exc import SQLAlchemyError
 
+from appvocai.core.data import NestedNamespace
 from appvocai.infra.base.config import Config
 from appvocai.infra.database.base import DBA, Database
 
@@ -43,14 +44,12 @@ load_dotenv()
 class MySQLDatabase(Database):
     """MySQL Database Class
     Args:
-        dbset (str): Indicates a permanent or working database
         config_cls (Type[Config]): System configuration class.
     """
 
     __dbname = "appvocai"
 
     def __init__(self, config_cls: Type[Config] = Config) -> None:
-        super().__init__()
         self._config = config_cls()
 
         self._dbname = f"{self.__dbname}_{self._config.get_environment()}"
@@ -59,14 +58,18 @@ class MySQLDatabase(Database):
         self._engine = None
         self._connection = None
         self._is_connected = False
+        super().__init__(connection_string=self._connection_string)
 
-    @property
-    def dbset(self) -> str:
-        return self._dbset
+    def begin(self) -> None:
+        """Begin a new MySQL database transaction."""
+        # MySQL-specific transaction management could go here
+        super().begin()  # Call the base method if needed
 
-    def connect(self, autocommit: bool = False) -> None:
+    def connect(self, autocommit: bool = False) -> MySQLDatabase:
         attempts = 0
-        while attempts < self._config.database.retries:
+        retries = self._config.database.retries if isinstance(self._config.database, NestedNamespace) else self._config.database['retries']
+
+        while attempts < retries:
             attempts += 1
             try:
                 if self._engine is None:
@@ -84,7 +87,7 @@ class MySQLDatabase(Database):
 
             except SQLAlchemyError as e:
                 self._is_connected = False
-                if attempts < self._config.database.retries:
+                if attempts < retries:
                     print("Database connection failed. Attempting to start database..")
                     self._start_db()
                     sleep(3)
@@ -92,14 +95,21 @@ class MySQLDatabase(Database):
                     msg = f"Database connection failed after {attempts} attempts.\nException type: {type(e)}\n{e}"
                     self._logger.exception(msg)
                     raise
+        msg = f"Database connection failed after multiple attempts."
+        self._logger.exception(msg)
+        raise
 
     def _get_connection_string(self) -> str:
         """Returns the connection string for the named database."""
-        return f"mysql+pymysql://{self._mysql_credentials.username}:{self._mysql_credentials.password}@localhost/{self._dbname}"
+        username = self._mysql_credentials.username if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["username"]
+        password = self._mysql_credentials.password if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["password"]
+        return f"mysql+pymysql://{username}:{password}@localhost/{self._dbname}"
 
     def _start_db(self) -> None:
         """Starts the MySQL database."""
-        subprocess.run([self._config.database.start], shell=True)
+
+        start = self._config.database.start if isinstance(self._config.database, NestedNamespace) else self._config.database["start"]
+        subprocess.run([start], shell=True)
 
     def close(self) -> None:
         """Closes the database connection."""
@@ -109,6 +119,7 @@ class MySQLDatabase(Database):
         if self._engine is not None:
             self._engine.dispose()
             self._engine = None
+
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -281,17 +292,19 @@ class MySQLDBA(DBA):
         Returns:
             list[str]: The command and arguments to execute.
         """
+        host = self._mysql_credentials.host if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["host"]
+        username = self._mysql_credentials.username if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["username"]
         command = [
             "mysql",
             "-h",
-            self._mysql_credentials.host,
+            host,
             "-u",
-            self._mysql_credentials.username,
+            username,
             "-e",
             query,
         ]
-        if self._mysql_credentials.password:
-            command.insert(3, f"-p{self._mysql_credentials.password}")
+        password = self._mysql_credentials.password if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["password"]
+        command.insert(3, f"-p{password}")
 
         return command
 

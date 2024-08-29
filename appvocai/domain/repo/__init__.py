@@ -1,29 +1,18 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI-Acquire                                                                    #
+# Project    : AppVoCAI - Acquire                                                                  #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /config/prometheus_dev.yaml                                                         #
+# Filename   : /appvocai/domain/response/__init__.py                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Thursday August 29th 2024 06:42:47 pm                                               #
+# Created    : Tuesday August 27th 2024 10:32:05 am                                                #
+# Modified   : Tuesday August 27th 2024 10:44:27 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-# ================================================================================================ #
-#                                 PROMETHEUS DEV CONFIG FILE                                       #
-# ================================================================================================ #
-global:
-  scrape_interval: 5s
-
-scrape_configs:
-  - job_name: 'appstore_stream_dev'
-    scrape_interval: 1s
-    static_configs:
-      - targets: ['localhost:8010']

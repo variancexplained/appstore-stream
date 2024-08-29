@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/entity/appdata.py                                                  #
+# Filename   : /appvocai/domain/content/appdata.py                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 12:47:38 am                                              #
-# Modified   : Wednesday August 28th 2024 12:48:09 am                                              #
+# Modified   : Thursday August 29th 2024 04:47:43 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from appvocai.core.data import DataClass
 
@@ -42,28 +43,24 @@ class AppData(DataClass):
         average_user_rating_current_version (Optional[int]): The average user rating for the current version of the app.
         user_rating_count (Optional[int]): The total number of user ratings for all versions.
         user_rating_current_version (Optional[int]): The total number of user ratings for the current version.
-        app_content_rating (Optional[str]): The content rating of the app.
         developer_id (Optional[int]): The unique identifier for the app's developer.
         developer_name (Optional[str]): The name of the app's developer.
-        release_notes (Optional[str]): The release notes for the current version of the app.
+        developer_view_url (Optional[str]): The URL to the developer's page on the App Store.
         seller_name (Optional[str]): The name of the seller or company behind the app.
         seller_url (Optional[str]): The URL to the seller's website.
+        app_content_rating (Optional[str]): The content rating of the app.
+        content_advisory_rating (Optional[str]): The advisory rating for the app's content.
         file_size_bytes (Optional[str]): The size of the app file in bytes.
         minimum_os_version (Optional[str]): The minimum OS version required to run the app.
         version (Optional[str]): The current version of the app.
-        release_date (Optional[str]): The release date of the app.
-        current_version_release_date (Optional[str]): The release date of the current version.
-        is_game_center_enabled (Optional[bool]): Whether the app has Game Center features enabled.
-        content_advisory_rating (Optional[str]): The advisory rating for the app's content.
-        developer_view_url (Optional[str]): The URL to the developer's page on the App Store.
+        release_date (Optional[datetime]): The release date of the app.
+        release_notes (Optional[str]): The release notes for the current version of the app.
+        current_version_release_date (Optional[datetime]): The release date of the current version.
         artwork_url100 (Optional[str]): The URL for the 100px version of the app's artwork.
         app_view_url (Optional[str]): The URL to the app's page on the App Store.
         artwork_url512 (Optional[str]): The URL for the 512px version of the app's artwork.
         artwork_url60 (Optional[str]): The URL for the 60px version of the app's artwork.
-        categories (List[int]): A list of category IDs the app belongs to.
-        language_codes (List[str]): A list of language codes supported by the app.
-        ipad_screenshot_urls (List[str]): A list of URLs to iPad screenshots of the app.
-        screenshot_urls (List[str]): A list of URLs to general screenshots of the app.
+        extract_date (Optional[datetime]): The date the data was last extracted from the App Store.
     """
 
     app_id: int
@@ -79,31 +76,30 @@ class AppData(DataClass):
     average_user_rating_current_version: Optional[int] = None
     user_rating_count: Optional[int] = None
     user_rating_current_version: Optional[int] = None
-    app_content_rating: Optional[str] = None
     developer_id: Optional[int] = None
     developer_name: Optional[str] = None
-    release_notes: Optional[str] = None
+    developer_view_url: Optional[str] = None
     seller_name: Optional[str] = None
     seller_url: Optional[str] = None
+    app_content_rating: Optional[str] = None
+    content_advisory_rating: Optional[str] = None
     file_size_bytes: Optional[str] = None
     minimum_os_version: Optional[str] = None
     version: Optional[str] = None
-    release_date: Optional[str] = None  # Could be changed to a date object
-    current_version_release_date: Optional[str] = None  # Could be changed to a date object
-    is_game_center_enabled: Optional[bool] = None
-    content_advisory_rating: Optional[str] = None
-    developer_view_url: Optional[str] = None
+    release_date: Optional[datetime] = None
+    release_notes: Optional[str] = None
+    current_version_release_date: Optional[datetime] = None
     artwork_url100: Optional[str] = None
     app_view_url: Optional[str] = None
     artwork_url512: Optional[str] = None
     artwork_url60: Optional[str] = None
+    extract_date: Optional[datetime] = None
 
     categories: List[int] = field(default_factory=list)
-    language_codes: List[str] = field(default_factory=list)
     ipad_screenshot_urls: List[str] = field(default_factory=list)
     screenshot_urls: List[str] = field(default_factory=list)
 
-    def export_appdata(self) -> Dict[str, any]:
+    def export_appdata(self) -> Dict[str, Any]:
         """
         Exports the app's data for insertion into the appdata table.
 
@@ -124,27 +120,27 @@ class AppData(DataClass):
             "average_user_rating_current_version": self.average_user_rating_current_version,
             "user_rating_count": self.user_rating_count,
             "user_rating_current_version": self.user_rating_current_version,
-            "app_content_rating": self.app_content_rating,
             "developer_id": self.developer_id,
             "developer_name": self.developer_name,
-            "release_notes": self.release_notes,
+            "developer_view_url": self.developer_view_url,
             "seller_name": self.seller_name,
             "seller_url": self.seller_url,
+            "app_content_rating": self.app_content_rating,
+            "content_advisory_rating": self.content_advisory_rating,
             "file_size_bytes": self.file_size_bytes,
             "minimum_os_version": self.minimum_os_version,
             "version": self.version,
             "release_date": self.release_date,
+            "release_notes": self.release_notes,
             "current_version_release_date": self.current_version_release_date,
-            "is_game_center_enabled": self.is_game_center_enabled,
-            "content_advisory_rating": self.content_advisory_rating,
-            "developer_view_url": self.developer_view_url,
             "artwork_url100": self.artwork_url100,
             "app_view_url": self.app_view_url,
             "artwork_url512": self.artwork_url512,
-            "artwork_url60": self.artwork_url60
+            "artwork_url60": self.artwork_url60,
+            "extract_date": self.extract_date
         }
 
-    def export_urls(self) -> List[Dict[str, str]]:
+    def export_urls(self) -> List[Dict[str, Any]]:
         """
         Exports the app's URLs for insertion into the urls table.
 
@@ -166,20 +162,13 @@ class AppData(DataClass):
             })
         return urls
 
-    def export_language_codes(self) -> List[Dict[str, str]]:
-        """
-        Exports the app's supported language codes for insertion into the language_codes table.
-
-        Returns:
-            List[Dict[str, str]]: A list of dictionaries, each representing a language code record with app_id and language_code.
-        """
-        return [{"app_id": self.app_id, "language_code": code} for code in self.language_codes]
-
     def export_categories(self) -> List[Dict[str, int]]:
         """
         Exports the app's category IDs for insertion into the categories table.
 
         Returns:
-            List[Dict[str, int]]: A list of dictionaries, each representing a category record with app_id and category_id.
+            List[Dict[int, int]]: A list of dictionaries, each representing a category record with app_id and category_id.
         """
         return [{"app_id": self.app_id, "category_id": category_id} for category_id in self.categories]
+
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/container.py                                                              #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Thursday August 29th 2024 06:23:22 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,14 +23,11 @@ import logging.config  # pragma: no cover
 from dependency_injector import containers, providers
 
 from appvocai.infra.base.config import Config
-from appvocai.infra.web.adapter import (
-    Adapter,
-    AdapterBaselineStage,
-    AdapterConcurrencyExploreStage,
-    AdapterExploitStage,
-    AdapterRateExploreStage,
-)
-
+from appvocai.infra.database.mysql import MySQLDatabase
+from appvocai.infra.web.adapter import (Adapter, AdapterBaselineStage,
+                                        AdapterConcurrencyExploreStage,
+                                        AdapterExploitStage,
+                                        AdapterRateExploreStage)
 # from appvocai.infra.web.asession import ASession
 from appvocai.infra.web.profile import SessionHistory
 
@@ -46,7 +43,12 @@ class LoggingContainer(containers.DeclarativeContainer):
         config=config.logging,
     )
 
+# ------------------------------------------------------------------------------------------------ #
+#                                      PERSISTENCE                                                 #
+# ------------------------------------------------------------------------------------------------ #
+class PersistenceContainer(containers.DeclarativeContainer):
 
+    database = providers.Singleton(MySQLDatabase)
 # ------------------------------------------------------------------------------------------------ #
 #                                       ASESSION                                                   #
 # ------------------------------------------------------------------------------------------------ #

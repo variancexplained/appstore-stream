@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/base/config.py                                                      #
@@ -11,16 +11,16 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Thursday August 29th 2024 06:37:57 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Configuration Classes."""
+import logging
 import os
-from typing import Union
+from typing import Any, Dict, Union
 
-import pandas as pd
 import yaml
 from dotenv import dotenv_values, load_dotenv
 
@@ -55,10 +55,11 @@ class Config:
         self._current_environment = self.get_environment()
         self._namespace_mode = namespace_mode
         self._config = self.load_config()
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def database(self) -> Union[dict, NestedNamespace]:
+    def database(self) -> Union[Dict[str,Any], NestedNamespace]:
         return (
             self.to_namespace(self._config["database"])
             if self._namespace_mode
@@ -67,7 +68,7 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def job(self) -> Union[dict, NestedNamespace]:
+    def job(self) -> Union[Dict[str,Any], NestedNamespace]:
         return (
             self.to_namespace(self._config["job"])
             if self._namespace_mode
@@ -76,7 +77,7 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def mysql(self) -> Union[dict, NestedNamespace]:
+    def mysql(self) -> Union[Dict[str,Any], NestedNamespace]:
         """
         Returns MySQL database name, backup location, and related parameters.
         """
@@ -146,17 +147,17 @@ class Config:
         Returns:
             str: The value of the environment variable.
         """
-        return os.getenv("ENV")
+        return os.getenv("ENV", "dev")
 
     #  ------------------------------------------------------------------------------------------- #
     def load_environment(self) -> None:
         """
         Load environment variables from the .env file.
         """
-        load_dotenv(self._env_file, override=True)
+        load_dotenv(self._env_file_path, override=True)
 
     #  ------------------------------------------------------------------------------------------- #
-    def load_config(self) -> dict:
+    def load_config(self) -> Dict[str,Any]:
         """
         Loads the base configuration as well as environment specific config.
 
@@ -165,29 +166,23 @@ class Config:
         config_filepath_base = os.getenv("CONFIG_FILEPATH_BASE")
         config_filepath_env = self.filepath
 
-        # Load base config
-        with open(config_filepath_base, "r") as base_config_file:
-            base_config = yaml.safe_load(base_config_file)
+        if config_filepath_base is not None:
+            # Load base config
+            with open(config_filepath_base, "r") as base_config_file:
+                base_config = yaml.safe_load(base_config_file)
 
-        # Load env config
-        with open(config_filepath_env, "r") as env_config_file:
-            env_config = yaml.safe_load(env_config_file)
+            # Load env config
+            with open(config_filepath_env, "r") as env_config_file:
+                env_config = yaml.safe_load(env_config_file)
 
-        config = {**base_config, **env_config}
+            config = {**base_config, **env_config}
 
-        return config
-
-    #  ------------------------------------------------------------------------------------------- #
-    def load_metrics_config(self) -> dict:
-        """
-        Loads and returns the metrics configuration
-        """
-        config_filepath_base = os.getenv("CONFIG_FILEPATH_BASE")
-        # Load base config
-        with open(config_filepath_base, "r") as base_config_file:
-            base_config = yaml.safe_load(base_config_file)
-        return base_config["metrics"]
+            return config
+        else:
+            msg = f"Base config filepath not found in .env file. Unable to load config."
+            self._logger.exception(msg)
+            raise RuntimeError(msg)
 
     #  ------------------------------------------------------------------------------------------- #
-    def to_namespace(self, config: dict) -> NestedNamespace:
+    def to_namespace(self, config: Dict[str,Any]) -> NestedNamespace:
         return NestedNamespace(config)

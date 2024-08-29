@@ -16,7 +16,7 @@
 			],
 			[
 				"projectname",
-				"AppVoCAI - Acquire"
+				"AppVoCAI-Acquire"
 			],
 			[
 				"version",
@@ -27,5 +27,8 @@
 				"3.10.14"
 			]
 		],
+		"psi-header.config": {
+
+		},
 	}
 }

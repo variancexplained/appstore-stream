@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/database/base.py                                                    #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 11:20:33 pm                                                #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Thursday August 29th 2024 07:35:48 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,31 +20,42 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Literal, Optional
 
 import pandas as pd
 import sqlalchemy
+from sqlalchemy import Engine, create_engine, text
+from sqlalchemy.engine import Connection, RootTransaction
 from sqlalchemy.exc import SQLAlchemyError
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                                     DATABASE                                                     #
 # ------------------------------------------------------------------------------------------------ #
-class Database(ABC):
-    """Base class for databases."""
 
-    def __init__(self) -> None:
-        self._engine = None
-        self._connection = None
-        self._transaction = None
+class Database(ABC):
+    """Base class for databases with connection pooling, transaction management, and DataFrame handling."""
+
+    def __init__(self, connection_string: str) -> None:
+        """Initialize the Database class with a connection string.
+
+        Args:
+            connection_string (str): Database connection string.
+        """
+        self._engine: Optional[Engine] = create_engine(connection_string, pool_size=5, max_overflow=10)  # Connection pooling
+        self._connection: Optional[Connection] = None
+        self._transaction: Optional[RootTransaction] = None
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
-    def __enter__(self) -> "Database":
-        """Enters a transaction block allowing multiple database operations to be performed as a unit."""
+    def __enter__(self) -> Database:
+        """Enter a transaction block, allowing multiple database operations to be performed as a unit."""
         self.begin()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback) -> None:  # pragma: no cover
+
+
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: Optional[traceback.TracebackType]) -> None:
         """Special method takes care of properly releasing the object's resources to the operating system."""
         if exc_type is not None:
             try:
@@ -62,8 +73,9 @@ class Database(ABC):
             self.commit()
         self.close()
 
+
     @abstractmethod
-    def connect(self, autocommit: bool = False):
+    def connect(self, autocommit: bool = False) -> Database:
         """Connect to an underlying database.
 
         Args:
@@ -71,22 +83,25 @@ class Database(ABC):
         """
         pass
 
-    def begin(self):
-        """Begins a transaction block."""
+    def begin(self) -> None:
+        """Begin a transaction block."""
         try:
             if self._connection is None:
                 self.connect()
-            self._transaction = self._connection.begin()
+            if self._connection is not None:
+                self._transaction = self._connection.begin()
         except AttributeError:
             self.connect()
-            self._transaction = self._connection.begin()
+            if self._connection is not None:
+                self._transaction = self._connection.begin()
         except sqlalchemy.exc.InvalidRequestError:
             self.close()
             self.connect()
-            self._transaction = self._connection.begin()
+            if self._connection is not None:
+                self._transaction = self._connection.begin()
 
     def commit(self) -> None:
-        """Saves pending database operations to the database."""
+        """Save pending database operations to the database."""
         try:
             if self._transaction:
                 self._transaction.commit()
@@ -97,7 +112,7 @@ class Database(ABC):
             raise
 
     def rollback(self) -> None:
-        """Restores the database to the state of the last commit."""
+        """Restore the database to the state of the last commit."""
         try:
             if self._transaction:
                 self._transaction.rollback()
@@ -108,10 +123,11 @@ class Database(ABC):
             raise
 
     def close(self) -> None:
-        """Closes the database connection."""
+        """Close the database connection."""
         try:
             if self._connection:
                 self._connection.close()
+                self._connection = None  # Set to None after closing
         except SQLAlchemyError as e:
             self._logger.exception(
                 f"Exception occurred during connection close.\nException type: {type(e)}\n{e}"
@@ -119,10 +135,11 @@ class Database(ABC):
             raise
 
     def dispose(self) -> None:
-        """Disposes the connection and releases resources."""
+        """Dispose the engine and release resources."""
         try:
             if self._engine:
                 self._engine.dispose()
+                self._engine = None  # Set to None after disposing
         except SQLAlchemyError as e:
             self._logger.exception(
                 f"Exception occurred during engine disposal.\nException type: {type(e)}\n{e}"
@@ -133,10 +150,10 @@ class Database(ABC):
         self,
         data: pd.DataFrame,
         tablename: str,
-        dtype: dict = None,
-        if_exists: str = "append",
+        dtype: Optional[Dict[str,Any]] = None,
+        if_exists: Literal['fail', 'replace', 'append'] = "append",
     ) -> int:
-        """Inserts data in pandas DataFrame format into the designated table.
+        """Insert data in pandas DataFrame format into the designated table.
 
         Args:
             data (pd.DataFrame): DataFrame containing the data to add to the designated table.
@@ -145,62 +162,101 @@ class Database(ABC):
             if_exists (str): Action to take if table already exists. Valid values are ['append', 'replace', 'fail']. Default = 'append'
 
         Returns:
-            int: Number of rows inserted.
+            int: Number of rows inserted. Returns 0 if the DataFrame is empty.
         """
+
+        if self._connection is None:
+            raise ValueError("Database connection is not established.")
+
+        if data.empty:
+            self._logger.warning("No data to insert. DataFrame is empty.")
+            return 0
+
         try:
-            return data.to_sql(
+            inserted_rows = data.to_sql(
                 tablename,
                 con=self._connection,
                 if_exists=if_exists,
                 dtype=dtype,
                 index=False,
             )
+            self._logger.info(f"Inserted {inserted_rows} rows into {tablename}.")
+            if inserted_rows is not None:
+                return inserted_rows
+            else:
+                return 0
         except SQLAlchemyError as e:
             self._logger.exception(
-                f"Exception occurred during insert.\nException type: {type(e)}\n{e}"
+                f"Exception occurred during insert into {tablename}.\nException type: {type(e)}\n{e}"
             )
             raise
 
     def query(
         self,
         query: str,
-        params: dict = (),
-        dtypes: dict = None,
-        parse_dates: dict = None,
+        params: Optional[Dict[str,Any]] = None,
+        dtypes: Optional[Dict[str,Any]] = None,
+        parse_dates: Optional[Dict[str,Any]] = None,
     ) -> pd.DataFrame:
-        """Fetches the results of a query and returns a DataFrame.
+        """Fetch the results of a query and return a DataFrame.
 
         Args:
-            query (str): The SQL command
-            params (dict): Parameters for the SQL command
-            dtypes (dict): Dictionary mapping of column to data types
+            query (str): The SQL command.
+            params (dict): Parameters for the SQL command. Should match placeholders in the query.
+            dtypes (dict): Dictionary mapping of column names to data types.
             parse_dates (dict): Dictionary of columns and keyword arguments for datetime parsing.
 
         Returns:
             pd.DataFrame: DataFrame containing the query results.
         """
+
+        if self._connection is None:
+            raise ValueError("Database connection is not established.")
+
+        self._logger.info(f"Executing query: {query} with params: {params}")
         return pd.read_sql(
-            sql=sqlalchemy.text(query),
+            sql=text(query),
             con=self._connection,
             params=params,
             dtype=dtypes,
             parse_dates=parse_dates,
         )
 
-    def execute(self, query: str, params: dict = ()) -> sqlalchemy.engine.Result:
-        """Execute method reserved primarily for updates, and deletes, as opposed to queries returning data.
+    def execute(self, query: str, params: Optional[Dict[str,Any]] = None) -> sqlalchemy.engine.Result:
+        """Execute a SQL command reserved primarily for updates and deletes.
 
         Args:
-            query (str): The SQL command
-            params (dict): Parameters for the SQL command
+            query (str): The SQL command.
+            params (dict): Parameters for the SQL command. Should match placeholders in the query.
 
         Returns:
             sqlalchemy.engine.Result: Result object containing information about the execution.
+
+        Raises:
+            ValueError: If parameters are required but not provided.
         """
+
+        if self._connection is None:
+            raise ValueError("Database connection is not established.")
+
+        if not params and self._requires_parameters(query):
+            raise ValueError("Parameters are required for this query.")
+
+        self._logger.info(f"Executing command: {query} with params: {params}")
         return self._connection.execute(
-            statement=sqlalchemy.text(query), parameters=params
+            statement=text(query), parameters=params
         )
 
+    def _requires_parameters(self, query: str) -> bool:
+        """Check if the query requires parameters.
+
+        Args:
+            query (str): The SQL command.
+
+        Returns:
+            bool: True if parameters are required, False otherwise.
+        """
+        return ":" in query or "?" in query  # Adjust based on your parameter style
 
 # ------------------------------------------------------------------------------------------------ #
 #                                DATABASE ADMIN                                                    #

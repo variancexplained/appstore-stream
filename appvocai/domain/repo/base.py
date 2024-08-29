@@ -1,29 +1,35 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /config/prometheus_dev.yaml                                                         #
+# Filename   : /appvocai/domain/repo/base.py                                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday July 19th 2024 04:22:54 am                                                   #
-# Modified   : Thursday August 29th 2024 06:42:47 pm                                               #
+# Created    : Thursday August 29th 2024 02:48:02 am                                               #
+# Modified   : Thursday August 29th 2024 06:49:14 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-# ================================================================================================ #
-#                                 PROMETHEUS DEV CONFIG FILE                                       #
-# ================================================================================================ #
-global:
-  scrape_interval: 5s
+"""Job Repo Module"""
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
-scrape_configs:
-  - job_name: 'appstore_stream_dev'
-    scrape_interval: 1s
-    static_configs:
-      - targets: ['localhost:8010']
+# ------------------------------------------------------------------------------------------------ #
+T = TypeVar('T')
+# ------------------------------------------------------------------------------------------------ #
+class Repo(ABC, Generic[T]):
+    """Base class for application layer repositories.
+
+    This class serves as an abstract base class for repositories.
+    """
+
+    @abstractmethod
+    def get(self, id_value: int) -> T:
+        """Fetches an entity by its ID."""
+        pass
