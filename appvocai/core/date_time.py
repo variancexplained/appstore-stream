@@ -11,19 +11,20 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 04:54:23 pm                                              #
-# Modified   : Wednesday August 28th 2024 05:58:09 pm                                              #
+# Modified   : Wednesday August 28th 2024 09:30:03 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 
 from datetime import datetime, timezone
+from typing import Optional
 
 import pytz
 
 
 # ------------------------------------------------------------------------------------------------ #
-def to_utc(dt: datetime, local_tz: str = None) -> datetime:
+def to_utc(dt: datetime, local_tz: Optional[str] = None) -> datetime:
     """
     Converts a given datetime to UTC.
 
@@ -52,7 +53,7 @@ def to_utc(dt: datetime, local_tz: str = None) -> datetime:
 
 
 # ------------------------------------------------------------------------------------------------ #
-def format_duration(seconds: int) -> str:
+def format_duration(seconds: float) -> str:
     """Convert seconds to a human-readable string format of minutes or hours and minutes.
 
     Args:

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:14:31 pm                                              #
-# Modified   : Wednesday August 28th 2024 06:47:02 pm                                              #
+# Modified   : Thursday August 29th 2024 01:10:32 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -64,16 +64,16 @@ class Job(DataClass):
     project: Project                          # Project object.
     id: str = ""                              # Unique identifier for the job; auto-generated if not provided.
     description: str = ""                     # Job description.
-    _created: Optional[datetime] = None       # Date and time the job was created.
-    _scheduled: Optional[datetime] = None     # Date and time the job is scheduled to start.
-    _started: Optional[datetime] = None       # Date and time the job was started.
-    _updated: Optional[datetime] = None       # Date and time the job was last updated.
-    _completed: Optional[datetime] = None     # Date and time the job was completed.
+    created: Optional[datetime] = None       # Date and time the job was created.
+    scheduled: Optional[datetime] = None     # Date and time the job is scheduled to start.
+    started: Optional[datetime] = None       # Date and time the job was started.
+    updated: Optional[datetime] = None       # Date and time the job was last updated.
+    completed: Optional[datetime] = None     # Date and time the job was completed.
     _execution_time: float = 0                # The amount of time the job has run in seconds.
+    start_page: int = 0                       # The start page for scaping.
     last_page: int = 0                        # The last page processed during scraping.
     status: JobStatus = JobStatus.CREATED      # Current status of the job from the JobStatus enum.
     cancellation_reason: Optional[str] = None  # Reason for cancellation if applicable.
-    success_rate: float = 0.0                  # Percentage of successful scraping jobs.
     retry_count: int = 0                       # Count of how many times the job has been retried.
     max_retries: int = 3                       # Maximum number of retries allowed.
     _tasks: List[Task] = field(default_factory=list)  # List of the job's Task objects.
@@ -86,12 +86,9 @@ class Job(DataClass):
         """
         if not self.id:
             self.id = str(uuid4())  # Generate a UUID for the job ID
-        self._created = datetime.now(timezone.utc)  # Set the creation time to the current UTC time
-        self._updated = self._created                    # Set the updated time to the creation time
-        self._task_idx = 0                              # Initialize task index to zero
-        self.project.job_count += 1                     # Increment number of jobs for project
+        self.created = datetime.now(timezone.utc)
         if not self.description:
-            self.description = f"Job Id: {self.id} to obtain {self.project.content_type} for the {self.project.category.value}"
+            self.description = f"Job to obtain {self.project.content_type.value} for the {self.project.category.name} category."
 
     def __iter__(self) -> 'Job':
         """Return the Job instance itself for iteration."""
@@ -117,31 +114,6 @@ class Job(DataClass):
             raise StopIteration()                 # Raise StopIteration to signal end of iteration
 
     @property
-    def created(self) -> datetime:
-        """Get the creation time of the job."""
-        return self._created
-
-    @property
-    def scheduled(self) -> Optional[datetime]:
-        """Get the scheduled time of the job."""
-        return self._scheduled
-
-    @property
-    def started(self) -> Optional[datetime]:
-        """Get the start time of the job."""
-        return self._started
-
-    @property
-    def updated(self) ->  Optional[datetime]:
-        """Get the last updated time of the job."""
-        return self._updated
-
-    @property
-    def completed(self) -> Optional[datetime]:
-        """Get the completion time of the job."""
-        return self._completed
-
-    @property
     def execution_time(self) -> float:
         """Get the total execution time of the job in seconds."""
         return self._execution_time
@@ -152,69 +124,107 @@ class Job(DataClass):
 
         Args:
             scheduled (datetime): The date and time to schedule the job.
+
+        Raises:
+            ValueError: If the scheduled time is in the past or if the job cannot be scheduled in its current state.
         """
-        self.status = JobStatus.SCHEDULED                      # Update job status to SCHEDULED
-        self._scheduled = to_utc(dt=scheduled)                 # Convert scheduled time to UTC
-        self._updated = datetime.now(timezone.utc)             # Update the last updated time
-        logger.info(f"{self.description} has been scheduled for {self._scheduled}.")
+        if scheduled < datetime.now(timezone.utc):
+            logger.error("Scheduled time cannot be in the past.")
+            raise ValueError("Scheduled time cannot be in the past.")
+        if self.status not in {JobStatus.CREATED, JobStatus.SCHEDULED}:
+            logger.error(f"Cannot schedule job {self.id} from status {self.status.value}.")
+            raise RuntimeError(f"Cannot schedule job {self.id} from status {self.status.value}.")
+        self.status = JobStatus.SCHEDULED
+        self.scheduled = to_utc(dt=scheduled)
+        self.updated = datetime.now(timezone.utc)
+        logger.info(f"{self.description} has been scheduled for {self.scheduled}.")
+
+
 
     def start(self) -> None:
         """Start the job and update its status and last updated time."""
-        self.status = JobStatus.RUNNING                         # Update job status to RUNNING
-        self._started = datetime.now(timezone.utc)             # Update the start time
-        self._updated = self._started                          # Update the last updated time
-        logger.info(f"Started {self.description} at {self._started}.")
+        if self.status not in {JobStatus.CREATED, JobStatus.SCHEDULED}:
+            msg = f"Cannot start job {self.id} from status {self.status.value}."
+            logger.error(msg)
+            raise RuntimeError(msg)
 
-    def update(self, last_page: int) -> None:
+        self.status = JobStatus.RUNNING
+        self.started = datetime.now(timezone.utc)
+        self.updated = self.started
+        self.project.job_started()
+        logger.info(f"Started {self.description} at {self.started}.")
+
+    def update_progress(self, page: int) -> None:
         """
         Update the job with the last page processed.
 
         Args:
             last_page (int): The last page number processed.
+
+        Raises:
+            RuntimeError: If the job is not running.
         """
-        self._check_started()
-        self.status = JobStatus.RUNNING                         # Keep status as RUNNING
-        self.last_page = last_page                               # Set the last page processed
-        self._updated = datetime.now(timezone.utc)             # Update the last updated time
+        self._check_running()  # Confirm job is in running state
+        self.last_page = page
+        self.project.update_progress(page=page)
+        self.updated = datetime.now(timezone.utc)
 
     def cancel(self, reason: Optional[str] = None) -> None:
-        """Cancel the job and update its status, optionally specifying a cancellation reason."""
-        self.status = JobStatus.CANCELED                        # Update job status to CANCELED
-        self._updated = datetime.now(timezone.utc)             # Update the last updated time
+        """
+        Cancel the job and update its status, optionally specifying a cancellation reason.
+
+        Args:
+            reason (Optional[str]): Reason for cancellation if applicable.
+        """
+        self.status = JobStatus.CANCELED  # Update job status to CANCELED
+        self.updated = datetime.now(timezone.utc)
         self.cancellation_reason = reason
-        logger.info(f"{self.description} canceled at {self._updated}.")
+        logger.info(f"{self.description} canceled at {self.updated}.")
         if reason:
             logger.info(f"Cancellation reason: {reason}")
 
+
     def fail(self) -> None:
         """Mark the job as failed, update its status, and reset the task index."""
-        self._check_started()
+        self._check_running()
         self.status = JobStatus.FAILED                          # Update job status to FAILED
-        self._updated = datetime.now(timezone.utc)             # Update the last updated time
+        self.updated = datetime.now(timezone.utc)               # Update the last updated time
         self._task_idx = 0                                      # Reset the task index for a new attempt
-        logger.info(f"{self.description} failed at {self._updated}.")
+        logger.info(f"{self.description} failed at {self.updated}.")
 
     def complete(self) -> None:
         """
         Mark the job as completed, update its status, completion time, and execution time.
-        """
-        self._check_started()
-        self._completed = datetime.now(timezone.utc)            # Set the completion time
-        self.status = JobStatus.COMPLETED                       # Update job status to COMPLETED
-        self._updated = self._completed                         # Update the last updated time
-        self._task_idx = 0                                      # Reset the task index for a new attempt
-        self._execution_time = (self._completed - self._started).total_seconds()
 
-        logger.info(f"Completed {self.description}\nCompletion time: {self._completed}\nExecution time: {format_duration(self.execution_time)}")
+        Raises:
+            RuntimeError: If the job is not running.
+        """
+        self._check_running()
+        self.completed = datetime.now(timezone.utc)
+        self.status = JobStatus.COMPLETED
+        self.updated = self.completed
+        self.project.job_completed()
+
+        # Compute execution time
+        if self.started:
+            self._execution_time = (self.completed - self.started).total_seconds()
+        logger.info(f"Completed {self.description}\nCompletion time: {self.completed}\nExecution time: {self._execution_time:.2f} seconds.")
 
     def retry(self) -> None:
         """Retry the job and reset the task index, incrementing the retry count."""
-        if self.retry_count >= self.max_retries:
-            raise RuntimeError(f"The number of retries has exceeded max retries.")
-        self.retry_count += 1                                   # Increment the retry count
-        self._task_idx = 0                                      # Reset the task index for a new attempt
-        logger.info(f"Retry #{self.retry_count} for {self.description}")
-        self.start()
+        self._check_retry()
+        if self.retry_count < self.max_retries:
+            self.retry_count += 1                                   # Increment the retry count
+            self._task_idx = 0                                      # Reset the task index for a new attempt
+            self.status = JobStatus.RUNNING                         # Reset in case status is failed.
+            self.started = datetime.now(timezone.utc)              # Reset start time
+            self.updated = self.started
+            logger.info(f"Retry #{self.retry_count} for {self.description}")
+        else:
+            msg = f"Maximum retries exceed for job id: {self.id}"
+            logger.exception(msg)
+            raise RuntimeError(msg)
+
 
     def add_task(self, task: T) -> None:
         """
@@ -228,11 +238,20 @@ class Job(DataClass):
         """
         if isinstance(task, Task):
             self._tasks.append(task)
+            self.updated = datetime.now(timezone.utc)
             logger.info(f"Added task: {task} to {self.description}.")
         else:
-            raise TypeError("Only Task instances can be added.")
+            msg = f"Expected a Task object but received an object of type {type(task)}."
+            logger.exception(msg)
+            raise TypeError(msg)
 
-    def _check_started(self) -> None:
-        """Ensure the job has been started before performing certain actions."""
-        if self.status not in {JobStatus.RUNNING, JobStatus.SCHEDULED}:
-            raise RuntimeError("The job must be started before this action can be performed.")
+    def _check_running(self) -> None:
+        """Ensure the job is running before performing certain actions."""
+        if self.status != JobStatus.RUNNING:
+            raise RuntimeError(f"The job must be running before this action can be performed. Current status is {self.status.value}")
+
+    def _check_retry(self) -> None:
+        """Ensure the job is running before performing certain actions."""
+        if self.status not in {JobStatus.FAILED, JobStatus.CANCELED}:
+            raise RuntimeError(f"The job {self.id} must be failed or canceled before this action can be performed. Current status is {self.status.value}")
+

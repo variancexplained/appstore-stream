@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Tuesday August 27th 2024 06:26:22 pm                                                #
+# Modified   : Thursday August 29th 2024 01:09:26 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,12 +27,17 @@ import pytest
 from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
-# from appvocai.container import appvocaiContainer
+from appvocai.application.job.project import Project
+from appvocai.application.task.base import Task
+from appvocai.core.enum import *
 from appvocai.infra.base.config import Config
-from appvocai.infra.web.adapter import Adapter
 from appvocai.infra.web.profile import (SessionHistory, SessionProfile,
                                         SessionStats)
 from tests.test_infra.test_web.test_adapt import MockSessionHistory
+
+# from appvocai.container import appvocaiContainer
+
+
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = ["appvocai/infra/web/asession.py"]
@@ -129,3 +134,23 @@ def session_history() -> SessionHistory:
 @pytest.fixture(scope="session", autouse=False)
 def mock_history(*args, **kwargs) -> MockSessionHistory:
     return MockSessionHistory().get_latency_stats
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                       PROJECT                                                    #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="session", autouse=False)
+def project(*args, **kwargs) -> Project:
+    return Project(category=Category.EDUCATION, content_type=ContentType.APPREVIEW)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    MOCK TASK                                                     #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="session", autouse=False)
+def mock_task(*args, **kwargs) -> Task:
+    class MockTask(Task):
+        def execute(*args, **kwargs):
+            pass
+    return MockTask()
+
