@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 11:20:33 pm                                                #
-# Modified   : Thursday August 29th 2024 07:35:48 pm                                               #
+# Modified   : Thursday August 29th 2024 08:51:10 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 import traceback
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -246,6 +246,17 @@ class Database(ABC):
         return self._connection.execute(
             statement=text(query), parameters=params
         )
+
+    def execute_many(self, query: str, param_list: List[Dict[str,Any]]) -> None:
+        """Execute a query with a list of parameters."""
+        if self._connection is None:
+            raise ValueError("Database connection is not established.")
+
+        with self._connection.begin():  # Use transaction
+            self._connection.execute(
+                text(query),
+                *param_list  # Pass the parameter list unpacked
+            )
 
     def _requires_parameters(self, query: str) -> bool:
         """Check if the query requires parameters.

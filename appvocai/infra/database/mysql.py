@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Thursday August 29th 2024 07:47:43 pm                                               #
+# Modified   : Thursday August 29th 2024 07:53:37 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -73,8 +73,10 @@ class MySQLDatabase(Database):
             attempts += 1
             try:
                 if self._engine is None:
+                    self._logger.debug(f"Creating engine for connection string: {self._connection_string}")
                     self._engine = sqlalchemy.create_engine(self._connection_string)
                 if self._connection is None:
+                    self._logger.debug("Attempting to connect to the database.")
                     self._connection = self._engine.connect()
 
                 if autocommit:
@@ -83,21 +85,24 @@ class MySQLDatabase(Database):
                     self._connection.execution_options(isolation_level="READ COMMITTED")
 
                 self._is_connected = True
+                self._logger.info("Database connection established successfully.")
                 return self
 
             except SQLAlchemyError as e:
                 self._is_connected = False
+                self._logger.warning(f"Attempt {attempts} to connect to the database failed.")
                 if attempts < retries:
-                    print("Database connection failed. Attempting to start database..")
+                    self._logger.info("Attempting to start database and retry connection.")
                     self._start_db()
                     sleep(3)
                 else:
-                    msg = f"Database connection failed after {attempts} attempts.\nException type: {type(e)}\n{e}"
+                    msg = f"Database connection failed after {attempts} attempts. Exception type: {type(e)}\n{e}"
                     self._logger.exception(msg)
                     raise
         msg = f"Database connection failed after multiple attempts."
         self._logger.exception(msg)
         raise
+
 
     def _get_connection_string(self) -> str:
         """Returns the connection string for the named database."""
