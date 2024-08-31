@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Thursday August 29th 2024 09:42:05 pm                                               #
+# Modified   : Saturday August 31st 2024 04:13:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,7 +19,7 @@
 """Configuration Classes."""
 import logging
 import os
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 
 import yaml
 from dotenv import dotenv_values, load_dotenv
@@ -51,11 +51,12 @@ class Config:
         Args:
             file_path (str): Path to the .env file.
         """
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self._env_file_path = env_file_path
         self._current_environment = self.get_environment()
         self._namespace_mode = namespace_mode
         self._config = self.load_config()
-        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+
 
     #  ------------------------------------------------------------------------------------------- #
     @property
@@ -117,6 +118,16 @@ class Config:
         return os.path.join(os.getenv("CONFIG_FOLDER", "config"), f"{env}.yaml")
 
     #  ------------------------------------------------------------------------------------------- #
+    @property
+    def setup(self) -> Union[Dict[str,Any], NestedNamespace]:
+        return (
+            self.to_namespace(self._config["setup"])
+            if self._namespace_mode
+            else self._config["setup"]
+        )
+
+
+    #  ------------------------------------------------------------------------------------------- #
     def change_environment(self, new_value: str) -> None:
         """
         Changes the environment variable and updates it in the current process.
@@ -135,6 +146,8 @@ class Config:
                 file.write(f"{k}={v}\n")
         # Update the environment variable in the current process
         os.environ[key] = new_value
+        # Load the current environment
+        self.load_environment()
         print(
             f"Updated {key} to {new_value} in {self._env_file_path} and current process"
         )
@@ -157,27 +170,117 @@ class Config:
         load_dotenv(self._env_file_path, override=True)
 
     #  ------------------------------------------------------------------------------------------- #
-    def load_config(self) -> Dict[str,Any]:
+    def load_config(self) -> Dict[str, Any]:
         """
-        Loads the base configuration as well as environment specific config.
+        Loads the base configuration as well as the environment-specific configuration.
 
+        This method merges the base configuration with environment-specific settings
+        by loading them separately and then combining them into a single dictionary.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the combined configuration, with
+                            environment-specific settings overriding the base settings.
         """
+        base_config = self._load_base_config()
+        env_config = self._load_env_config()
+        return {**base_config, **env_config}
 
-        config_filepath_env = self.filepath
+    #  ------------------------------------------------------------------------------------------- #
+    def _load_base_config(self) -> Dict[str, Any]:
+        """
+        Loads the base configuration from a YAML file.
 
-        if config_filepath_env is not None:
-            # Load env config
-            with open(config_filepath_env, "r") as env_config_file:
-                env_config = yaml.safe_load(env_config_file)
+        The file path is determined by the `CONFIG_BASE_FILEPATH` environment variable,
+        or it defaults to `config/base.yaml`. This method reads the YAML file and returns
+        its contents as a dictionary.
 
-            config = {**env_config}
+        Returns:
+            Dict[str, Any]: The base configuration as a dictionary.
 
-            return config
-        else:
-            msg = f"Base config filepath not found in .env file. Unable to load config."
+        Raises:
+            FileNotFoundError: If the base configuration file is not found.
+            yaml.YAMLError: If there is an error parsing the YAML file.
+        """
+        base_config = {}
+
+        filepath = os.getenv("CONFIG_BASE_FILEPATH", "config/base.yaml")
+        content = "base configuration"
+        base_config = self.read_yaml(filepath=filepath, content=content)
+        return base_config
+
+    #  ------------------------------------------------------------------------------------------- #
+    def _load_env_config(self) -> Dict[str, Any]:
+        """
+        Loads the environment-specific configuration from a YAML file.
+
+        The file path is determined by the `filepath` attribute of the class. If the
+        `filepath` is not set, a `RuntimeError` is raised. This method reads the YAML
+        file and returns its contents as a dictionary.
+
+        Returns:
+            Dict[str, Any]: The environment-specific configuration as a dictionary.
+
+        Raises:
+            RuntimeError: If the environment-specific configuration file path is not set.
+            FileNotFoundError: If the environment-specific configuration file is not found.
+            yaml.YAMLError: If there is an error parsing the YAML file.
+        """
+        env_config = {}
+        filepath = self.filepath
+        if not filepath:
+            msg = "Unable to determine the environment filepath."
             self._logger.exception(msg)
             raise RuntimeError(msg)
 
+        content = "environment configuration"
+        env_config = self.read_yaml(filepath=filepath, content=content)
+        return env_config
+
     #  ------------------------------------------------------------------------------------------- #
-    def to_namespace(self, config: Dict[str,Any]) -> NestedNamespace:
+    def read_yaml(self, filepath: str, content: str) -> Dict[str, Any]:
+        """
+        Reads a YAML file and returns its contents as a dictionary.
+
+        This method attempts to load a YAML file from the specified `filepath`. If the
+        file is found and successfully parsed, its contents are returned as a dictionary.
+        If the file is not found or there is an error parsing the YAML content, an exception
+        is logged and re-raised.
+
+        Args:
+            filepath (str): The path to the YAML file to be read.
+            content (str): A description of the content being read, used for logging purposes.
+
+        Returns:
+            Dict[str, Any]: The contents of the YAML file as a dictionary.
+
+        Raises:
+            FileNotFoundError: If the specified file is not found at the given `filepath`.
+            yaml.YAMLError: If there is an error parsing the YAML file.
+        """
+        try:
+            with open(filepath, "r") as file:
+                data = yaml.safe_load(file)
+                return cast(Dict[str, Any], data)
+        except FileNotFoundError:
+            self._logger.exception(f"Unable to read {content}. File not found at {filepath}.")
+            raise
+        except yaml.YAMLError as e:
+            self._logger.exception(f"Exception while reading {content} from {filepath}\n{e}")
+            raise
+
+    #  ------------------------------------------------------------------------------------------- #
+    def to_namespace(self, config: Dict[str, Any]) -> NestedNamespace:
+        """
+        Converts a configuration dictionary to a NestedNamespace object.
+
+        This method transforms a flat or nested dictionary of configuration settings
+        into a `NestedNamespace` object, which allows for attribute-style access to
+        the configuration values.
+
+        Args:
+            config (Dict[str, Any]): The configuration dictionary to be converted.
+
+        Returns:
+            NestedNamespace: The configuration wrapped in a `NestedNamespace` object.
+        """
         return NestedNamespace(config)

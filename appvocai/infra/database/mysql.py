@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Saturday August 31st 2024 02:01:17 pm                                               #
+# Modified   : Saturday August 31st 2024 04:43:13 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -253,6 +253,8 @@ class MySQLDatabase(Database):
 # ------------------------------------------------------------------------------------------------ #
 #                         MYSQL DATABASE ADMIN - FEYNMAN                                           #
 # ------------------------------------------------------------------------------------------------ #
+FOREIGN_KEY_CHECKS_OFF = "FOREIGN_KEY_CHECKS = 0"
+FOREIGN_KEY_CHECKS_ON = "FOREIGN_KEY_CHECKS = 1"
 
 class Feynman(DBA):
     """ "Abstract base class for building databases from DDL"""
@@ -347,7 +349,9 @@ class Feynman(DBA):
         try:
             query = f"DROP TABLE IF EXISTS {table_name};"
             with self._database as db:
+                db.execute(FOREIGN_KEY_CHECKS_OFF)
                 db.execute(query=query)
+                db.execute(FOREIGN_KEY_CHECKS_ON)
             self._logger.info(f"Table {table_name} was dropped from the {self._database.name} database.")
         except OperationalError as e:
             self._logger.exception(e)

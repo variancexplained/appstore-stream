@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 30th 2024 02:42:23 am                                                 #
-# Modified   : Friday August 30th 2024 07:03:56 am                                                 #
+# Modified   : Saturday August 31st 2024 04:38:56 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,9 +20,10 @@
 schema = {
     "category":
         """CREATE TABLE category (
-        id INTEGER NOT NULL PRIMARY KEY,
+        category_id INTEGER NOT NULL PRIMARY KEY,
         category VARCHAR(128) NOT NULL,
-        UNIQUE (id) -- Ensures the id is unique
+        UNIQUE (category_id),
+        INDEX idx_category_id (category_id)
         );""",
     "appdata":
         """CREATE TABLE appdata (
@@ -70,7 +71,7 @@ schema = {
             category_id INTEGER NOT NULL,
             PRIMARY KEY (app_id, category_id),
             FOREIGN KEY (app_id) REFERENCES appdata(app_id),
-            FOREIGN KEY (category_id) REFERENCES category(id)
+            FOREIGN KEY (category_id) REFERENCES category(category_id)
         );"""
 
 }
