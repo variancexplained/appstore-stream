@@ -11,18 +11,22 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 12:47:38 am                                              #
-# Modified   : Friday August 30th 2024 02:13:14 am                                                 #
+# Modified   : Saturday August 31st 2024 05:17:20 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+from __future__ import annotations
+
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from appvocai.core.data import DataClass
 
-
+# ------------------------------------------------------------------------------------------------ #
+logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AppData(DataClass):
@@ -105,6 +109,76 @@ class AppData(DataClass):
     urls_screenshot_iphone: Optional[List[str]] = field(default_factory=lambda: None)
     extract_date: Optional[datetime] = None
 
+
+    @classmethod
+    def create(cls, appdata_row: Dict[str, Any], categories: List[int]) -> AppData:
+        """Create an AppData object from the retrieved data.
+
+        Args:
+            appdata_row (Dict[str, Any]): A dictionary containing app data fields.
+            categories (List[int]): A list of category IDs associated with the app.
+
+        Returns:
+            AppData: An instance of the AppData class populated with the provided data.
+
+        Raises:
+            ValueError: If app_id is None or if any required field is missing.
+
+        Logs:
+            - Logs an error if app_id is None.
+            - Logs the successful creation of an AppData object.
+        """
+        app_id = appdata_row.get('app_id')
+        if app_id is None:
+            msg = "app_id cannot be None"
+            logger.exception(msg)
+            raise ValueError(msg)
+
+        # Use default values for optional fields
+        app_name = appdata_row.get('app_name', "Unknown")
+        app_censored_name = appdata_row.get('app_censored_name', "Unknown")
+        bundle_id = appdata_row.get('bundle_id', "Unknown")
+
+
+        # Log the successful creation of an AppData object
+        return cls(
+            app_id=app_id,
+            app_name=app_name,
+            app_censored_name=app_censored_name,
+            bundle_id=bundle_id,
+            description=appdata_row.get('description'),
+            category_id=appdata_row.get('category_id'),
+            category=appdata_row.get('category'),
+            categories=categories,
+            price=appdata_row.get('price'),
+            currency=appdata_row.get('currency'),
+            rating_average=appdata_row.get('rating_average'),
+            rating_average_current_version=appdata_row.get('rating_average_current_version'),
+            rating_average_current_version_change=appdata_row.get('rating_average_current_version_change'),
+            rating_average_current_version_pct_change=appdata_row.get('rating_average_current_version_pct_change'),
+            rating_count=appdata_row.get('rating_count'),
+            rating_count_current_version=appdata_row.get('rating_count_current_version'),
+            developer_id=appdata_row.get('developer_id'),
+            developer_name=appdata_row.get('developer_name'),
+            seller_name=appdata_row.get('seller_name'),
+            app_content_rating=appdata_row.get('app_content_rating'),
+            content_advisory_rating=appdata_row.get('content_advisory_rating'),
+            file_size_bytes=appdata_row.get('file_size_bytes'),
+            minimum_os_version=appdata_row.get('minimum_os_version'),
+            version=appdata_row.get('version'),
+            release_date=appdata_row.get('release_date'),
+            release_notes=appdata_row.get('release_notes'),
+            release_date_current_version=appdata_row.get('release_date_current_version'),
+            url_developer_view=appdata_row.get('url_developer_view'),
+            url_seller=appdata_row.get('url_seller'),
+            url_app_view=appdata_row.get('url_app_view'),
+            url_artwork_100=appdata_row.get('url_artwork_100'),
+            url_artwork_512=appdata_row.get('url_artwork_512'),
+            url_artwork_60=appdata_row.get('url_artwork_60'),
+            extract_date=appdata_row.get('extract_date'),
+            urls_screenshot_ipad=appdata_row.get("urls_screenshot_ipad"),
+            urls_screenshot_iphone=appdata_row.get("urls_screenshot_iphone"),
+        )
 
 
     def export_appdata(self) -> Dict[str, Any]:

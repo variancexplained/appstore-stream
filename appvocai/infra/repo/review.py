@@ -11,20 +11,26 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Friday August 30th 2024 04:31:52 am                                                 #
+# Modified   : Saturday August 31st 2024 07:05:02 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Review Repo Module"""
+import logging
+from typing import Any, Dict, cast
+
 import pandas as pd
 
-from appvocai.domain.base.repo import DomainLayerRepo
+from appvocai.core.enum import Category
+from appvocai.domain.content.review import AppReview
+from appvocai.domain.repo.base import Repo
 from appvocai.infra.database.mysql import MySQLDatabase
+from appvocai.infra.exceptions.database import DatabaseError
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ReviewRepo(DomainLayerRepo):
+class ReviewRepo(Repo):
     """Repository class for handling operations on the 'review' table.
 
     Args:
@@ -38,12 +44,12 @@ class ReviewRepo(DomainLayerRepo):
         Initializes the ReviewRepo with a database connection.
 
         """
-        super().__init__()
         self._database = database
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    def get(self, category_id: int) -> pd.DataFrame:
+    def get(self, id_value: int) -> AppReview:
         """
-        Fetches data from the 'review' table based on the category_id.
+        Fetches data from the 'review' table based on the app_id.
 
         Args:
             category_id (int): The ID of the category to fetch data for.
@@ -54,15 +60,58 @@ class ReviewRepo(DomainLayerRepo):
         # Construct SQL query using the category_id
         query = """
         SELECT * FROM review
-        WHERE category_id = :category_id
+        WHERE app_id = :app_id
         """
-        params = {"category_id": category_id}
+        params = {"app_id": id_value}
 
         # Use the database connection to execute the query and return the result as a DataFrame
-        with self._database as conn:
-            return conn.query(query, params)
+        try:
+            with self._database as db:
+                result = db.execute(query=query, params=params)
+            appreview_row = result.fetchone()
+            appreview_dict = dict(appreview_row) if appreview_row else {}
+            return AppReview.create(appreview_row=appreview_dict)
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to delete reviews for app_id '{id_value}': {e}")
+            raise DatabaseError(f"An error occurred while deleting reviews for app_id '{id_value}'") from e
 
-    def upsert(self, data: pd.DataFrame) -> int:
+    def get_by_category_id(self, category: Category) -> pd.DataFrame:
+        """
+        Retrieves reviews from the 'review' table filtered by the specified category ID.
+
+        This method constructs an SQL query to select all records from the 'review' table where
+        the `category_id` matches the value provided by the `Category` enum. The results of the
+        query are returned as a Pandas DataFrame.
+
+        Args:
+            category (Category): An instance of the `Category` enum representing the category ID
+                                to filter the reviews by.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the reviews that match the specified category ID.
+
+        Example:
+            df = repository.get_by_category_id(Category.GAMES)
+            # df will contain all reviews associated with the 'GAMES' category.
+        """
+        # Construct SQL query using the category_id
+        query = """
+        SELECT * FROM review
+        WHERE category_id = :category_id
+        """
+        params = {"category_id": category.value}
+
+        # Use the database connection to execute the query and return the result as a DataFrame
+        try:
+            with self._database as db:
+                return db.query(query=query, params=params)
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to read reviews for category '{category.name}': {e}")
+            raise DatabaseError(f"An error occurred while reading reviews for category '{category.name}'") from e
+
+    def add(self, data: pd.DataFrame) -> int:
         """
         Upserts (inserts or updates) data into the 'review' table.
 
@@ -72,73 +121,199 @@ class ReviewRepo(DomainLayerRepo):
         Returns:
             int: Number of rows affected by the upsert operation.
         """
-        # Convert DataFrame to a list of dictionaries for upsert operation
+        # Convert DataFrame to a list of dictionaries for the upsert operation
         data_dict = data.to_dict(orient="records")
 
         # Construct the upsert SQL query
-        upsert_query = """
+        query = """
             INSERT INTO review (
                 review_id,
-                reviewer_id,
                 app_id,
-                app_name,
-                category_id,
-                category,
-                title,
-                content,
+                review,
                 review_length,
-                rating,
-                vote_count,
-                vote_count_per_day,
-                vote_sum,
-                vote_sum_per_day,
-                vote_avg,
-                review_age,
                 review_date,
+                reviewer_name,
+                rating,
+                review_title,
+                vote_count,
+                vote_sum,
+                is_edited,
+                reviews_url,
+                vote_url,
+                customer_type,
                 extract_date
             ) VALUES (
                 :review_id,
-                :reviewer_id,
                 :app_id,
-                :app_name,
-                :category_id,
-                :category,
-                :title,
-                :content,
+                :review,
                 :review_length,
-                :rating,
-                :vote_count,
-                :vote_count_per_day,
-                :vote_sum,
-                :vote_sum_per_day,
-                :vote_avg,
-                :review_age,
                 :review_date,
+                :reviewer_name,
+                :rating,
+                :review_title,
+                :vote_count,
+                :vote_sum,
+                :is_edited,
+                :reviews_url,
+                :vote_url,
+                :customer_type,
                 :extract_date
             ) ON DUPLICATE KEY UPDATE
-                reviewer_id = VALUES(reviewer_id),
                 app_id = VALUES(app_id),
-                app_name = VALUES(app_name),
-                category_id = VALUES(category_id),
-                category = VALUES(category),
-                title = VALUES(title),
-                content = VALUES(content),
+                review = VALUES(review),
                 review_length = VALUES(review_length),
-                rating = VALUES(rating),
-                vote_count = VALUES(vote_count),
-                vote_count_per_day = VALUES(vote_count_per_day),
-                vote_sum = VALUES(vote_sum),
-                vote_sum_per_day = VALUES(vote_sum_per_day),
-                vote_avg = VALUES(vote_avg),
-                review_age = VALUES(review_age),
                 review_date = VALUES(review_date),
+                reviewer_name = VALUES(reviewer_name),
+                rating = VALUES(rating),
+                review_title = VALUES(review_title),
+                vote_count = VALUES(vote_count),
+                vote_sum = VALUES(vote_sum),
+                is_edited = VALUES(is_edited),
+                reviews_url = VALUES(reviews_url),
+                vote_url = VALUES(vote_url),
+                customer_type = VALUES(customer_type),
                 extract_date = VALUES(extract_date);
             """
 
         # Execute the upsert query for each record
-        with self._database as conn:
-            upsert_count = 0
-            for record in data_dict:
-                result = conn.execute(upsert_query, record)
-                upsert_count += result.rowcount
-            return upsert_count
+        try:
+            with self._database as db:
+                upsert_count = 0
+                for record in data_dict:
+                    params = cast(Dict[str,Any], record)
+                    result = db.execute(query=query, params=params)
+                    upsert_count += result.rowcount if hasattr(result, 'rowcount') else 0
+                return upsert_count
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            msg = f"Failed to execute upsert of reviews.\n{e}"
+            self._logger.exception(msg)
+            raise DatabaseError(f"An error occurred while upserting reviews.") from e
+
+    def remove(self, id_value: int) -> int:
+        """
+        Removes reviews from the 'review' table based on the specified app_id.
+
+        This method constructs an SQL query to delete all records from the 'review' table where
+        the `app_id` matches the provided `id_value`. The method returns the number of rows
+        affected by the deletion.
+
+        Args:
+            id_value (int): The `app_id` value to filter the reviews by.
+
+        Returns:
+            int: The number of rows affected by the delete operation.
+
+        Example:
+            deleted_count = repository.remove(123456)
+            # deleted_count will contain the number of reviews removed with app_id 123456.
+        """
+        # Construct SQL query to delete records with the specified app_id
+        query = """
+        DELETE FROM review
+        WHERE app_id = :app_id
+        """
+        params = {"app_id": id_value}
+
+        # Use the database connection to execute the delete query
+        try:
+            with self._database as db:
+                count = 0
+
+                result = db.execute(query=query, params=params)
+                if hasattr(result, "rowcount"):
+                    if isinstance(result.rowcount, int):
+                        count = result.rowcount
+                return count
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to delete reviews for app_id '{id_value}': {e}")
+            raise DatabaseError(f"An error occurred while deleting reviews for app_id '{id_value}'") from e
+
+    def remove_by_category(self, category: Category) -> int:
+        """
+        Removes reviews from the 'review' table based on the specified category ID.
+
+        This method constructs an SQL query to delete all records from the 'review' table where
+        the `category_id` matches the value provided by the `Category` enum. The method returns
+        the number of rows affected by the deletion.
+
+        Args:
+            category (Category): An instance of the `Category` enum representing the category ID
+                                to filter the reviews by.
+
+        Returns:
+            int: The number of rows affected by the delete operation.
+
+        Raises:
+            DatabaseError: If an error occurs during the database operation.
+
+        Example:
+            deleted_count = repository.remove_by_category(Category.GAMES)
+            # deleted_count will contain the number of reviews removed with the 'GAMES' category ID.
+        """
+
+        # Construct SQL query to delete records with the specified category_id
+        query = """
+        DELETE FROM review
+        WHERE category_id = :category_id
+        """
+        params = {"category_id": category.value}
+
+            # Use the database connection to execute the delete query
+        try:
+            with self._database as db:
+                result = db.execute(query=query, params=params)
+                if hasattr(result, "rowcount"):
+                    if isinstance(result.rowcount, int):
+                        count = result.rowcount
+                        self._logger.info(f"Removed {count} rows from the reviews table.")
+                return count
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to delete reviews for category '{category.name}': {e}")
+            raise DatabaseError(f"An error occurred while deleting reviews for category '{category.name}'") from e
+
+    def remove_all(self) -> int:
+        """
+        Removes all reviews from the 'review' table after user confirmation.
+
+        This method prompts the user for confirmation before deleting all records from the 'review' table.
+        If the user confirms, it will delete all reviews and return the number of rows affected.
+
+        Returns:
+            int: The number of rows affected by the delete operation.
+
+        Raises:
+            DatabaseError: If an error occurs during the database operation.
+
+        Example:
+            deleted_count = repository.remove_all_reviews()
+            # deleted_count will contain the number of reviews removed.
+        """
+        # Ask for user confirmation
+        confirmation = input("Are you sure you want to delete all reviews? This action cannot be undone. (yes/no): ")
+
+        if confirmation.lower() != 'yes':
+            print("Operation cancelled.")
+            return 0
+
+        try:
+            # Construct SQL query to delete all records in the review table
+            query = "DELETE FROM review"
+
+            # Execute the delete query
+            with self._database as db:
+                result = db.execute(query=query)
+                if hasattr(result, 'rowcount'):
+                    if isinstance(result.rowcount, int):
+                        count = result.rowcount
+                        self._logger.info(f"Removed {count} rows from the reviews table.")
+                return count
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception("Failed to delete all reviews: {e}")
+            raise DatabaseError("An error occurred while deleting all reviews") from e

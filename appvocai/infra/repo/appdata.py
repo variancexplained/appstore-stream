@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Saturday August 31st 2024 02:23:02 pm                                               #
+# Modified   : Saturday August 31st 2024 07:00:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,6 +25,7 @@ from appvocai.core.enum import Category
 from appvocai.domain.content.appdata import AppData
 from appvocai.domain.repo.base import Repo
 from appvocai.infra.database.mysql import MySQLDatabase
+from appvocai.infra.exceptions.database import DatabaseError
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -49,14 +50,25 @@ class AppDataRepo(Repo):
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     def get_appdata(self, id_value: int) -> Dict[str, Any]:
-        """Retrieve a single app's data from the appdata table.
+        """
+        Retrieves app data from the 'appdata' table based on the specified app_id.
+
+        This method constructs an SQL query to select the record from the 'appdata' table where
+        the `app_id` matches the provided `id_value`. The result is returned as a dictionary.
 
         Args:
-            id_value (int): The unique identifier for the app.
+            id_value (int): The `app_id` value to filter the app data by.
 
         Returns:
-            Dict[str, Any]: A dictionary representing the app's data, or an empty
-            dictionary if no data is found.
+            Dict[str, Any]: A dictionary containing the app data for the specified `app_id`,
+                            or an empty dictionary if no matching record is found.
+
+        Raises:
+            DatabaseError: If an error occurs during the database operation.
+
+        Example:
+            app_data = repository.get_appdata_by_id(123456)
+            # app_data will contain the app details for app_id 123456 or an empty dictionary if not found.
         """
         query = """
         SELECT * FROM appdata
@@ -64,28 +76,56 @@ class AppDataRepo(Repo):
         """
         params = {"app_id": id_value}
 
-        result = self._database.execute(query=query, params=params)
-        row = result.fetchone()  # Fetch the first row
-        return dict(row) if row else {}
+        try:
+            with self._database as db:
+                result = db.execute(query=query, params=params)
+            row = result.fetchone()  # Fetch the first row
+            return dict(row) if row else {}
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to retrieve app data for app_id '{id_value}': {e}")
+            raise DatabaseError(f"An error occurred while retrieving app data for app_id '{id_value}'") from e
+
 
     def get_app_categories(self, id_value: int) -> List[int]:
-        """Retrieve the categories associated with a specific app.
+        """
+        Retrieves a list of category IDs from the 'review' table based on the specified app_id.
+
+        This method constructs an SQL query to select all category IDs from the 'review' table
+        where the `app_id` matches the provided `id_value`. The result is returned as a list of
+        integers representing the category IDs.
 
         Args:
-            id_value (int): The unique identifier for the app.
+            id_value (int): The `app_id` value to filter the reviews by.
 
         Returns:
-            List[int]: A list of category IDs associated with the app.
+            List[int]: A list of category IDs associated with the specified `app_id`.
+
+        Raises:
+            DatabaseError: If an error occurs during the database operation.
+
+        Example:
+            category_ids = repository.get_category_ids_by_app_id(123456)
+            # category_ids will contain a list of category IDs associated with app_id 123456.
         """
         query = """
-        SELECT category_id FROM category_app
+        SELECT category_id FROM review
         WHERE app_id = :app_id
         """
         params = {"app_id": id_value}
 
-        result = self._database.execute(query=query, params=params)
-        rows = result.fetchall()  # Fetch all rows
-        return [row.category_id for row in rows]
+        try:
+            with self._database as db:
+                result = db.execute(query=query, params=params)
+            rows = result.fetchall()  # Fetch all rows
+            return [row.category_id for row in rows]
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to retrieve category IDs for app_id '{id_value}': {e}")
+            raise DatabaseError(f"An error occurred while retrieving category IDs for app_id '{id_value}'") from e
+
 
 
     def get(self, id_value: int) -> AppData:
@@ -110,7 +150,7 @@ class AppDataRepo(Repo):
         """
         appdata_row = self.get_appdata(id_value)
         categories = self.get_app_categories(id_value)
-        return self._constitute_appdata(appdata_row=appdata_row, categories=categories)
+        return AppData.create(appdata_row=appdata_row, categories=categories)
 
 
     def get_by_category(self, category: Category) -> pd.DataFrame:
@@ -118,22 +158,33 @@ class AppDataRepo(Repo):
         Retrieves AppData by category ID.
 
         Note: This method returns a DataFrame, without alternate categories,
-        and lists of screenshos.
+        and lists of screenshots.
 
         Args:
             category (Category): The enum of the category to filter by.
 
         Returns:
             pd.DataFrame: A DataFrame containing app data for the specified category.
+
+        Raises:
+            DatabaseError: If an error occurs during the database operation.
         """
-        # Define the raw SQL query to join appdata and category_app tables
+        # Define the raw SQL query to filter appdata by category_id
         query = """
         SELECT *
         FROM appdata
         WHERE category_id = :category_id
         """
 
-        return self._database.query(query=query, params={"category_id": category.value})
+        try:
+            with self._database as db:
+                return db.query(query=query, params={"category_id": category.value})
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to retrieve app data for category '{category.name}': {e}")
+            raise DatabaseError(f"An error occurred while retrieving app data for category '{category.name}'") from e
+
 
 
     def add(self, app_data_list: List[AppData]) -> None:
@@ -268,13 +319,20 @@ class AppDataRepo(Repo):
                 for app_data in app_data_list
             ]
 
-        # Execute the batch upsert query
-        self._database.execute_many(query=query, param_list=param_list)
+        try:
+            # Execute the batch upsert query
+            with self._database as db:
+                db.execute_many(query=query, param_list=param_list)
 
-        # Handle categories and URLs for all app_data
-        for app_data in app_data_list:
-            if app_data.categories:
-                self._add_app_categories(app_data.app_id, app_data.categories)
+            # Handle categories and URLs for all app_data
+            for app_data in app_data_list:
+                if app_data.categories:
+                    self._add_app_categories(app_data.app_id, app_data.categories)
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            msg = f"Failed to execute upsert of appdata.\n{e}"
+            self._logger.exception(msg)
+            raise DatabaseError(f"An error occurred while upserting appdata.") from e
 
 
     def _add_app_categories(self, app_id: int, categories: List[int]) -> None:
@@ -308,23 +366,28 @@ class AppDataRepo(Repo):
             return
 
 
-        # First delete existing categories for the app
-        query = """
-        DELETE FROM category_app WHERE app_id = :app_id;
-        """
-
-        params={"app_id": app_id}
-        with self._database as db:
-            db.execute(query=query, params=params)
-
-        # Insert new categories for the app
-        query = """
-        INSERT INTO category_app (app_id, category_id) VALUES (:app_id, :category_id);
-        """
-        for category_id in categories:
-            params = {"app_id": app_id, "category_id": category_id}
+        try:
+            # First delete existing categories for the app
+            delete_query = """
+            DELETE FROM category_app WHERE app_id = :app_id;
+            """
+            delete_params = {"app_id": app_id}
             with self._database as db:
-                db.execute(query=query, params=params)
+                db.execute(query=delete_query, params=delete_params)
+
+            # Insert new categories for the app
+            insert_query = """
+            INSERT INTO category_app (app_id, category_id) VALUES (:app_id, :category_id);
+            """
+            for category_id in categories:
+                insert_params = {"app_id": app_id, "category_id": category_id}
+                with self._database as db:
+                    db.execute(query=insert_query, params=insert_params)
+
+        except Exception as e:
+            # Log the exception and raise a custom DatabaseError
+            self._logger.exception(f"Failed to update categories for app_id '{app_id}': {e}")
+            raise DatabaseError(f"An error occurred while updating categories for app_id '{app_id}'") from e
 
     def remove(self, id_value: int) -> None:
         self._remove_app_data(id_value=id_value)
@@ -344,7 +407,8 @@ class AppDataRepo(Repo):
         params = {"app_id": id_value}
 
         try:
-            self._database.execute(query, params)
+            with self._database as db:
+                db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete app with ID {id_value}: {str(e)}")
@@ -363,7 +427,8 @@ class AppDataRepo(Repo):
         params = {"app_id": id_value}
 
         try:
-            self._database.execute(query, params)
+            with self._database as db:
+                db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete category_app data with ID {id_value}: {str(e)}")
@@ -387,7 +452,8 @@ class AppDataRepo(Repo):
         params = {"category_id": category_id}
 
         try:
-            self._database.execute(query, params)
+            with self._database as db:
+                db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
@@ -407,7 +473,8 @@ class AppDataRepo(Repo):
         params = {"category_id": category_id}
 
         try:
-            self._database.execute(query, params)
+            with self._database as db:
+                db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
@@ -424,7 +491,7 @@ class AppDataRepo(Repo):
         """
         confirmation = input("Are you sure you want to delete all entries from the appdata tables? (yes/no): ")
         if confirmation.lower() != 'yes':
-            print("Deletion canceled.")
+            self._logger.info("Deletion canceled.")
             return
         else:
             self._remove_all_appdata()
@@ -446,8 +513,9 @@ class AppDataRepo(Repo):
 
         query = "DELETE FROM appdata;"
         try:
-            self._database.execute(query)
-            print("All entries from the appdata table have been deleted.")
+            with self._database as db:
+                db.execute(query)
+            self._logger.info("All entries from the appdata table have been deleted.")
         except Exception as e:
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete all entries from appdata: {str(e)}")
@@ -467,80 +535,9 @@ class AppDataRepo(Repo):
         """
         query = "DELETE FROM category_app;"
         try:
-            self._database.execute(query)
-            print("All entries from the appdata table have been deleted.")
+            with self._database as db:
+                db.execute(query)
+            self._logger.info("All entries from the appdata table have been deleted.")
         except Exception as e:
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete all entries from appdata: {str(e)}")
-
-    def _constitute_appdata(
-        self, appdata_row: Dict[str, Any], categories: List[int]) -> AppData:
-        """Create an AppData object from the retrieved data.
-
-        Args:
-            appdata_row (Dict[str, Any]): A dictionary containing app data fields.
-            categories (List[int]): A list of category IDs associated with the app.
-
-        Returns:
-            AppData: An instance of the AppData class populated with the provided data.
-
-        Raises:
-            ValueError: If app_id is None or if any required field is missing.
-
-        Logs:
-            - Logs an error if app_id is None.
-            - Logs the successful creation of an AppData object.
-        """
-        app_id = appdata_row.get('app_id')
-        if app_id is None:
-            msg = "app_id cannot be None"
-            self._logger.exception(msg)
-            raise ValueError(msg)
-
-        # Use default values for optional fields
-        app_name = appdata_row.get('app_name', "Unknown")
-        app_censored_name = appdata_row.get('app_censored_name', "Unknown")
-        bundle_id = appdata_row.get('bundle_id', "Unknown")
-
-
-        # Log the successful creation of an AppData object
-        app_data = AppData(
-            app_id=app_id,
-            app_name=app_name,
-            app_censored_name=app_censored_name,
-            bundle_id=bundle_id,
-            description=appdata_row.get('description'),
-            category_id=appdata_row.get('category_id'),
-            category=appdata_row.get('category'),
-            categories=categories,
-            price=appdata_row.get('price'),
-            currency=appdata_row.get('currency'),
-            rating_average=appdata_row.get('rating_average'),
-            rating_average_current_version=appdata_row.get('rating_average_current_version'),
-            rating_average_current_version_change=appdata_row.get('rating_average_current_version_change'),
-            rating_average_current_version_pct_change=appdata_row.get('rating_average_current_version_pct_change'),
-            rating_count=appdata_row.get('rating_count'),
-            rating_count_current_version=appdata_row.get('rating_count_current_version'),
-            developer_id=appdata_row.get('developer_id'),
-            developer_name=appdata_row.get('developer_name'),
-            seller_name=appdata_row.get('seller_name'),
-            app_content_rating=appdata_row.get('app_content_rating'),
-            content_advisory_rating=appdata_row.get('content_advisory_rating'),
-            file_size_bytes=appdata_row.get('file_size_bytes'),
-            minimum_os_version=appdata_row.get('minimum_os_version'),
-            version=appdata_row.get('version'),
-            release_date=appdata_row.get('release_date'),
-            release_notes=appdata_row.get('release_notes'),
-            release_date_current_version=appdata_row.get('release_date_current_version'),
-            url_developer_view=appdata_row.get('url_developer_view'),
-            url_seller=appdata_row.get('url_seller'),
-            url_app_view=appdata_row.get('url_app_view'),
-            url_artwork_100=appdata_row.get('url_artwork_100'),
-            url_artwork_512=appdata_row.get('url_artwork_512'),
-            url_artwork_60=appdata_row.get('url_artwork_60'),
-            extract_date=appdata_row.get('extract_date'),
-            urls_screenshot_ipad=appdata_row.get("urls_screenshot_ipad"),
-            urls_screenshot_iphone=appdata_row.get("urls_screenshot_iphone"),
-        )
-
-        return app_data
