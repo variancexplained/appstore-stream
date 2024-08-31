@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Friday August 30th 2024 02:16:09 am                                                 #
+# Modified   : Saturday August 31st 2024 02:23:02 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -87,25 +87,6 @@ class AppDataRepo(Repo):
         rows = result.fetchall()  # Fetch all rows
         return [row.category_id for row in rows]
 
-    def get_app_urls(self, id_value: int) -> List[Dict[str, str]]:
-        """Retrieve URLs associated with a specific app.
-
-        Args:
-            id_value (int): The unique identifier for the app.
-
-        Returns:
-            List[Dict[str, str]]: A list of dictionaries containing URL types and URLs.
-        """
-        query = """
-        SELECT url_type, url FROM app_url
-        WHERE app_id = :app_id
-        """
-        params = {"app_id": id_value}
-
-        result = self._database.execute(query=query, params=params)
-        rows = result.fetchall()  # Fetch all rows
-        return [dict(row) for row in rows]
-
 
     def get(self, id_value: int) -> AppData:
         """Retrieve app data by ID and return an AppData object.
@@ -129,8 +110,7 @@ class AppDataRepo(Repo):
         """
         appdata_row = self.get_appdata(id_value)
         categories = self.get_app_categories(id_value)
-        urls = self.get_app_urls(id_value)
-        return self._constitute_appdata(appdata_row=appdata_row, categories=categories, urls=urls)
+        return self._constitute_appdata(appdata_row=appdata_row, categories=categories)
 
 
     def get_by_category(self, category: Category) -> pd.DataFrame:
@@ -294,10 +274,10 @@ class AppDataRepo(Repo):
         # Handle categories and URLs for all app_data
         for app_data in app_data_list:
             if app_data.categories:
-                self.add_app_categories(app_data.app_id, app_data.categories)
+                self._add_app_categories(app_data.app_id, app_data.categories)
 
 
-    def add_app_categories(self, app_id: int, categories: List[int]) -> None:
+    def _add_app_categories(self, app_id: int, categories: List[int]) -> None:
         """
         Upsert categories associated with the specified app.
 
@@ -330,7 +310,7 @@ class AppDataRepo(Repo):
 
         # First delete existing categories for the app
         query = """
-        DELETE FROM category_app WHERE app_id = :app_id
+        DELETE FROM category_app WHERE app_id = :app_id;
         """
 
         params={"app_id": app_id}
@@ -339,16 +319,18 @@ class AppDataRepo(Repo):
 
         # Insert new categories for the app
         query = """
-        INSERT INTO category_app (app_id, category_id) VALUES (:app_id, :category_id)
+        INSERT INTO category_app (app_id, category_id) VALUES (:app_id, :category_id);
         """
         for category_id in categories:
             params = {"app_id": app_id, "category_id": category_id}
             with self._database as db:
                 db.execute(query=query, params=params)
 
-
-
     def remove(self, id_value: int) -> None:
+        self._remove_app_data(id_value=id_value)
+        self._remove_category_app_data(id_value=id_value)
+
+    def _remove_app_data(self, id_value: int) -> None:
         """
         Deletes an entry from the appdata table based on the provided app_id.
 
@@ -367,8 +349,31 @@ class AppDataRepo(Repo):
             # Handle exceptions or log them as necessary
             raise Exception(f"Failed to delete app with ID {id_value}: {str(e)}")
 
+    def _remove_category_app_data(self, id_value: int) -> None:
+        """
+        Deletes an entry from the appdata table based on the provided app_id.
+
+        Args:
+            app_id (int): The ID of the app to delete from the appdata table.
+
+        Raises:
+            Exception: If the delete operation fails due to a database error.
+        """
+        query = "DELETE FROM category_app WHERE app_id = :app_id"
+        params = {"app_id": id_value}
+
+        try:
+            self._database.execute(query, params)
+        except Exception as e:
+            # Handle exceptions or log them as necessary
+            raise Exception(f"Failed to delete category_app data with ID {id_value}: {str(e)}")
 
     def remove_by_category_id(self, category_id: int) -> None:
+        self._remove_appdata_by_category_id(category_id=category_id)
+        self._remove_appdata_categories_by_category_id(category_id=category_id)
+
+
+    def _remove_appdata_by_category_id(self, category_id: int) -> None:
         """
         Deletes entries from the appdata table based on the provided category_id.
 
@@ -378,7 +383,7 @@ class AppDataRepo(Repo):
         Raises:
             Exception: If the delete operation fails due to a database error.
         """
-        query = "DELETE FROM appdata WHERE category_id = :category_id"
+        query = "DELETE FROM appdata WHERE category_id = :category_id;"
         params = {"category_id": category_id}
 
         try:
@@ -388,19 +393,79 @@ class AppDataRepo(Repo):
             raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
 
 
-    def remove_all(self) -> None:
+    def _remove_appdata_categories_by_category_id(self, category_id: int) -> None:
         """
-        Deletes all entries from the appdata table after user confirmation.
+        Deletes entries from the appdata table based on the provided category_id.
+
+        Args:
+            category_id (int): The ID of the category to delete from the appdata table.
 
         Raises:
             Exception: If the delete operation fails due to a database error.
         """
-        confirmation = input("Are you sure you want to delete all entries from the appdata table? (yes/no): ")
+        query = "DELETE FROM category_app WHERE category_id = :category_id;"
+        params = {"category_id": category_id}
+
+        try:
+            self._database.execute(query, params)
+        except Exception as e:
+            # Handle exceptions or log them as necessary
+            raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
+
+    def remove_all(self) -> None:
+        """
+        Prompts the user for confirmation before deleting all entries from the appdata tables.
+
+        The method asks the user to confirm the deletion of all entries from the appdata tables.
+        If the user confirms by typing 'yes', the deletion is carried out; otherwise, the operation is canceled.
+
+        Returns:
+            None
+        """
+        confirmation = input("Are you sure you want to delete all entries from the appdata tables? (yes/no): ")
         if confirmation.lower() != 'yes':
             print("Deletion canceled.")
             return
+        else:
+            self._remove_all_appdata()
 
-        query = "DELETE FROM appdata"
+
+    def _remove_all_appdata(self) -> None:
+        """
+        Deletes all entries from the appdata table after user confirmation.
+
+        This method performs the actual deletion of all records from the appdata table in the database.
+        It should be called only after user confirmation through the `remove_all` method.
+
+        Raises:
+            Exception: If the delete operation fails due to a database error.
+
+        Returns:
+            None
+        """
+
+        query = "DELETE FROM appdata;"
+        try:
+            self._database.execute(query)
+            print("All entries from the appdata table have been deleted.")
+        except Exception as e:
+            # Handle exceptions or log them as necessary
+            raise Exception(f"Failed to delete all entries from appdata: {str(e)}")
+
+    def _remove_all_category_app_data(self) -> None:
+        """
+        Deletes all entries from the category_app table.
+
+        This method deletes all records from the category_app table in the database.
+        It is meant to be used for operations where all category-specific app data needs to be purged.
+
+        Raises:
+            Exception: If the delete operation fails due to a database error.
+
+        Returns:
+            None
+        """
+        query = "DELETE FROM category_app;"
         try:
             self._database.execute(query)
             print("All entries from the appdata table have been deleted.")
@@ -409,14 +474,12 @@ class AppDataRepo(Repo):
             raise Exception(f"Failed to delete all entries from appdata: {str(e)}")
 
     def _constitute_appdata(
-        self, appdata_row: Dict[str, Any], categories: List[int], urls: List[Dict[str, str]]
-    ) -> AppData:
+        self, appdata_row: Dict[str, Any], categories: List[int]) -> AppData:
         """Create an AppData object from the retrieved data.
 
         Args:
             appdata_row (Dict[str, Any]): A dictionary containing app data fields.
             categories (List[int]): A list of category IDs associated with the app.
-            urls (List[Dict[str, str]]): A list of dictionaries containing URLs and their types.
 
         Returns:
             AppData: An instance of the AppData class populated with the provided data.
