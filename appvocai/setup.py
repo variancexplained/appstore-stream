@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/setup.py                                                                  #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Saturday August 31st 2024 02:02:08 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,62 +25,40 @@ import pandas as pd
 from dependency_injector.wiring import Provide, inject
 from sqlalchemy.types import DATETIME, INTEGER, VARCHAR
 
-from appvocai.container import appvocaiContainer
+from appvocai.container import AppVoCAIContainer
+from appvocai.core.data import NestedNamespace
 from appvocai.infra.base.config import Config
-from appvocai.infra.database.mysql import MySQLDBA
-from appvocai.infra.repo.project import ProjectRepo
+from appvocai.infra.database.base import Database
+from appvocai.infra.database.schema import schema
 
-
+# ------------------------------------------------------------------------------------------------ #
+logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 @inject
 def setup_database(
-    env: str,
-    config: Config,
-    repo: ProjectRepo = Provide[appvocaiContainer.data.project_repo],
+    database: Database
 ) -> None:
     """
-    Sets up the database based on the given environment name.
+    Sets up the database based on the current environment name.
 
     Args:
-        env (str): The environment name (e.g., 'prod', 'dev', 'test').
-        config (Config): A Configuration object.
+        database (Database): A Database object.
 
     Raises:
         ValueError: If the provided environment name is not valid.
     """
-    if env not in ["prod", "dev", "test"]:
-        raise ValueError(
-            f"Invalid environment: {env}. Choose from 'prod', 'dev', 'test'."
-        )
-
-    # Change the environment.
-    config.change_environment(new_value=env)
-
-    # Setup the database for the environment
-    dba = MySQLDBA(config_cls=Config)
-    dba.create_database(dbname=config.database.dbname)
-    print("Database created.")
 
     # Setup Tables
     dba.create_tables(
-        dbname=config.database.dbname,
-        ddl_directory=config.database.ddl_directory,
+        dbname=dbname,
+        ddl_directory=ddl_directory,
     )
-    print("Tables created.")
+    logger.info("Tables created.")
 
     # Load project table
     dtypes = {
-        "project_id": INTEGER,
-        "dataset": VARCHAR,
         "category_id": INTEGER,
         "category": VARCHAR,
-        "project_priority": INTEGER,
-        "bookmark": INTEGER,
-        "n_jobs": INTEGER,
-        "last_job_id": VARCHAR,
-        "last_job_ended": DATETIME,
-        "last_job_status": VARCHAR,
-        "project_status": VARCHAR,
     }
     try:
         df = pd.read_csv(config.database.project_data_filepath, index_col=None)
@@ -93,11 +71,12 @@ def setup_database(
         print(f"Project table already exists.")
 
 
-def setup_dependencies():
-    container = appvocaiContainer()
+def setup_dependencies() -> AppVoCAIContainer:
+    container = AppVoCAIContainer()
     container.init_resources()
     container.wire(modules=[__name__])
-    print("Dependency Container Created and Wired")
+    logger.info("Dependency Container Created and Wired")
+    return container
 
 
 @click.command()
@@ -111,8 +90,9 @@ def main(env):
 
     config = Config()
     try:
-        setup_dependencies()
-        setup_database(env=env, config=config)
+        container = setup_dependencies()
+        database = container.db.mysql
+        setup_database(config=config, database=database)
         print("Environment setup complete.")
     except ValueError as e:
         print(e)

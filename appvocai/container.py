@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Thursday August 29th 2024 06:23:22 pm                                               #
+# Modified   : Friday August 30th 2024 05:19:39 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -48,7 +48,7 @@ class LoggingContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class PersistenceContainer(containers.DeclarativeContainer):
 
-    database = providers.Singleton(MySQLDatabase)
+    mysql = providers.Singleton(MySQLDatabase)
 # ------------------------------------------------------------------------------------------------ #
 #                                       ASESSION                                                   #
 # ------------------------------------------------------------------------------------------------ #
@@ -86,12 +86,14 @@ class PersistenceContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 #                                       FRAMEWORK                                                  #
 # ------------------------------------------------------------------------------------------------ #
-class appvocaiContainer(containers.DeclarativeContainer):
+class AppVoCAIContainer(containers.DeclarativeContainer):
 
     config_filepath = Config().filepath
 
     config = providers.Configuration(yaml_files=[config_filepath])
 
     logs = providers.Container(LoggingContainer, config=config)
+
+    db = providers.Container(PersistenceContainer)
 
     # session = providers.Container(AdapterContainer, config=config)

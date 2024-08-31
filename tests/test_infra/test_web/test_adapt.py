@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /tests/test_infra/test_web/test_adapt.py                                            #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 23rd 2024 03:02:47 pm                                                 #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Friday August 30th 2024 12:32:50 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,19 +25,13 @@ from typing import Any, Optional
 import pytest
 from dependency_injector.containers import Container
 
-from appvocai.container import appvocaiContainer
-from appvocai.infra.web.adapter import (
-    Adapter,
-    AdapterBaselineStage,
-    AdapterConcurrencyExploreStage,
-    AdapterExploitStage,
-    AdapterRateExploreStage,
-)
-from appvocai.infra.web.profile import (
-    SessionControl,
-    SessionHistory,
-    SessionStats,
-)
+from appvocai.container import AppVoCAIContainer
+from appvocai.infra.web.adapter import (Adapter, AdapterBaselineStage,
+                                        AdapterConcurrencyExploreStage,
+                                        AdapterExploitStage,
+                                        AdapterRateExploreStage)
+from appvocai.infra.web.profile import (SessionControl, SessionHistory,
+                                        SessionStats)
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long
@@ -80,7 +74,7 @@ class TestAdapt:  # pragma: no cover
     # ============================================================================================ #
     def test_baseline(
         self,
-        container: appvocaiContainer,
+        container: AppVoCAIContainer,
         monkeypatch,
         caplog: Any,
     ) -> None:  # type: ignore[no-untyped-def]

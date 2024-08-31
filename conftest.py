@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /conftest.py                                                                        #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Thursday August 29th 2024 01:09:26 am                                               #
+# Modified   : Friday August 30th 2024 05:20:34 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -29,13 +29,14 @@ from prometheus_client import CollectorRegistry
 
 from appvocai.application.job.project import Project
 from appvocai.application.task.base import Task
+from appvocai.container import AppVoCAIContainer
 from appvocai.core.enum import *
 from appvocai.infra.base.config import Config
 from appvocai.infra.web.profile import (SessionHistory, SessionProfile,
                                         SessionStats)
 from tests.test_infra.test_web.test_adapt import MockSessionHistory
 
-# from appvocai.container import appvocaiContainer
+# from appvocai.container import AppVoCAIContainer
 
 
 
@@ -59,12 +60,12 @@ def mode() -> Generator[Any, Any, Any]:
 # ------------------------------------------------------------------------------------------------ #
 #                              DEPENDENCY INJECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="function", autouse=True)
-# def container() -> Container:
-#     container = appvocaiContainer()
-#     container.init_resources()
-#     container.wire(modules=["appvocai.infra.web.adapter"])
-#     return container
+@pytest.fixture(scope="function", autouse=True)
+def container() -> Container:
+    container = AppVoCAIContainer()
+    container.init_resources()
+    container.wire(modules=["appvocai.infra.web.adapter"])
+    return container
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -112,7 +113,7 @@ def session_history() -> SessionHistory:
 #                                     ADAPTER                                                      #
 # ------------------------------------------------------------------------------------------------ #
 # @pytest.fixture(scope="function", autouse=False)
-# def adapter(container: appvocaiContainer) -> Adapter:
+# def adapter(container: AppVoCAIContainer) -> Adapter:
 
 #     baseline = container.session.baseline()
 #     rate = container.session.rate()

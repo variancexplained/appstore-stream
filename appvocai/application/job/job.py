@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/application/job/job.py                                                    #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:14:31 pm                                              #
-# Modified   : Thursday August 29th 2024 01:10:32 am                                               #
+# Modified   : Friday August 30th 2024 12:14:43 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -88,7 +88,7 @@ class Job(DataClass):
             self.id = str(uuid4())  # Generate a UUID for the job ID
         self.created = datetime.now(timezone.utc)
         if not self.description:
-            self.description = f"Job to obtain {self.project.content_type.value} for the {self.project.category.name} category."
+            self.description = f"Job to obtain {self.project.content_type.value} for the {self.project.category.display_name} category." # type: ignore
 
     def __iter__(self) -> 'Job':
         """Return the Job instance itself for iteration."""

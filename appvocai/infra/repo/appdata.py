@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Thursday August 29th 2024 09:08:27 pm                                               #
+# Modified   : Friday August 30th 2024 02:16:09 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,7 +21,7 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from appvocai.core.enum import AppDataURLType, Category
+from appvocai.core.enum import Category
 from appvocai.domain.content.appdata import AppData
 from appvocai.domain.repo.base import Repo
 from appvocai.infra.database.mysql import MySQLDatabase
@@ -38,13 +38,13 @@ class AppDataRepo(Repo):
         logger (logging.Logger): Logger for recording operational messages.
     """
 
-    def __init__(self, database: MySQLDatabase) -> None:
+    def _init_(self, database: MySQLDatabase) -> None:
         """Initializes the AppDataRepo with a given database instance.
 
         Args:
             database (MySQLDatabase): The database connection instance.
         """
-        super().__init__()
+
         self._database = database
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
@@ -68,7 +68,7 @@ class AppDataRepo(Repo):
         row = result.fetchone()  # Fetch the first row
         return dict(row) if row else {}
 
-    def get_categories(self, id_value: int) -> List[int]:
+    def get_app_categories(self, id_value: int) -> List[int]:
         """Retrieve the categories associated with a specific app.
 
         Args:
@@ -87,7 +87,7 @@ class AppDataRepo(Repo):
         rows = result.fetchall()  # Fetch all rows
         return [row.category_id for row in rows]
 
-    def get_urls(self, id_value: int) -> List[Dict[str, str]]:
+    def get_app_urls(self, id_value: int) -> List[Dict[str, str]]:
         """Retrieve URLs associated with a specific app.
 
         Args:
@@ -105,82 +105,6 @@ class AppDataRepo(Repo):
         result = self._database.execute(query=query, params=params)
         rows = result.fetchall()  # Fetch all rows
         return [dict(row) for row in rows]
-
-
-    def constitute_appdata(
-        self, appdata_row: Dict[str, Any], categories: List[int], urls: List[Dict[str, str]]
-    ) -> AppData:
-        """Create an AppData object from the retrieved data.
-
-        Args:
-            appdata_row (Dict[str, Any]): A dictionary containing app data fields.
-            categories (List[int]): A list of category IDs associated with the app.
-            urls (List[Dict[str, str]]): A list of dictionaries containing URLs and their types.
-
-        Returns:
-            AppData: An instance of the AppData class populated with the provided data.
-
-        Raises:
-            ValueError: If app_id is None or if any required field is missing.
-
-        Logs:
-            - Logs an error if app_id is None.
-            - Logs the successful creation of an AppData object.
-        """
-        app_id = appdata_row.get('app_id')
-        if app_id is None:
-            msg = "app_id cannot be None"
-            self._logger.exception(msg)
-            raise ValueError(msg)
-
-        # Use default values for optional fields
-        app_name = appdata_row.get('app_name', "Unknown")
-        app_censored_name = appdata_row.get('app_censored_name', "Unknown")
-        bundle_id = appdata_row.get('bundle_id', "Unknown")
-
-        # Extract URL lists based on type
-        ipad_screenshot_urls = [url['url'] for url in urls if url['url_type'] == AppDataURLType.IPAD.value]
-        screenshot_urls = [url['url'] for url in urls if url['url_type'] == AppDataURLType.SCREENSHOT.value]
-
-        # Log the successful creation of an AppData object
-        app_data = AppData(
-            app_id=app_id,
-            app_name=app_name,
-            app_censored_name=app_censored_name,
-            bundle_id=bundle_id,
-            description=appdata_row.get('description'),
-            category_id=appdata_row.get('category_id'),
-            category=appdata_row.get('category'),
-            price=appdata_row.get('price'),
-            currency=appdata_row.get('currency'),
-            average_user_rating=appdata_row.get('average_user_rating'),
-            average_user_rating_current_version=appdata_row.get('average_user_rating_current_version'),
-            user_rating_count=appdata_row.get('user_rating_count'),
-            user_rating_current_version=appdata_row.get('user_rating_current_version'),
-            developer_id=appdata_row.get('developer_id'),
-            developer_name=appdata_row.get('developer_name'),
-            developer_view_url=appdata_row.get('developer_view_url'),
-            seller_name=appdata_row.get('seller_name'),
-            seller_url=appdata_row.get('seller_url'),
-            app_content_rating=appdata_row.get('app_content_rating'),
-            content_advisory_rating=appdata_row.get('content_advisory_rating'),
-            file_size_bytes=appdata_row.get('file_size_bytes'),
-            minimum_os_version=appdata_row.get('minimum_os_version'),
-            version=appdata_row.get('version'),
-            release_date=appdata_row.get('release_date'),
-            release_notes=appdata_row.get('release_notes'),
-            current_version_release_date=appdata_row.get('current_version_release_date'),
-            artwork_url100=appdata_row.get('artwork_url100'),
-            app_view_url=appdata_row.get('app_view_url'),
-            artwork_url512=appdata_row.get('artwork_url512'),
-            artwork_url60=appdata_row.get('artwork_url60'),
-            extract_date=appdata_row.get('extract_date'),
-            categories=categories,
-            ipad_screenshot_urls=ipad_screenshot_urls,
-            screenshot_urls=screenshot_urls
-        )
-
-        return app_data
 
 
     def get(self, id_value: int) -> AppData:
@@ -204,9 +128,9 @@ class AppDataRepo(Repo):
                         given ID.
         """
         appdata_row = self.get_appdata(id_value)
-        categories = self.get_categories(id_value)
-        urls = self.get_urls(id_value)
-        return self.constitute_appdata(appdata_row=appdata_row, categories=categories, urls=urls)
+        categories = self.get_app_categories(id_value)
+        urls = self.get_app_urls(id_value)
+        return self._constitute_appdata(appdata_row=appdata_row, categories=categories, urls=urls)
 
 
     def get_by_category(self, category: Category) -> pd.DataFrame:
@@ -232,7 +156,7 @@ class AppDataRepo(Repo):
         return self._database.query(query=query, params={"category_id": category.value})
 
 
-    def batch_upsert_appdata(self, app_data_list: List[AppData]) -> None:
+    def add(self, app_data_list: List[AppData]) -> None:
         """
         Batch upsert multiple app data records into the database.
 
@@ -265,24 +189,25 @@ class AppDataRepo(Repo):
 
         query = """
             INSERT INTO appdata (app_id, app_name, app_censored_name, bundle_id, description,
-                                category_id, category, price, currency, average_user_rating,
-                                average_user_rating_current_version, user_rating_count,
-                                user_rating_current_version, developer_id, developer_name,
-                                developer_view_url, seller_name, seller_url,
-                                app_content_rating, content_advisory_rating,
+                                category_id, category, price, currency, rating_average,
+                                rating_average_current_version, rating_average_current_version_change,
+                                rating_average_current_version_pct_change, rating_count,
+                                rating_count_current_version, developer_id, developer_name,
+                                seller_name,  app_content_rating, content_advisory_rating,
                                 file_size_bytes, minimum_os_version, version,
-                                release_date, release_notes, current_version_release_date,
-                                artwork_url100, app_view_url, artwork_url512, artwork_url60,
-                                extract_date)
+                                release_date, release_notes, release_date_current_version,
+                                url_developer_view, url_seller, url_app_view, url_artwork_100,
+                                url_artwork_512, url_artwork_60, extract_date)
             VALUES (:app_id, :app_name, :app_censored_name, :bundle_id, :description,
-                    :category_id, :category, :price, :currency, :average_user_rating,
-                    :average_user_rating_current_version, :user_rating_count,
-                    :user_rating_current_version, :developer_id, :developer_name,
-                    :developer_view_url, :seller_name, :seller_url,
-                    :app_content_rating, :content_advisory_rating,
+                    :category_id, :category, :price, :currency, :rating_average,
+                    :rating_average_current_version, :rating_count,
+                    :rating_count_current_version, :developer_id, :developer_name,
+                    :seller_name, :app_content_rating, :content_advisory_rating,
                     :file_size_bytes, :minimum_os_version, :version,
-                    :release_date, :release_notes, :current_version_release_date,
-                    :artwork_url100, :app_view_url, :artwork_url512, :artwork_url60,
+                    :release_date, :release_notes, :release_date_current_version,
+                    :url_developer_view, :url_seller, :url_app_view,
+                    :url_artwork_100, :url_artwork_512, :url_artwork_60,
+                    :urls_screenshot_ipad, :urls_screenshot_iphone,
                     :extract_date)
             ON DUPLICATE KEY UPDATE
                 app_name = VALUES(app_name),
@@ -293,15 +218,15 @@ class AppDataRepo(Repo):
                 category = VALUES(category),
                 price = VALUES(price),
                 currency = VALUES(currency),
-                average_user_rating = VALUES(average_user_rating),
-                average_user_rating_current_version = VALUES(average_user_rating_current_version),
-                user_rating_count = VALUES(user_rating_count),
-                user_rating_current_version = VALUES(user_rating_current_version),
+                rating_average = VALUES(rating_average),
+                rating_average_current_version = VALUES(rating_average_current_version),
+                rating_average_current_version_change = VALUES(rating_average_current_version_change),
+                rating_average_current_version_pct_change = VALUES(rating_average_current_version_pct_change),
+                rating_count = VALUES(rating_count),
+                rating_count_current_version = VALUES(rating_count_current_version),
                 developer_id = VALUES(developer_id),
                 developer_name = VALUES(developer_name),
-                developer_view_url = VALUES(developer_view_url),
                 seller_name = VALUES(seller_name),
-                seller_url = VALUES(seller_url),
                 app_content_rating = VALUES(app_content_rating),
                 content_advisory_rating = VALUES(content_advisory_rating),
                 file_size_bytes = VALUES(file_size_bytes),
@@ -309,11 +234,15 @@ class AppDataRepo(Repo):
                 version = VALUES(version),
                 release_date = VALUES(release_date),
                 release_notes = VALUES(release_notes),
-                current_version_release_date = VALUES(current_version_release_date),
-                artwork_url100 = VALUES(artwork_url100),
-                app_view_url = VALUES(app_view_url),
-                artwork_url512 = VALUES(artwork_url512),
-                artwork_url60 = VALUES(artwork_url60),
+                release_date_current_version = VALUES(release_date_current_version),
+                url_developer_view = VALUES(url_developer_view),
+                url_seller = VALUES(url_seller),
+                url_app_view = VALUES(url_app_view),
+                url_artwork_100 = VALUES(url_artwork_100),
+                url_artwork_512 = VALUES(url_artwork_512),
+                url_artwork_60 = VALUES(url_artwork_60),
+                urls_screenshot_ipad = VALUES(urls_screenshot_ipad),
+                urls_screenshot_iphone = VALUES(urls_screenshot_iphone),
                 extract_date = VALUES(extract_date)
             """
 
@@ -329,15 +258,15 @@ class AppDataRepo(Repo):
                     "category": app_data.category,
                     "price": app_data.price,
                     "currency": app_data.currency,
-                    "average_user_rating": app_data.average_user_rating,
-                    "average_user_rating_current_version": app_data.average_user_rating_current_version,
-                    "user_rating_count": app_data.user_rating_count,
-                    "user_rating_current_version": app_data.user_rating_current_version,
+                    "rating_average": app_data.rating_average,
+                    "rating_average_current_version": app_data.rating_average_current_version,
+                    "rating_average_current_version_change": app_data.rating_average_current_version_change,
+                    "rating_average_current_version_pct_change": app_data.rating_average_current_version_pct_change,
+                    "rating_count": app_data.rating_count,
+                    "rating_count_current_version": app_data.rating_count_current_version,
                     "developer_id": app_data.developer_id,
                     "developer_name": app_data.developer_name,
-                    "developer_view_url": app_data.developer_view_url,
                     "seller_name": app_data.seller_name,
-                    "seller_url": app_data.seller_url,
                     "app_content_rating": app_data.app_content_rating,
                     "content_advisory_rating": app_data.content_advisory_rating,
                     "file_size_bytes": app_data.file_size_bytes,
@@ -345,11 +274,15 @@ class AppDataRepo(Repo):
                     "version": app_data.version,
                     "release_date": app_data.release_date,
                     "release_notes": app_data.release_notes,
-                    "current_version_release_date": app_data.current_version_release_date,
-                    "artwork_url100": app_data.artwork_url100,
-                    "app_view_url": app_data.app_view_url,
-                    "artwork_url512": app_data.artwork_url512,
-                    "artwork_url60": app_data.artwork_url60,
+                    "release_date_current_version": app_data.release_date_current_version,
+                    "url_developer_view": app_data.url_developer_view,
+                    "url_seller": app_data.url_seller,
+                    "url_app_view": app_data.url_app_view,
+                    "url_artwork_100": app_data.url_artwork_100,
+                    "url_artwork_512": app_data.url_artwork_512,
+                    "url_artwork_60": app_data.url_artwork_60,
+                    "urls_screenshot_ipad": app_data.urls_screenshot_ipad,
+                    "urls_screenshot_iphone": app_data.urls_screenshot_iphone,
                     "extract_date": app_data.extract_date
                 }
                 for app_data in app_data_list
@@ -360,12 +293,11 @@ class AppDataRepo(Repo):
 
         # Handle categories and URLs for all app_data
         for app_data in app_data_list:
-            self.upsert_categories(app_data.app_id, app_data.categories)
-            self.upsert_urls(app_data.app_id, app_data.ipad_screenshot_urls, AppDataURLType.IPAD)
-            self.upsert_urls(app_data.app_id, app_data.screenshot_urls, AppDataURLType.SCREENSHOT)
+            if app_data.categories:
+                self.add_app_categories(app_data.app_id, app_data.categories)
 
 
-    def upsert_categories(self, app_id: int, categories: List[int]) -> None:
+    def add_app_categories(self, app_id: int, categories: List[int]) -> None:
         """
         Upsert categories associated with the specified app.
 
@@ -390,7 +322,7 @@ class AppDataRepo(Repo):
         Example:
             app_id = 12345
             categories = [1, 2, 3]
-            upsert_categories(app_id, categories)
+            add_app_categories(app_id, categories)
         """
         if not categories:
             return
@@ -414,54 +346,138 @@ class AppDataRepo(Repo):
             with self._database as db:
                 db.execute(query=query, params=params)
 
-    def upsert_urls(self, app_id: int, urls: List[str], url_type: AppDataURLType) -> None:
-        """
-        Upsert URLs associated with the specified app.
 
-        This method takes an app ID, a list of URLs, and a URL type,
-        and performs an upsert operation to associate the provided
-        URLs with the app. If the URLs list is empty, the method
-        will return without making any changes.
+
+    def remove(self, id_value: int) -> None:
+        """
+        Deletes an entry from the appdata table based on the provided app_id.
 
         Args:
-            app_id (int): The unique identifier of the app for which
-                        URLs are being upserted.
-            urls (List[str]): A list of URLs to be associated with
-                            the app.
-            url_type (AppDataURLType): The type of the URLs being
-                                        associated (e.g., screenshot,
-                                        iPad).
-
-        Returns:
-            None: This method does not return a value.
+            app_id (int): The ID of the app to delete from the appdata table.
 
         Raises:
-            ValueError: If the app_id is invalid or if there are
-                        issues with the database operation.
-
-        Example:
-            app_id = 12345
-            urls = ['http://example.com/image1.png', 'http://example.com/image2.png']
-            url_type = AppDataURLType.SCREENSHOT
-            upsert_urls(app_id, urls, url_type)
+            Exception: If the delete operation fails due to a database error.
         """
-        if not urls:
+        query = "DELETE FROM appdata WHERE app_id = :app_id"
+        params = {"app_id": id_value}
+
+        try:
+            self._database.execute(query, params)
+        except Exception as e:
+            # Handle exceptions or log them as necessary
+            raise Exception(f"Failed to delete app with ID {id_value}: {str(e)}")
+
+
+    def remove_by_category_id(self, category_id: int) -> None:
+        """
+        Deletes entries from the appdata table based on the provided category_id.
+
+        Args:
+            category_id (int): The ID of the category to delete from the appdata table.
+
+        Raises:
+            Exception: If the delete operation fails due to a database error.
+        """
+        query = "DELETE FROM appdata WHERE category_id = :category_id"
+        params = {"category_id": category_id}
+
+        try:
+            self._database.execute(query, params)
+        except Exception as e:
+            # Handle exceptions or log them as necessary
+            raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
+
+
+    def remove_all(self) -> None:
+        """
+        Deletes all entries from the appdata table after user confirmation.
+
+        Raises:
+            Exception: If the delete operation fails due to a database error.
+        """
+        confirmation = input("Are you sure you want to delete all entries from the appdata table? (yes/no): ")
+        if confirmation.lower() != 'yes':
+            print("Deletion canceled.")
             return
 
+        query = "DELETE FROM appdata"
+        try:
+            self._database.execute(query)
+            print("All entries from the appdata table have been deleted.")
+        except Exception as e:
+            # Handle exceptions or log them as necessary
+            raise Exception(f"Failed to delete all entries from appdata: {str(e)}")
 
-        # First delete existing URLs for the app of a specific type
-        query = """
-        DELETE FROM app_url WHERE app_id = :app_id AND url_type = :url_type
-        """
-        params={"app_id": app_id, "url_type": url_type.value}
-        with self._database as db:
-            db.execute(query=query, params=params)
+    def _constitute_appdata(
+        self, appdata_row: Dict[str, Any], categories: List[int], urls: List[Dict[str, str]]
+    ) -> AppData:
+        """Create an AppData object from the retrieved data.
 
-        # Insert new URLs for the app
-        query = """
-        INSERT INTO app_url (app_id, url_type, url) VALUES (:app_id, :url_type, :url)
+        Args:
+            appdata_row (Dict[str, Any]): A dictionary containing app data fields.
+            categories (List[int]): A list of category IDs associated with the app.
+            urls (List[Dict[str, str]]): A list of dictionaries containing URLs and their types.
+
+        Returns:
+            AppData: An instance of the AppData class populated with the provided data.
+
+        Raises:
+            ValueError: If app_id is None or if any required field is missing.
+
+        Logs:
+            - Logs an error if app_id is None.
+            - Logs the successful creation of an AppData object.
         """
-        for url in urls:
-            params = {"app_id": app_id, "url_type": url_type.value, "url": url}
-            with self._database as db:
-                db.execute(query=query, params=params)
+        app_id = appdata_row.get('app_id')
+        if app_id is None:
+            msg = "app_id cannot be None"
+            self._logger.exception(msg)
+            raise ValueError(msg)
+
+        # Use default values for optional fields
+        app_name = appdata_row.get('app_name', "Unknown")
+        app_censored_name = appdata_row.get('app_censored_name', "Unknown")
+        bundle_id = appdata_row.get('bundle_id', "Unknown")
+
+
+        # Log the successful creation of an AppData object
+        app_data = AppData(
+            app_id=app_id,
+            app_name=app_name,
+            app_censored_name=app_censored_name,
+            bundle_id=bundle_id,
+            description=appdata_row.get('description'),
+            category_id=appdata_row.get('category_id'),
+            category=appdata_row.get('category'),
+            categories=categories,
+            price=appdata_row.get('price'),
+            currency=appdata_row.get('currency'),
+            rating_average=appdata_row.get('rating_average'),
+            rating_average_current_version=appdata_row.get('rating_average_current_version'),
+            rating_average_current_version_change=appdata_row.get('rating_average_current_version_change'),
+            rating_average_current_version_pct_change=appdata_row.get('rating_average_current_version_pct_change'),
+            rating_count=appdata_row.get('rating_count'),
+            rating_count_current_version=appdata_row.get('rating_count_current_version'),
+            developer_id=appdata_row.get('developer_id'),
+            developer_name=appdata_row.get('developer_name'),
+            seller_name=appdata_row.get('seller_name'),
+            app_content_rating=appdata_row.get('app_content_rating'),
+            content_advisory_rating=appdata_row.get('content_advisory_rating'),
+            file_size_bytes=appdata_row.get('file_size_bytes'),
+            minimum_os_version=appdata_row.get('minimum_os_version'),
+            version=appdata_row.get('version'),
+            release_date=appdata_row.get('release_date'),
+            release_notes=appdata_row.get('release_notes'),
+            release_date_current_version=appdata_row.get('release_date_current_version'),
+            url_developer_view=appdata_row.get('url_developer_view'),
+            url_seller=appdata_row.get('url_seller'),
+            url_app_view=appdata_row.get('url_app_view'),
+            url_artwork_100=appdata_row.get('url_artwork_100'),
+            url_artwork_512=appdata_row.get('url_artwork_512'),
+            url_artwork_60=appdata_row.get('url_artwork_60'),
+            extract_date=appdata_row.get('extract_date'),
+            urls_screenshot_ipad=appdata_row.get("urls_screenshot_ipad"),
+            urls_screenshot_iphone=appdata_row.get("urls_screenshot_iphone"),
+        )
+
+        return app_data

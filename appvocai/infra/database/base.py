@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 11:20:33 pm                                                #
-# Modified   : Thursday August 29th 2024 08:51:10 pm                                               #
+# Modified   : Friday August 30th 2024 08:06:00 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -149,7 +149,7 @@ class Database(ABC):
     def insert(
         self,
         data: pd.DataFrame,
-        tablename: str,
+        table_name: str,
         dtype: Optional[Dict[str,Any]] = None,
         if_exists: Literal['fail', 'replace', 'append'] = "append",
     ) -> int:
@@ -157,7 +157,7 @@ class Database(ABC):
 
         Args:
             data (pd.DataFrame): DataFrame containing the data to add to the designated table.
-            tablename (str): The name of the table in the database. If the table does not exist, it will be created.
+            table_name (str): The name of the table in the database. If the table does not exist, it will be created.
             dtype (dict): Dictionary of data types for columns.
             if_exists (str): Action to take if table already exists. Valid values are ['append', 'replace', 'fail']. Default = 'append'
 
@@ -174,20 +174,20 @@ class Database(ABC):
 
         try:
             inserted_rows = data.to_sql(
-                tablename,
+                table_name,
                 con=self._connection,
                 if_exists=if_exists,
                 dtype=dtype,
                 index=False,
             )
-            self._logger.info(f"Inserted {inserted_rows} rows into {tablename}.")
+            self._logger.info(f"Inserted {inserted_rows} rows into {table_name}.")
             if inserted_rows is not None:
                 return inserted_rows
             else:
                 return 0
         except SQLAlchemyError as e:
             self._logger.exception(
-                f"Exception occurred during insert into {tablename}.\nException type: {type(e)}\n{e}"
+                f"Exception occurred during insert into {table_name}.\nException type: {type(e)}\n{e}"
             )
             raise
 
@@ -213,7 +213,6 @@ class Database(ABC):
         if self._connection is None:
             raise ValueError("Database connection is not established.")
 
-        self._logger.info(f"Executing query: {query} with params: {params}")
         return pd.read_sql(
             sql=text(query),
             con=self._connection,
@@ -242,7 +241,7 @@ class Database(ABC):
         if not params and self._requires_parameters(query):
             raise ValueError("Parameters are required for this query.")
 
-        self._logger.info(f"Executing command: {query} with params: {params}")
+
         return self._connection.execute(
             statement=text(query), parameters=params
         )
@@ -257,6 +256,25 @@ class Database(ABC):
                 text(query),
                 *param_list  # Pass the parameter list unpacked
             )
+
+    def count(self, table_name: str) -> int:
+        """Counts and returns the number of records in a table
+
+        Args:
+            table_name (str): Table name
+        """
+        try:
+            query = F"SELECT COUNT(*) FROM {table_name};"
+            result = self.execute(query=query)
+            count = result.scalar()
+            if isinstance(count,int):
+                return count
+            else:
+                return 0
+
+        except SQLAlchemyError as e:
+            self._logger.exception(f"Exception occurred in count method.\n{e}")
+            raise
 
     def _requires_parameters(self, query: str) -> bool:
         """Check if the query requires parameters.
@@ -306,7 +324,7 @@ class DBA(ABC):
         """
 
     @abstractmethod
-    def create_table(self, dbname: str, ddl_filepath: str) -> None:
+    def create_table(self, *args: Any, **kwargs: Any) -> None:
         """
         Creates a table from a DDL file.
 
@@ -316,7 +334,7 @@ class DBA(ABC):
         """
 
     @abstractmethod
-    def create_tables(self, dbname: str, ddl_directory: str) -> None:
+    def create_tables(self,*args: Any, **kwargs: Any) -> None:
         """
         Creates tables from all DDL files in a directory.
 
@@ -326,7 +344,7 @@ class DBA(ABC):
         """
 
     @abstractmethod
-    def table_exists(self, dbname: str, table_name: str) -> bool:
+    def table_exists(self, *args: Any, **kwargs:Any) -> bool:
         """
         Checks if a specific table exists in the specified database.
 

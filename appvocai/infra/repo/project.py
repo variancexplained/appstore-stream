@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/repo/project.py                                                     #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 12:53:41 pm                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Friday August 30th 2024 04:31:52 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -39,7 +39,7 @@ class ProjectRepo(AppLayerRepo):
         database (MySQLDatabase): The database instance used for operations.
     """
 
-    __tablename = "project"
+    __table_name = "project"
 
     def __init__(self, database: MySQLDatabase) -> None:
         """
@@ -64,7 +64,7 @@ class ProjectRepo(AppLayerRepo):
         with self._database as db:
             db.insert(
                 data=projects,
-                tablename=self.__tablename,
+                table_name=self.__table_name,
                 dtype=dtype,
                 if_exists="fail",
             )

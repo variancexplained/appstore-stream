@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Thursday August 29th 2024 06:37:57 pm                                               #
+# Modified   : Thursday August 29th 2024 09:42:05 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -163,19 +163,14 @@ class Config:
 
         """
 
-        config_filepath_base = os.getenv("CONFIG_FILEPATH_BASE")
         config_filepath_env = self.filepath
 
-        if config_filepath_base is not None:
-            # Load base config
-            with open(config_filepath_base, "r") as base_config_file:
-                base_config = yaml.safe_load(base_config_file)
-
+        if config_filepath_env is not None:
             # Load env config
             with open(config_filepath_env, "r") as env_config_file:
                 env_config = yaml.safe_load(env_config_file)
 
-            config = {**base_config, **env_config}
+            config = {**env_config}
 
             return config
         else:
