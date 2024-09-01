@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/domain/request/review.py                                                  #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 12:26:33 am                                                #
-# Modified   : Tuesday August 27th 2024 04:58:21 pm                                                #
+# Modified   : Sunday September 1st 2024 01:47:42 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass, field
-from typing import Collection, List
+from typing import Any, Collection, Dict, List
 
 from appvocai.domain.request.base import Request, RequestAsync, RequestGen
 from appvocai.infra.web.header import STOREFRONT
@@ -62,7 +62,7 @@ class RequestAppReview(Request):
         return f"https://itunes.apple.com/WebObjects/MZStore.woa/wa/userReviewsRow?id={self.app_id}&displayable-kind=11&startIndex={self.start_index}&endIndex={self.end_index}&sort=1"
 
     @property
-    def params(self) -> Collection[str]:
+    def params(self) -> Dict[str, Any]:
         """The AppReview Request has no parameters."""
         return {}
 # ------------------------------------------------------------------------------------------------ #

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/domain/response/review.py                                                 #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 02:00:33 pm                                                #
-# Modified   : Tuesday August 27th 2024 06:44:43 pm                                                #
+# Modified   : Sunday September 1st 2024 01:57:37 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,6 +30,7 @@ from appvocai.domain.response.base import Response
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class ResponseAppReview(Response):
+    n: int = 0 # Number of records in response
 
     def parse_request(self, request: Request) -> None:
         super().parse_request(request)

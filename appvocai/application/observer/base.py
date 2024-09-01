@@ -4,29 +4,33 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/task/base.py                                                  #
+# Filename   : /appvocai/application/observer/base.py                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Wednesday August 28th 2024 04:22:03 pm                                              #
-# Modified   : Saturday August 31st 2024 08:46:18 pm                                               #
+# Created    : Saturday August 31st 2024 08:52:56 pm                                               #
+# Modified   : Saturday August 31st 2024 09:16:50 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+"""Observer Base Module"""
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+
+from appvocai.domain.metrics.base import Metrics
+
 
 # ------------------------------------------------------------------------------------------------ #
-T = TypeVar('T')
-U = TypeVar('U')
-# ------------------------------------------------------------------------------------------------ #
-class Task(ABC, Generic[T, U]):
-    """Abstract base class for Task objects."""
+class Observer(ABC):
+    """Abstract base class for observers that respond to metrics updates."""
 
     @abstractmethod
-    def run(self, async_request: T) -> U:
-        """Executes the task."""
+    def update(self, metrics: Metrics) -> None:
+        """Updates observer with the latest metrics.
 
+        Args:
+            metrics (Metrics): The metrics object containing the latest data.
+        """
+        pass

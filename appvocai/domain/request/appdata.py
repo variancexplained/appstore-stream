@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/domain/request/appdata.py                                                 #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Tuesday August 27th 2024 05:04:24 pm                                                #
+# Modified   : Sunday September 1st 2024 01:46:45 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -72,7 +72,7 @@ class RequestAppData(Request):
         return next(self.header_list)
 
     @property
-    def params(self) -> Dict[str, object]:
+    def params(self) -> Dict[str, Any]:
         params = {
             "media": self.media,
             "genreId": self.genreId,
