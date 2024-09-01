@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Sunday September 1st 2024 03:46:24 am                                               #
+# Modified   : Sunday September 1st 2024 12:49:39 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,7 +28,7 @@ from appvocai.domain.metrics.load import MetricsLoad
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-class ObserverLoadMetrics(Observer):
+class ObserverLoadMetrics(Observer[MetricsLoad]):
     """
     Observer class for updating load-related Prometheus metrics.
     """
@@ -64,7 +64,7 @@ class ObserverLoadMetrics(Observer):
             ['content_type']
         )
 
-    def update(self, metrics: MetricsLoad) -> None:
+    def notify(self, metrics: MetricsLoad) -> None:
         """
         Updates the Prometheus metrics with data from a MetricsLoad object.
 

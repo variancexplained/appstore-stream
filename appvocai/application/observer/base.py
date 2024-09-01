@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:52:56 pm                                               #
-# Modified   : Sunday September 1st 2024 03:18:12 am                                               #
+# Modified   : Sunday September 1st 2024 12:45:37 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,15 +19,17 @@
 """Observer Base Module"""
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Generic, TypeVar
 
 from prometheus_client import start_http_server
 
 from appvocai.core.enum import ContentType
-
+from appvocai.domain.metrics.base import Metrics
 
 # ------------------------------------------------------------------------------------------------ #
-class Observer(ABC):
+T = TypeVar('T', bound='Metrics')
+# ------------------------------------------------------------------------------------------------ #
+class Observer(ABC, Generic[T]):
     """
     Base class for a metrics observer that starts a Prometheus server and updates metrics.
 
@@ -66,11 +68,11 @@ class Observer(ABC):
         pass
 
     @abstractmethod
-    def update(self, metrics: Any) -> None:
+    def notify(self, metrics: T) -> None:
         """
         Updates the Prometheus metrics based on the provided Metrics object.
 
         Args:
-            metrics (Any): The metrics object containing the data to be updated.
+            metrics (Metrics): The metrics object containing the data to be updated.
         """
         pass

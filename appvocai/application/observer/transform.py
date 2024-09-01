@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Sunday September 1st 2024 03:36:28 am                                               #
+# Modified   : Sunday September 1st 2024 12:49:57 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,7 +28,7 @@ from appvocai.domain.metrics.transform import MetricsTransform
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-class ObserverTransformMetrics(Observer):
+class ObserverTransformMetrics(Observer[MetricsTransform]):
     """
     Observer class for updating transform-related Prometheus metrics.
     """
@@ -69,7 +69,7 @@ class ObserverTransformMetrics(Observer):
             ['content_type']
         )
 
-    def update(self, metrics: MetricsTransform) -> None:
+    def notiffy(self, metrics: MetricsTransform) -> None:
         """
         Updates the Prometheus metrics with data from a MetricsTransform object.
 

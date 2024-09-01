@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Sunday September 1st 2024 02:31:27 am                                               #
+# Modified   : Sunday September 1st 2024 12:33:31 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -29,6 +29,7 @@ from aiohttp import ClientResponse
 
 from appvocai.core.data import DataClass
 from appvocai.domain.request.base import Request
+from appvocai.infra.web.profile import SessionControl
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -36,16 +37,29 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResponseAsync(DataClass):
     """Collection of Response objects as part of an asynchronous request."""
-    delay: float = 0
+    session_control: Optional[SessionControl] = None
     responses: List[Response] = field(default_factory=list)
 
-    @property
-    def adapted_request_rate(self) -> float:
-        if not self.responses:
-            return 0  # No responses, no rate
-        # When delay is 0, this means the rate is simply the natural throughput of the endpoint.
-        return len(self.responses) / self.delay if self.delay > 0 else len(self.responses)
+    def validate(self) -> None:
 
+        if not self.session_control:
+            msg = "session_control is None. It must be a valid SessionControl object. "
+            logger.exception(msg)
+            raise TypeError(msg)
+
+        if self.session_control.delay < 0:
+            msg = f"Negative values for delay {self.session_control.delay} are not permitted."
+            logger.exception(msg)
+            raise RuntimeError(msg)
+
+        if self.session_control.concurrency < 0:
+            msg = f"Negative values for concurrency {self.session_control.concurrency} are not permitted."
+            logger.exception(msg)
+            raise RuntimeError(msg)
+
+        if len(self.responses) == 0:
+            msg = "No responses in the ResponseAsync class"
+            logger.warning(msg)
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar('T', bound='Request')

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 11:13:39 am                                                #
-# Modified   : Sunday September 1st 2024 01:57:29 am                                               #
+# Modified   : Sunday September 1st 2024 11:52:53 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -41,4 +41,3 @@ class ResponseAppData(Response):
         content = await response.json(content_type=None)
         self.n = content.get("resultCount",0)
 
-# ------------------------------------------------------------------------------------------------ #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Sunday September 1st 2024 03:32:47 am                                               #
+# Modified   : Sunday September 1st 2024 12:41:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -42,7 +42,8 @@ class MetricsExtract(Metrics):
     speedup: float = 0.0  # Ratio of total latency to duration
     response_size: float = 0.0  # Total response size in bytes for all responses in the session
     throughput: float = 0.0  # Number of requests per second of duration
-    adapted_request_rate: float = 0.0  # The inverse of delay times requests
+    session_control_rate: float = 0.0  # The inverse of delay times requests
+    session_control_concurrency: float = 0.0 # Concurrency from the session adapter
     errors: int = 0  # Number of errors encountered in the session
 
     def compute(self, async_response: ResponseAsync) -> None:
@@ -57,7 +58,10 @@ class MetricsExtract(Metrics):
             async_response (ResponseAsync): An object containing the details of the asynchronous responses
             collected during the extraction session.
         """
-        self.adapted_request_rate = async_response.adapted_request_rate
+        if async_response.session_control:
+            self.session_control_rate = async_response.session_control.rate
+            self.session_control_concurrency = async_response.session_control.concurrency
+
         total_latency = 0.0
         for response in async_response.responses:
             self.requests += 1
@@ -97,8 +101,8 @@ class MetricsExtract(Metrics):
             logger.warning(f"Negative value for response_size: {self.response_size}")
         if self.throughput < 0:
             logger.warning(f"Negative value for throughput: {self.throughput}")
-        if self.adapted_request_rate < 0:
-            logger.warning(f"Negative value for adapted_request_rate: {self.adapted_request_rate}")
+        if self.session_control_rate < 0:
+            logger.warning(f"Negative value for session_control_rate: {self.session_control_rate}")
         if self.errors < 0:
             logger.warning(f"Negative value for errors: {self.errors}")
         if self.records < 0:

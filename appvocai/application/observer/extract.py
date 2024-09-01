@@ -11,13 +11,14 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Sunday September 1st 2024 03:20:09 am                                               #
+# Modified   : Sunday September 1st 2024 12:49:01 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Extract Observer Module"""
 import logging
+from typing import TypeVar
 
 from prometheus_client import Counter, Gauge, Histogram
 
@@ -28,7 +29,9 @@ from appvocai.domain.metrics.extract import MetricsExtract
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-class ObserverExtractMetrics(Observer):
+T = TypeVar('T')
+# ------------------------------------------------------------------------------------------------ #
+class ObserverExtractMetrics(Observer[MetricsExtract]):
     """
     Observer class for updating extract-related Prometheus metrics.
     """
@@ -74,11 +77,17 @@ class ObserverExtractMetrics(Observer):
         )
 
         # Histogram Metrics
-        self.extract_adapted_request_rate_ratio = Histogram(
-            'appvocai_extract_adapted_request_rate_ratio',
+        self.extract_session_control_rate_ratio = Histogram(
+            'appvocai_extract_session_control_rate_ratio',
             'Inverse of Duration * Concurrency',
             ['content_type']
         )
+        self.extract_session_control_concurrency = Histogram(
+            'appvocai_extract_session_control_concurrency',
+            'Concurrency computed by the Adapter ',
+            ['content_type']
+        )
+
         self.extract_duration_seconds = Histogram(
             'appvocai_extract_duration_seconds',
             'Duration Of Session',
@@ -100,7 +109,7 @@ class ObserverExtractMetrics(Observer):
             ['content_type']
         )
 
-    def update(self, metrics: MetricsExtract) -> None:
+    def notify(self, metrics: MetricsExtract) -> None:
         """
         Updates the Prometheus metrics with data from a MetricsExtract object.
 
@@ -121,7 +130,8 @@ class ObserverExtractMetrics(Observer):
             self.extract_response_size_bytes.labels(content_type=self._content_type.value).set(metrics.response_size)
 
             # Histogram metrics.
-            self.extract_adapted_request_rate_ratio.labels(content_type=self._content_type.value).observe(metrics.adapted_request_rate)
+            self.extract_session_control_rate_ratio.labels(content_type=self._content_type.value).observe(metrics.session_control_rate)
+            self.extract_session_control_concurrency.labels(content_type=self._content_type.value).observe(metrics.session_control_concurrency)
             self.extract_duration_seconds.labels(content_type=self._content_type.value).observe(metrics.duration)
             self.extract_latency_average_seconds.labels(content_type=self._content_type.value).observe(metrics.latency_average)
             self.extract_speedup_ratio.labels(content_type=self._content_type.value).observe(metrics.speedup)
