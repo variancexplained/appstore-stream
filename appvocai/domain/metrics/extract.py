@@ -11,22 +11,22 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Sunday September 1st 2024 02:34:02 am                                               #
+# Modified   : Sunday September 1st 2024 03:32:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from abc import abstractmethod
+"""Extract Metrics Module"""
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from appvocai.domain.metrics.base import Metrics
 from appvocai.domain.response.base import ResponseAsync
 
-
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-
+logger = logging.getLogger(__name__)
+# ------------------------------------------------------------------------------------------------ #
 @dataclass
 class MetricsExtract(Metrics):
     """
@@ -37,6 +37,7 @@ class MetricsExtract(Metrics):
     """
 
     requests: int = 0  # Number of requests in the session
+    records: int = 0 # Number of records returned in the session
     latency_average: float = 0.0  # Average latency over the session
     speedup: float = 0.0  # Ratio of total latency to duration
     response_size: float = 0.0  # Total response size in bytes for all responses in the session
@@ -44,28 +45,6 @@ class MetricsExtract(Metrics):
     adapted_request_rate: float = 0.0  # The inverse of delay times requests
     errors: int = 0  # Number of errors encountered in the session
 
-    def pre(self) -> None:
-        """
-        Marks the start time of the extract task.
-
-        This method should be called at the beginning of the extraction process to record
-        the current UTC time as the start time of the task.
-        """
-        self.start = datetime.now(timezone.utc)
-
-    def post(self) -> None:
-        """
-        Marks the end time of the extract task and computes its duration.
-
-        This method should be called at the end of the extraction process to record the current
-        UTC time as the end time. It also computes the task's duration by calculating the
-        difference between the end and start times.
-        """
-        self.end = datetime.now(timezone.utc)
-        if isinstance(self.start, datetime):
-            self.duration = (self.end - self.start).total_seconds()
-
-    @abstractmethod
     def compute(self, async_response: ResponseAsync) -> None:
         """
         Computes extract-related metrics based on the provided async response.
@@ -84,9 +63,43 @@ class MetricsExtract(Metrics):
             self.requests += 1
             if response.status == 200:
                 total_latency += response.latency
+                self.records += response.n
                 self.response_size += int(response.content_length)  # Convert content_length to int if needed
             else:
                 self.errors += 1
         self.latency_average = total_latency / self.requests if self.requests > 0 else 0
         self.speedup = total_latency / self.duration if self.duration > 0 else 0
         self.throughput = self.requests / self.duration if self.duration > 0 else 0
+
+
+    def validate(self) -> None:
+        """
+        Validates the metrics data.
+
+        This method is intended to be implemented by subclasses to perform specific validation
+        checks on the metrics data. The validation process should include checks for any invalid
+        or unexpected values (e.g., negative values where they shouldn't exist) and issue warnings
+        or raise errors as appropriate.
+
+        Subclasses should override this method to ensure that all metrics adhere to the expected
+        constraints and are safe to use in subsequent calculations or updates.
+
+        Raises:
+            ValueError: Subclasses may raise this exception if the validation fails critically.
+        """
+        if self.requests < 0:
+            logger.warning(f"Negative value for requests: {self.requests}")
+        if self.latency_average < 0:
+            logger.warning(f"Negative value for latency_average: {self.latency_average}")
+        if self.speedup < 0:
+            logger.warning(f"Negative value for speedup: {self.speedup}")
+        if self.response_size < 0:
+            logger.warning(f"Negative value for response_size: {self.response_size}")
+        if self.throughput < 0:
+            logger.warning(f"Negative value for throughput: {self.throughput}")
+        if self.adapted_request_rate < 0:
+            logger.warning(f"Negative value for adapted_request_rate: {self.adapted_request_rate}")
+        if self.errors < 0:
+            logger.warning(f"Negative value for errors: {self.errors}")
+        if self.records < 0:
+            logger.warning(f"Negative value for records: {self.records}")

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Sunday September 1st 2024 01:32:57 am                                               #
+# Modified   : Sunday September 1st 2024 03:07:31 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -73,3 +73,20 @@ class Metrics(DataClass):
             **kwargs: Arbitrary keyword arguments.
         """
         pass
+
+    @abstractmethod
+    def validate(self) -> None:
+        """
+        Validates the metrics data.
+
+        This method is intended to be implemented by subclasses to perform specific validation
+        checks on the metrics data. The validation process should include checks for any invalid
+        or unexpected values (e.g., negative values where they shouldn't exist) and issue warnings
+        or raise errors as appropriate.
+
+        Subclasses should override this method to ensure that all metrics adhere to the expected
+        constraints and are safe to use in subsequent calculations or updates.
+
+        Raises:
+            ValueError: Subclasses may raise this exception if the validation fails critically.
+        """
