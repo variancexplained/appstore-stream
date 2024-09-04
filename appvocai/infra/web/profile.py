@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/web/profile.py                                                      #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 06:48:22 am                                              #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Wednesday September 4th 2024 01:05:48 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ import statistics
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, List, Optional, Tuple
+from typing import Deque, Optional, Tuple
 from uuid import uuid4
 
 import numpy as np
@@ -56,9 +56,6 @@ class SessionProfile(DataClass):
     session_id: str = ""
     requests: int = 0
     responses: int = 0
-    retries: int = 0
-    errors: int = 0
-    error_codes: List[int] = field(default_factory=list)
     send_timestamp: float = 0
     recv_timestamp: float = 0
     latencies: Deque[Tuple[str, float, float]] = field(default_factory=deque)
@@ -351,8 +348,8 @@ class SessionHistory:
                     (sum((x - stats.average) ** 2 for x in latencies) / len(latencies))
                     ** 0.5
                 ) / stats.average
-            except ZeroDivisionError as e:
-                msg = f"Coefficient of variation for latency is underfined for zero mean. Returning zero."
+            except ZeroDivisionError:
+                msg = "Coefficient of variation for latency is underfined for zero mean. Returning zero."
                 self._logger.warning(msg)
                 stats.cv = 0
         return stats

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Tuesday September 3rd 2024 09:47:58 pm                                              #
+# Modified   : Tuesday September 3rd 2024 11:02:04 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,12 +19,13 @@
 from __future__ import annotations
 
 import logging
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar
 from uuid import uuid4
 
-from aiohttp import ClientResponse
+from aiohttp import ClientResponse, ClientResponseError
 
 from appvocai.core.data import DataClass
 from appvocai.core.enum import ContentType
@@ -202,9 +203,7 @@ class Response(DataClass):
 
         # Set response metadata
         self.status = response.status
-        self.content_length = self.parse_content_length(
-            content_length=response.headers.get("Content-Length", self.content_length)
-        )
+        self.content_length = self.parse_content_length(response=response)
         self.encoding = response.headers.get("Content-Encoding", self.encoding)
         self.response_datetime = datetime.now(timezone.utc)  # Current datetime in GMT
         self.latency = self.calculate_latency()
@@ -231,10 +230,13 @@ class Response(DataClass):
         else:
             return 0
 
-    def parse_content_length(self, content_length: Union[str, int]) -> int:
+    def parse_content_length(self, response: ClientResponse) -> int:
         try:
-            content_length_int = int(content_length)
-        except ValueError:
-            logger.warning(f"Invalid content length: {content_length}")
-            content_length_int = 0  # or handle the error appropriately
-        return content_length_int
+            return int(response.headers["Content-Length"])
+        except KeyError:
+            return sys.getsizeof(response.json(content_type=None))
+        except ClientResponseError:
+            return sys.getsizeof(response) - sys.getsizeof(response.headers)
+        except Exception:
+            logger.warning("Content length not provided and could not be inferred.")
+            return 0

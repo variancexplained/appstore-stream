@@ -4,29 +4,31 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/metrics/base.py                                               #
+# Filename   : /appvocai/infra/operator/base/metrics.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Tuesday September 3rd 2024 05:15:02 pm                                              #
+# Modified   : Wednesday September 4th 2024 03:53:11 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+from __future__ import annotations
+
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Generic, Optional
 
 from appvocai.core.data import DataClass
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class Metrics(DataClass):
+class Metrics(DataClass, Generic[T]):
     """
     Base class for capturing and computing task-related metrics.
 
@@ -63,7 +65,7 @@ class Metrics(DataClass):
             self.duration = (self.end - self.start).total_seconds()
 
     @abstractmethod
-    def compute(self, *args: Any, **kwargs: Any) -> None:
+    def compute(self, *args: Any, **kwargs: Any) -> Any:
         """
         Computes additional metrics based on the provided arguments.
 

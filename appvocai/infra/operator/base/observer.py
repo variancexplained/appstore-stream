@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/observer/base.py                                                    #
+# Filename   : /appvocai/infra/operator/base/observer.py                                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:52:56 pm                                               #
-# Modified   : Tuesday September 3rd 2024 05:20:21 pm                                              #
+# Modified   : Wednesday September 4th 2024 03:53:19 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,7 +19,7 @@
 """Observer Base Module"""
 import logging
 from abc import ABC, abstractmethod
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 from prometheus_client import start_http_server
 
@@ -30,7 +30,7 @@ T = TypeVar("T")
 
 
 # ------------------------------------------------------------------------------------------------ #
-class Observer(ABC):
+class Observer(ABC, Generic[T]):
     """
     Base class for a metrics observer that starts a Prometheus server and updates metrics.
 

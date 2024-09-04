@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/observer/extract.py                                                 #
+# Filename   : /appvocai/infra/operator/extract/observer.py                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Tuesday September 3rd 2024 10:28:33 pm                                              #
+# Modified   : Wednesday September 4th 2024 03:39:14 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,8 +23,8 @@ from typing import TypeVar
 from prometheus_client import Counter, Histogram
 
 from appvocai.core.enum import ContentType
-from appvocai.infra.observer.base import Observer
-from appvocai.infra.web.extractor import MetricsExtractor
+from appvocai.infra.operator.base.observer import Observer
+from appvocai.infra.operator.extract.extractor import MetricsExtractor
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ T = TypeVar("T")
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ObserverExtractorMetrics(Observer):
+class ObserverExtractorMetrics(Observer[MetricsExtractor]):
     """
     Observer class for updating extractor-related Prometheus metrics.
     """

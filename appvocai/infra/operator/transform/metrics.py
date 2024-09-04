@@ -4,19 +4,18 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/metrics/load.py                                               #
+# Filename   : /appvocai/infra/operator/transform/metrics.py                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Wednesday September 4th 2024 04:08:13 am                                            #
+# Created    : Friday July 19th 2024 04:42:55 am                                                   #
+# Modified   : Wednesday September 4th 2024 04:07:06 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Extract Metrics Module"""
 import logging
 from dataclasses import dataclass
 
@@ -28,46 +27,36 @@ logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class MetricsLoad(Metrics):
-    """
-    Class for capturing and computing load-related metrics.
+class MetricsTransformerAppData(Metrics):
+    """"""
 
-    This class tracks metrics related to the load phase of a task, including the number of records
-    loaded, throughput, and errors encountered during the process.
-    """
-
-    records: int = 0  # Number of records loaded
+    records_in: int = 0  # Number of input records
+    records_out: int = 0  # Number of output records
     throughput: float = 0.0  # Number of records processed per second of duration
-    errors: int = 0  # Number of errors encountered during the load process
 
-    def compute(self, records: int, errors: int = 0) -> None:
-        """
-        Computes load-related metrics based on the provided number of records and errors.
-
-        This method calculates the number of records loaded, throughput, and errors encountered
-        during the load phase.
-
-        Args:
-            records (int): The number of records loaded.
-            errors (int): The number of errors encountered during the load process. Defaults to 0.
-        """
-        self.records = records
-        self.errors = errors
-        self.throughput = self.records / self.duration if self.duration > 0 else 0.0
+    async def compute(self, records_in: int, records_out: int) -> None:
+        """"""
+        self.records_in = records_in
+        self.records_out = records_out
 
     def validate(self) -> None:
         """
-        Validates the load metrics data.
+        Validates the metrics data.
 
-        Checks for any invalid or unexpected values, such as negative values where they shouldn't exist,
-        and issues warnings as appropriate.
+        This method is intended to be implemented by subclasses to perform specific validation
+        checks on the metrics data. The validation process should include checks for any invalid
+        or unexpected values (e.g., negative values where they shouldn't exist) and issue warnings
+        or raise errors as appropriate.
+
+        Subclasses should override this method to ensure that all metrics adhere to the expected
+        constraints and are safe to use in subsequent calculations or updates.
 
         Raises:
-            ValueError: May be raised if the validation identifies critical issues.
+            ValueError: Subclasses may raise this exception if the validation fails critically.
         """
-        if self.records < 0:
-            logger.warning(f"Negative value for records: {self.records}")
-        if self.errors < 0:
-            logger.warning(f"Negative value for errors: {self.errors}")
+        if self.records_in < 0:
+            logger.warning(f"Negative value for records_in: {self.records_in}")
+        if self.records_out < 0:
+            logger.warning(f"Negative value for records_out: {self.records_out}")
         if self.throughput < 0:
             logger.warning(f"Negative value for throughput: {self.throughput}")

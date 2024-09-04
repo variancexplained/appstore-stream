@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Tuesday September 3rd 2024 01:47:04 pm                                              #
+# Modified   : Wednesday September 4th 2024 04:51:58 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,6 @@ import yaml
 from dotenv import dotenv_values, load_dotenv
 
 from appvocai.core.data import NestedNamespace
-from appvocai.infra.web.header import BrowserHeaders
 
 # ------------------------------------------------------------------------------------------------ #
 load_dotenv()
@@ -58,10 +57,9 @@ class Config:
         self._namespace_mode = namespace_mode
         self._config = self.load_config()
 
-
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def database(self) -> Union[Dict[str,Any], NestedNamespace]:
+    def database(self) -> Union[Dict[str, Any], NestedNamespace]:
         return (
             self.to_namespace(self._config["database"])
             if self._namespace_mode
@@ -70,7 +68,7 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def job(self) -> Union[Dict[str,Any], NestedNamespace]:
+    def job(self) -> Union[Dict[str, Any], NestedNamespace]:
         return (
             self.to_namespace(self._config["job"])
             if self._namespace_mode
@@ -79,7 +77,7 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def mysql(self) -> Union[Dict[str,Any], NestedNamespace]:
+    def mysql(self) -> Union[Dict[str, Any], NestedNamespace]:
         """
         Returns MySQL database name, backup location, and related parameters.
         """
@@ -112,10 +110,9 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def asession_config(self) -> NestedNamespace:
+    def extractor(self) -> NestedNamespace:
         config = self.load_config()
-        return self.to_namespace(config["asession"])
-
+        return self.to_namespace(config["extractor"])
 
     #  ------------------------------------------------------------------------------------------- #
     @property
@@ -127,13 +124,12 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def setup(self) -> Union[Dict[str,Any], NestedNamespace]:
+    def setup(self) -> Union[Dict[str, Any], NestedNamespace]:
         return (
             self.to_namespace(self._config["setup"])
             if self._namespace_mode
             else self._config["setup"]
         )
-
 
     #  ------------------------------------------------------------------------------------------- #
     def change_environment(self, new_value: str) -> None:
@@ -270,10 +266,14 @@ class Config:
                 data = yaml.safe_load(file)
                 return cast(Dict[str, Any], data)
         except FileNotFoundError:
-            self._logger.exception(f"Unable to read {content}. File not found at {filepath}.")
+            self._logger.exception(
+                f"Unable to read {content}. File not found at {filepath}."
+            )
             raise
         except yaml.YAMLError as e:
-            self._logger.exception(f"Exception while reading {content} from {filepath}\n{e}")
+            self._logger.exception(
+                f"Exception while reading {content} from {filepath}\n{e}"
+            )
             raise
 
     #  ------------------------------------------------------------------------------------------- #

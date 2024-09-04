@@ -4,32 +4,33 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/observer/error.py                                                   #
+# Filename   : /appvocai/infra/operator/transform/observer.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Tuesday September 3rd 2024 10:28:33 pm                                              #
+# Modified   : Wednesday September 4th 2024 03:57:06 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Error Observer Module"""
+"""Extract Observer Module"""
 import logging
 
-from prometheus_client import Counter
+from prometheus_client import Gauge, Histogram
 
+from appvocai.application.observer.base import Observer
 from appvocai.core.enum import ContentType
-from appvocai.infra.observer.base import Observer
+from appvocai.infra.operator.transform.metrics import MetricsTransform
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ObserverTransformMetrics(Observer):
+class ObserverTransformMetrics(Observer[MetricsTransform]):
     """
     Observer class for updating transform-related Prometheus metrics.
     """
@@ -43,7 +44,7 @@ class ObserverTransformMetrics(Observer):
         """
 
         # Gauge Metrics
-        self.errors_total = Counter(
+        self.transform_errors_total = Gauge(
             "appvocai_transform_errors_total",
             "Number Of Errors In Transform Step",
             ["content_type"],
@@ -71,7 +72,7 @@ class ObserverTransformMetrics(Observer):
             ["content_type"],
         )
 
-    def notify(self, subject: str, error_code: Op) -> None:
+    def notify(self, metrics: MetricsTransform) -> None:
         """
         Updates the Prometheus metrics with data from a MetricsTransform object.
 

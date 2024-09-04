@@ -4,39 +4,46 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/observer/transform.py                                               #
+# Filename   : /appvocai/infra/operator/error/observer.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Tuesday September 3rd 2024 05:38:06 pm                                              #
+# Modified   : Wednesday September 4th 2024 03:53:46 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Extract Observer Module"""
+"""Error Observer Module"""
 import logging
+from typing import TypeVar
 
-from prometheus_client import Gauge, Histogram
+from prometheus_client import Counter
 
-from appvocai.application.observer.base import Observer
 from appvocai.core.enum import ContentType
-from appvocai.domain.metrics.transform import MetricsTransform
+from appvocai.infra.operator.base.metrics import Metrics
+from appvocai.infra.operator.base.observer import Observer
+from appvocai.infra.operator.error.metrics import MetricsError
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ObserverTransformMetrics(Observer[MetricsTransform]):
+T = TypeVar("T", bound=Metrics)
+
+
+# ------------------------------------------------------------------------------------------------ #
+class ObserverError(Observer[MetricsError]):
     """
     Observer class for updating transform-related Prometheus metrics.
     """
 
     def __init__(self, content_type: ContentType):
-        super().__init__(content_type)
+        self._content_type = content_type
+        self._setup_metrics()
 
     def _setup_metrics(self) -> None:
         """
@@ -44,35 +51,13 @@ class ObserverTransformMetrics(Observer[MetricsTransform]):
         """
 
         # Gauge Metrics
-        self.transform_errors_total = Gauge(
-            "appvocai_transform_errors_total",
-            "Number Of Errors In Transform Step",
-            ["content_type"],
-        )
-        self.transform_records_in_total = Gauge(
-            "appvocai_transform_records_in_total",
-            "Number Of Transform Input Records",
-            ["content_type"],
-        )
-        self.transform_records_out_total = Gauge(
-            "appvocai_transform_records_out_total",
-            "Number Of Transform Output Records",
-            ["content_type"],
+        self.errors_total = Counter(
+            "appvocai_errors_total",
+            "Number Of Errors",
+            ["content_type", "error_type", "operator"],
         )
 
-        # Histogram Metrics
-        self.transform_duration_seconds = Histogram(
-            "appvocai_transform_duration_seconds",
-            "Duration Of Transform Step",
-            ["content_type"],
-        )
-        self.transform_throughput_ratio = Histogram(
-            "appvocai_transform_throughput_ratio",
-            "Ratio Of Number Of Records And Duration",
-            ["content_type"],
-        )
-
-    def notify(self, metrics: MetricsTransform) -> None:
+    def notify(self, metrics: MetricsError) -> None:
         """
         Updates the Prometheus metrics with data from a MetricsTransform object.
 
@@ -82,24 +67,11 @@ class ObserverTransformMetrics(Observer[MetricsTransform]):
         # Validate the metrics.
         metrics.validate()
         try:
-            # Update Gauges
-            self.transform_errors.labels(content_type=self._content_type.value).set(
-                metrics.errors
-            )
-            self.transform_records_in.labels(content_type=self._content_type.value).set(
-                metrics.records_in
-            )
-            self.transform_records_out.labels(
-                content_type=self._content_type.value
-            ).set(metrics.records_out)
-
-            # Update Histograms
-            self.transform_duration_seconds.labels(
-                content_type=self._content_type.value
-            ).observe(metrics.duration)
-            self.transform_throughput_ratio.labels(
-                content_type=self._content_type.value
-            ).observe(metrics.throughput)
+            self.errors_total.labels(
+                content_type=self._content_type.value,
+                error_type=metrics.error_type.value,
+                operator=metrics.operator,
+            ).inc()
 
         except Exception as e:
             logger.error(f"Failed to update metrics: {e}", exc_info=True)

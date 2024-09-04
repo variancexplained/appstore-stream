@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/web/adapter.py                                                      #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Wednesday September 4th 2024 01:06:09 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,6 +31,7 @@ from appvocai.core.data import NestedNamespace
 from appvocai.infra.web.profile import (
     SessionControl,
     SessionHistory,
+    SessionProfile,
     SessionStats,
     StatisticalSnapshot,
 )
@@ -239,13 +240,15 @@ class Adapter:
         _stage (AdapterStage): The current stage in the adaptive process.
     """
 
-    def __init__(self, initial_stage: AdapterBaselineStage) -> None:
+    def __init__(
+        self, initial_stage: AdapterBaselineStage, history: SessionHistory
+    ) -> None:
         """Initializes the Adapter with a starting stage.
 
         Args:
             initial_stage (AdapterBaselineStage): The initial stage to start the adaptation process.
         """
-        self._session_history: SessionHistory = SessionHistory()
+        self._session_history: SessionHistory = history
         self._session_control: SessionControl = SessionControl()
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.transition_to_stage(stage=initial_stage)
@@ -300,7 +303,7 @@ class Adapter:
             raise TypeError(msg)
         self._stage = stage
 
-    def adapt_requests(self, history: SessionHistory) -> None:
+    def adapt_requests(self, profile: SessionProfile) -> None:
         """Adapts the control values based on the session history.
 
         This method sets the session history and delegates the adaptation logic to the current stage.
@@ -308,7 +311,7 @@ class Adapter:
         Args:
             history (SessionHistory): The session history containing metrics for adaptation.
         """
-        self._session_history = history
+        self._session_history.add_profile(profile=profile)
         self._stage.adapt_requests()
 
     def transition_to_stage(self, stage: AdapterStage) -> None:
