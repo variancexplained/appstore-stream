@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Wednesday September 4th 2024 05:42:54 am                                            #
+# Modified   : Wednesday September 4th 2024 05:55:08 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -41,6 +41,40 @@ logger = logging.getLogger(__name__)
 #                                   EXTRACTOR                                                      #
 # ------------------------------------------------------------------------------------------------ #
 class Extractor:
+    """
+    Manages asynchronous HTTP requests and processes them using configured adapters and observers.
+
+    This class handles the creation and management of `aiohttp.ClientSession` objects, manages request retries,
+    logs errors, and notifies observers with metrics related to the extraction process.
+
+    Args:
+        connector (aiohttp.TCPConnector): The TCP connector to use for the session.
+        timeout (aiohttp.ClientTimeout): The timeout settings for the session.
+        cookie_jar (aiohttp.DummyCookieJar): The cookie jar to use for managing cookies in the session.
+        adapter (Adapter): An adapter for handling session control and rate/concurrency adaptation.
+        observer (ObserverExtractorMetrics): An observer for collecting and reporting task metrics.
+        error_observer (ObserverError): An observer for collecting and reporting error metrics.
+        config_cls (type[Config], optional): The configuration class to use. Defaults to `Config`.
+
+    Attributes:
+        _connector (aiohttp.TCPConnector): Stores the provided TCP connector.
+        _timeout (aiohttp.ClientTimeout): Stores the provided timeout settings.
+        _cookie_jar (aiohttp.DummyCookieJar): Stores the provided cookie jar.
+        _adapter (Adapter): Stores the provided adapter for session control.
+        _observer (ObserverExtractorMetrics): Stores the provided observer for task metrics.
+        _error_observer (ObserverError): Stores the provided observer for error metrics.
+        _config (Config): The extracted configuration instance.
+        _session_request_limit (int): Maximum number of requests per session.
+        _retries (int): Number of retries allowed per request.
+        _concurrency (int): Base concurrency level for the session.
+        _proxies (dict): Proxy settings from the configuration.
+        _session_request_count (int): Counter for the number of requests processed in the current session.
+        _session_active (bool): Indicates whether a session is currently active.
+        _session (Optional[aiohttp.ClientSession]): The active aiohttp client session.
+        _headers (BrowserHeaders): Iterator for cycling through browser headers.
+        _logger (logging.Logger): Logger instance for the class.
+    """
+
     def __init__(
         self,
         connector: aiohttp.TCPConnector,
@@ -51,7 +85,6 @@ class Extractor:
         error_observer: ObserverError,
         config_cls: type[Config] = Config,
     ) -> None:
-
         self._connector: aiohttp.TCPConnector = connector
         self._timeout: aiohttp.ClientTimeout = timeout
         self._cookie_jar = cookie_jar
@@ -60,59 +93,54 @@ class Extractor:
         self._error_observer = error_observer
         self._config: Config = config_cls()
 
-        # Extract primary configuration values
         self._session_request_limit: int = self._config.extractor.session_request_limit
         self._retries: int = self._config.extractor.retries
         self._concurrency: int = self._config.extractor.concurrency
         self._proxies = self._config.proxy
 
-        # Initialize counters,
         self._session_request_count: int = 0
         self._session_active = False
         self._session: Optional[aiohttp.ClientSession] = None
         self._headers: BrowserHeaders = BrowserHeaders()
 
-        self._session_active = False
-
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     async def __enter__(self) -> None:
+        """Creates and initializes the aiohttp client session."""
         await self._create_session()
 
     async def __exit__(self) -> None:
+        """Closes the aiohttp client session."""
         if self._session:
             await self._session.close()
             self._session_active = False
 
     async def get(self, async_request: RequestAsync[Request]) -> ResponseAsync:
+        """
+        Executes asynchronous HTTP GET requests, processes the responses, and returns them.
 
-        # Create a session profiler to capture stats for rate and concurrency adaptation object
+        Args:
+            async_request (RequestAsync[Request]): The asynchronous request object containing individual requests.
+
+        Returns:
+            ResponseAsync: The response object containing the individual responses and related metadata.
+        """
         profile = self._create_profile(async_request=async_request)
-        # Increment requests processed by the session and set request count no profile.
         self._session_request_count += async_request.n
-        # Update the concurrency Semaphore for the current concurrency value
         semaphore = asyncio.Semaphore(self._concurrency)
-        # Create the the asyncio concurrency tasks.
         tasks = [
             self.make_request(request, semaphore) for request in async_request.requests
         ]
 
-        # We wrap the request in a profile send/recv envelope to capture response time.
         profile.send()
         responses = await asyncio.gather(*tasks)
         profile.recv()
-        # Update the profile object with latencies and responses
         profile = self._update_profile(profile=profile, responses=responses)
-        # Adapt request rate and concurrency to current conditions
         self._adapter.adapt_requests(profile=profile)
-        # Execute the auto adapted delay
         delay = self._adapter.session_control.delay
-        # Execute the computed delay
         await asyncio.sleep(delay)
 
-        # Set the adapted concurrency
         self._concurrency = int(self._adapter.session_control.concurrency)
-        # Create the response object that encapsulates the request transaction
         response = ResponseAsync(
             request_count=async_request.n,
             response_count=len(responses),
@@ -120,11 +148,9 @@ class Extractor:
             responses=responses,
         )
 
-        # If the request limit has been exceeded, create a new session.
         if self._reset_session_if_expired():
             await self._create_session()
 
-        # Compute metrics and notify the observer.
         metrics = MetricsExtractor()
         metrics.compute(async_response=response)
         self._observer.notify(metrics=metrics)
@@ -132,6 +158,15 @@ class Extractor:
         return response
 
     def _create_profile(self, async_request: RequestAsync[Request]) -> SessionProfile:
+        """
+        Creates a session profile for tracking request and response metrics.
+
+        Args:
+            async_request (RequestAsync[Request]): The asynchronous request object.
+
+        Returns:
+            SessionProfile: The profile object for tracking session metrics.
+        """
         profile = SessionProfile()
         profile.requests = async_request.n
         return profile
@@ -139,6 +174,16 @@ class Extractor:
     def _update_profile(
         self, profile: SessionProfile, responses: List[Response]
     ) -> SessionProfile:
+        """
+        Updates the session profile with response metrics.
+
+        Args:
+            profile (SessionProfile): The session profile object.
+            responses (List[Response]): The list of response objects.
+
+        Returns:
+            SessionProfile: The updated session profile.
+        """
         profile.responses = len(responses)
         for response in responses:
             profile.add_latency(response.latency)
@@ -147,17 +192,22 @@ class Extractor:
     async def make_request(
         self, request: Request, semaphore: asyncio.Semaphore
     ) -> Optional[Response]:
+        """
+        Makes an individual HTTP GET request and processes the response.
 
-        # Create a response object and parse information from the request for logging purposes
+        Args:
+            request (Request): The request object containing the request details.
+            semaphore (asyncio.Semaphore): Semaphore to limit concurrent requests.
+
+        Returns:
+            Optional[Response]: The response object if the request is successful; None if all retries are exhausted.
+        """
         response = Response()
-
-        # Obtain headers if not already provided.
         headers = request.headers or next(self._headers)
 
         async with semaphore:
             while response.retries < self._retries:
                 try:
-                    # Parsing the request starts the latency clock.
                     response.parse_request(request=request)
                     if self._session:
                         async with self._session.get(
@@ -167,7 +217,6 @@ class Extractor:
                             params=request.params,
                         ) as resp:
                             resp.raise_for_status()
-                            # Parsing the response stops the latency clock.
                             await response.parse_response(response=resp)
                             return response
                     else:
@@ -218,16 +267,21 @@ class Extractor:
                     response.retries += 1
                     await asyncio.sleep(2**metrics.retries)  # Exponential backoff
 
-            # If all retries are exhausted, log and return None
             self._logger.error("Exhausted retries. Returning to calling environment.")
             return None
 
     async def _create_session(self) -> None:
+        """
+        Creates a new aiohttp.ClientSession with the provided settings.
 
+        If session creation fails, it will retry according to the configured retry policy.
+
+        Raises:
+            RuntimeError: If the session could not be established after all retries.
+        """
         attempt = 0
 
         while attempt < self._retries:
-
             try:
                 self._session = aiohttp.ClientSession(
                     connector=self._connector,
@@ -250,14 +304,20 @@ class Extractor:
                 self._logger.warning(msg)
                 await asyncio.sleep(2**self._retries)  # Exponential backoff
 
-        # If all retries are exhausted, turn the lights out. We're done.
-        msg = "Exhaused retries. Unable to establish an aiohttp.ClientSession."
+        msg = "Exhausted retries. Unable to establish an aiohttp.ClientSession."
         self._logger.exception(msg)
         raise RuntimeError(msg)
 
-    async def _reset_session_if_expired(self) -> None:
-        """Creates a new session if max requests per session exceeded."""
+    async def _reset_session_if_expired(self) -> bool:
+        """
+        Checks if the session request limit has been exceeded and resets the session if necessary.
+
+        Returns:
+            bool: True if the session was reset, False otherwise.
+        """
         if self._session_request_count > self._session_request_limit:
             if self._session_active and self._session:
                 await self._session.close()
             await self._create_session()
+            return True
+        return False
