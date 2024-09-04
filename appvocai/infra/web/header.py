@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/web/header.py                                                       #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:43:55 am                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Tuesday September 3rd 2024 02:19:13 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -69,6 +69,22 @@ class AppleStoreFrontHeader(Header):
     def __next__(self) -> Dict[str, Any]:
         """Returns an apple storefront header."""
         return self._headers
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               APPSTORE STOREFRONT HEADER                                         #
+# ------------------------------------------------------------------------------------------------ #
+SKIP_AUTO_HEADERS = {
+    "User-Agent",
+    "Accept",
+    "Accept-Language",
+    "Connection",
+    "Sec-Fetch-Dest",
+    "Sec-Fetch-Mode",
+    "Sec-Fetch-Site",
+    "Sec-Fetch-User",
+    "Upgrade-Insecure-Requests"
+}
 
 
 # ------------------------------------------------------------------------------------------------ #

@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/observer/base.py                                              #
+# Filename   : /appvocai/infra/observer/base.py                                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:52:56 pm                                               #
-# Modified   : Sunday September 1st 2024 12:45:37 pm                                               #
+# Modified   : Tuesday September 3rd 2024 05:20:21 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,17 +19,18 @@
 """Observer Base Module"""
 import logging
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from prometheus_client import start_http_server
 
 from appvocai.core.enum import ContentType
-from appvocai.domain.metrics.base import Metrics
 
 # ------------------------------------------------------------------------------------------------ #
-T = TypeVar('T', bound='Metrics')
+T = TypeVar("T")
+
+
 # ------------------------------------------------------------------------------------------------ #
-class Observer(ABC, Generic[T]):
+class Observer(ABC):
     """
     Base class for a metrics observer that starts a Prometheus server and updates metrics.
 
@@ -42,7 +43,6 @@ class Observer(ABC, Generic[T]):
         Initializes the Prometheus server and sets up necessary metrics.
 
         Args:
-            content_type (ContentType): The type of content being observed, used to label or filter metrics.
             port (int): The port on which the Prometheus server should be exposed. Defaults to 8000.
         """
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")

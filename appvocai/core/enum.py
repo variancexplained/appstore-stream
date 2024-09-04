@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:31:31 pm                                              #
-# Modified   : Friday August 30th 2024 12:17:28 am                                                 #
+# Modified   : Tuesday September 3rd 2024 05:52:37 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -71,32 +71,32 @@ class Category(Enum):
         >>> print(category.display_name) # Output: 'Books'
     """
 
-    BOOKS = (6018,"Books")
-    BUSINESS = (6000,"Business")
-    CATALOGS = (6022,"Catalogs")
-    DEVELOPER_TOOLS = (6026,"Developer Tools")
-    EDUCATION = (6017,"Education")
-    ENTERTAINMENT = (6016,"Entertainment")
-    FINANCE = (6015,"Finance")
-    FOOD_DRINK = (6023,"Food & Drink")
-    GAMES = (6014,"Games")
-    GRAPHICS_DESIGN = (6027,"Graphics & Design")
-    HEALTH_FITNESS = (6013,"Health & Fitness")
-    LIFESTYLE = (6012,"Lifestyle")
-    MEDICAL = (6020,"Medical")
-    MUSIC = (6011,"Music")
-    NAVIGATION = (6010,"Navigation")
-    NEWS = (6009,"News")
-    NEWSSTAND = (6021,"Newsstand")
-    PHOTO_VIDEO = (6008,"Photo & Video")
-    PRODUCTIVITY = (6007,"Productivity")
-    REFERENCE = (6006,"Reference")
-    SOCIAL_NETWORKING = (6005,"Social Networking")
-    SHOPPING = (6024,"Shopping")
-    SPORTS = (6004,"Sports")
-    TRAVEL = (6003,"Travel")
-    UTILITIES = (6002,"Utilities")
-    WEATHER = (6001,"Weather")
+    BOOKS = (6018, "Books")
+    BUSINESS = (6000, "Business")
+    CATALOGS = (6022, "Catalogs")
+    DEVELOPER_TOOLS = (6026, "Developer Tools")
+    EDUCATION = (6017, "Education")
+    ENTERTAINMENT = (6016, "Entertainment")
+    FINANCE = (6015, "Finance")
+    FOOD_DRINK = (6023, "Food & Drink")
+    GAMES = (6014, "Games")
+    GRAPHICS_DESIGN = (6027, "Graphics & Design")
+    HEALTH_FITNESS = (6013, "Health & Fitness")
+    LIFESTYLE = (6012, "Lifestyle")
+    MEDICAL = (6020, "Medical")
+    MUSIC = (6011, "Music")
+    NAVIGATION = (6010, "Navigation")
+    NEWS = (6009, "News")
+    NEWSSTAND = (6021, "Newsstand")
+    PHOTO_VIDEO = (6008, "Photo & Video")
+    PRODUCTIVITY = (6007, "Productivity")
+    REFERENCE = (6006, "Reference")
+    SOCIAL_NETWORKING = (6005, "Social Networking")
+    SHOPPING = (6024, "Shopping")
+    SPORTS = (6004, "Sports")
+    TRAVEL = (6003, "Travel")
+    UTILITIES = (6002, "Utilities")
+    WEATHER = (6001, "Weather")
 
     def __new__(cls, code: int, name: str) -> Category:
         obj = object.__new__(cls)
@@ -104,15 +104,18 @@ class Category(Enum):
         obj.display_name = name  # type: ignore
         return obj
 
+
 # ------------------------------------------------------------------------------------------------ #
 class ContentType(Enum):
     APPDATA = "AppData"
     APPREVIEW = "AppReview"
 
+
 # ------------------------------------------------------------------------------------------------ #
 class ProjectStatus(Enum):
     ACTIVE = "Active"
     IDLE = "Idle"
+
 
 # ------------------------------------------------------------------------------------------------ #
 class JobStatus(Enum):
@@ -123,13 +126,9 @@ class JobStatus(Enum):
     FAILED = "Failed"
     CANCELED = "Canceled"
 
+
 # ------------------------------------------------------------------------------------------------ #
 class ProjectFrequency(Enum):
     DAILY = "Daily"
     WEEKLY = "Weekly"
     MONTHLY = "Monthly"
-
-# ------------------------------------------------------------------------------------------------ #
-class AppDataURLType(Enum):
-    SCREENSHOT = "screenshot"
-    IPAD = "ipad"

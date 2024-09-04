@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 30th 2024 02:42:23 am                                                 #
-# Modified   : Saturday August 31st 2024 04:38:56 pm                                               #
+# Modified   : Sunday September 1st 2024 06:58:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -34,33 +34,35 @@ schema = {
         description TEXT NOT NULL,
         category_id INTEGER NOT NULL,
         category VARCHAR(128) NOT NULL,
-        price DECIMAL(10, 2) NOT NULL,
-        currency VARCHAR(8) NOT NULL,
+        price DECIMAL(10, 2),
+        currency VARCHAR(8),
         rating_average INTEGER NOT NULL,
         rating_average_current_version INTEGER NOT NULL,
-        rating_average_current_version_change DECIMAL(3,2) NOT NULL,
-        rating_average_current_version_pct_change DECIMAL(5,2) NOT NULL,
+        rating_average_current_version_change DECIMAL(3,2),
+        rating_average_current_version_pct_change DECIMAL(5,2),
         rating_count INTEGER NOT NULL,
         rating_count_current_version INTEGER NOT NULL,
         developer_id BIGINT NOT NULL,
         developer_name VARCHAR(255) NOT NULL,
-        seller_name VARCHAR(255) NOT NULL,
-        app_content_rating VARCHAR(255) NOT NULL,
-        content_advisory_rating VARCHAR(255) NOT NULL,
+        seller_name VARCHAR(255),
+        seller_url VARCHAR(255),
+        app_content_rating VARCHAR(255),
+        content_advisory_rating VARCHAR(255),
         file_size_bytes VARCHAR(255),
         minimum_os_version VARCHAR(255),
-        version VARCHAR(8) NOT NULL,
+        version VARCHAR(8),
         release_date DATETIME NOT NULL,
-        release_notes LONGTEXT NOT NULL,
+        release_notes LONGTEXT,
         release_date_current_version DATETIME NOT NULL,
         url_developer_view VARCHAR(255),
-        url_seller VARCHAR(255),
         url_app_view VARCHAR(255),
         url_artwork_100 VARCHAR(255),
         url_artwork_512 VARCHAR(255),
         url_artwork_60 VARCHAR(255),
         urls_screenshot_ipad JSON,
-        urls_screenshot_iphone JSON,
+        urls_screenshot JSON,
+        iphone_support BOOLEAN,
+        ipad_support BOOLEAN,
         extract_date DATETIME NOT NULL,
         UNIQUE (app_id),
         INDEX idx_category_id (category_id)

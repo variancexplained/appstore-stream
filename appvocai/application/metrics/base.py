@@ -4,19 +4,19 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/metrics/base.py                                                    #
+# Filename   : /appvocai/application/metrics/base.py                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Sunday September 1st 2024 03:07:31 am                                               #
+# Modified   : Tuesday September 3rd 2024 05:15:02 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -37,7 +37,9 @@ class Metrics(DataClass):
 
     start: Optional[datetime] = None  # timestamp when the task started.
     end: Optional[datetime] = None  # The timestamp when the task ended.
-    duration: float = 0.0 # The duration of the task in seconds, computed as the difference between end and start times.
+    duration: float = (
+        0.0  # The duration of the task in seconds, computed as the difference between end and start times.
+    )
 
     def pre(self) -> None:
         """

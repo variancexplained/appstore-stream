@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Saturday August 31st 2024 07:00:23 pm                                               #
+# Modified   : Sunday September 1st 2024 06:55:49 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -224,21 +224,22 @@ class AppDataRepo(Repo):
                                 rating_average_current_version, rating_average_current_version_change,
                                 rating_average_current_version_pct_change, rating_count,
                                 rating_count_current_version, developer_id, developer_name,
-                                seller_name,  app_content_rating, content_advisory_rating,
+                                seller_name, seller_url, app_content_rating, content_advisory_rating,
                                 file_size_bytes, minimum_os_version, version,
                                 release_date, release_notes, release_date_current_version,
-                                url_developer_view, url_seller, url_app_view, url_artwork_100,
-                                url_artwork_512, url_artwork_60, extract_date)
+                                url_developer_view, url_app_view, url_artwork_100,
+                                url_artwork_512, url_artwork_60, iphone_support, ipad_support, extract_date)
             VALUES (:app_id, :app_name, :app_censored_name, :bundle_id, :description,
                     :category_id, :category, :price, :currency, :rating_average,
                     :rating_average_current_version, :rating_count,
                     :rating_count_current_version, :developer_id, :developer_name,
-                    :seller_name, :app_content_rating, :content_advisory_rating,
+                    :seller_name, :seller_url, :app_content_rating, :content_advisory_rating,
                     :file_size_bytes, :minimum_os_version, :version,
                     :release_date, :release_notes, :release_date_current_version,
-                    :url_developer_view, :url_seller, :url_app_view,
+                    :url_developer_view, :url_app_view,
                     :url_artwork_100, :url_artwork_512, :url_artwork_60,
-                    :urls_screenshot_ipad, :urls_screenshot_iphone,
+                    :urls_screenshot_ipad, :urls_screenshot,
+                    :iphone_support, :ipad_support,
                     :extract_date)
             ON DUPLICATE KEY UPDATE
                 app_name = VALUES(app_name),
@@ -258,6 +259,7 @@ class AppDataRepo(Repo):
                 developer_id = VALUES(developer_id),
                 developer_name = VALUES(developer_name),
                 seller_name = VALUES(seller_name),
+                seller_url = VALUES(seller_url),
                 app_content_rating = VALUES(app_content_rating),
                 content_advisory_rating = VALUES(content_advisory_rating),
                 file_size_bytes = VALUES(file_size_bytes),
@@ -267,13 +269,14 @@ class AppDataRepo(Repo):
                 release_notes = VALUES(release_notes),
                 release_date_current_version = VALUES(release_date_current_version),
                 url_developer_view = VALUES(url_developer_view),
-                url_seller = VALUES(url_seller),
                 url_app_view = VALUES(url_app_view),
                 url_artwork_100 = VALUES(url_artwork_100),
                 url_artwork_512 = VALUES(url_artwork_512),
                 url_artwork_60 = VALUES(url_artwork_60),
                 urls_screenshot_ipad = VALUES(urls_screenshot_ipad),
-                urls_screenshot_iphone = VALUES(urls_screenshot_iphone),
+                urls_screenshot = VALUES(urls_screenshot),
+                iphone_support = VALUES(iphone_support),
+                ipad_support = VALUES(ipad_support),
                 extract_date = VALUES(extract_date)
             """
 
@@ -298,6 +301,7 @@ class AppDataRepo(Repo):
                     "developer_id": app_data.developer_id,
                     "developer_name": app_data.developer_name,
                     "seller_name": app_data.seller_name,
+                    "seller_url": app_data.seller_url,
                     "app_content_rating": app_data.app_content_rating,
                     "content_advisory_rating": app_data.content_advisory_rating,
                     "file_size_bytes": app_data.file_size_bytes,
@@ -307,13 +311,14 @@ class AppDataRepo(Repo):
                     "release_notes": app_data.release_notes,
                     "release_date_current_version": app_data.release_date_current_version,
                     "url_developer_view": app_data.url_developer_view,
-                    "url_seller": app_data.url_seller,
                     "url_app_view": app_data.url_app_view,
                     "url_artwork_100": app_data.url_artwork_100,
                     "url_artwork_512": app_data.url_artwork_512,
                     "url_artwork_60": app_data.url_artwork_60,
                     "urls_screenshot_ipad": app_data.urls_screenshot_ipad,
-                    "urls_screenshot_iphone": app_data.urls_screenshot_iphone,
+                    "urls_screenshot": app_data.urls_screenshot,
+                    "iphone_support": app_data.iphone_support,
+                    "ipad_support": app_data.ipad_support,
                     "extract_date": app_data.extract_date
                 }
                 for app_data in app_data_list

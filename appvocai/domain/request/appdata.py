@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Sunday September 1st 2024 01:46:45 am                                               #
+# Modified   : Tuesday September 3rd 2024 08:52:54 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,11 +19,17 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from dataclasses import dataclass
+from typing import Any, Collection, Dict, Union
 
+from appvocai.core.enum import ContentType
 from appvocai.domain.request.base import Request, RequestAsync, RequestGen
 from appvocai.infra.web.header import BrowserHeaders
+
+# ------------------------------------------------------------------------------------------------ #
+headers = BrowserHeaders()
+# ------------------------------------------------------------------------------------------------ #
+# mypy: ignore-errors
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -49,27 +55,24 @@ class RequestAppData(Request):
     lang: str = "en-us"
     explicit: str = "yes"
     limit: int = 200
-    header_list: BrowserHeaders = BrowserHeaders()
 
     @property
     def start_index(self) -> int:
         """Returns the starting index for the current page (zero-based)."""
         return self.page * self.limit  # Zero-based index
 
-
     @property
     def end_index(self) -> int:
         """Returns the ending index for the current page (zero-based)."""
         return (self.page + 1) * self.limit  # Zero-based index
 
+    @property
+    def headers(self) -> Union[Collection[str], Dict[str, Any]]:
+        return next(headers)
 
     @property
     def baseurl(self) -> str:
         return f"{self.scheme}://{self.host}/{self.command}"
-
-    @property
-    def headers(self) -> Dict[str, Any]:
-        return next(self.header_list)
 
     @property
     def params(self) -> Dict[str, Any]:
@@ -85,15 +88,13 @@ class RequestAppData(Request):
         }
         return params
 
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class RequestAsyncAppData(RequestAsync):
-    requests: List[RequestAppData] = field(default_factory=list)
+    @property
+    def content_type(self) -> ContentType:
+        return ContentType.APPDATA
 
 
 # ------------------------------------------------------------------------------------------------ #
-class RequestAppDataGen(RequestGen):
+class RequestAppDataGen(RequestGen[RequestAsync[RequestAppData]]):
     """Encapsulates an asynchronous AppData request generation.
 
     Args:
@@ -146,11 +147,11 @@ class RequestAppDataGen(RequestGen):
 
         return self
 
-    def __next__(self) -> RequestAsyncAppData:
+    def __next__(self) -> RequestAsync[RequestAppData]:
         """Generates the next batch of asynchronous AppData requests.
 
         Returns:
-            AppDataAsyncRequest: The next batch of requests.
+            RequestAsync: The next batch of requests.
 
         Raises:
             StopIteration: If no more requests can be generated.
@@ -166,16 +167,16 @@ class RequestAppDataGen(RequestGen):
         batch_start_page = self._page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
-        async_requests = RequestAsyncAppData()
+        async_request: RequestAsync[RequestAppData] = RequestAsync()
 
         for page in range(batch_start_page, batch_stop_page):
             request = RequestAppData(
-                genreId=self._category_id, page=page, limit=self._limit,
+                genreId=self._category_id,
+                page=page,
+                limit=self._limit,
             )
-            async_requests.requests.append(request)
+            async_request.add_request(request=request)
             self._page += 1
 
-            self._request_count += 1
-
         # Create the Request Object
-        return async_requests
+        return async_request

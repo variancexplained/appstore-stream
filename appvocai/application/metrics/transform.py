@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/metrics/load.py                                                    #
+# Filename   : /appvocai/application/metrics/transform.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Sunday September 1st 2024 03:43:33 am                                               #
+# Modified   : Tuesday September 3rd 2024 05:16:58 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,42 +20,45 @@
 import logging
 from dataclasses import dataclass
 
-from appvocai.domain.metrics.base import Metrics
+from appvocai.application.metrics.base import Metrics
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
+
+
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class MetricsLoad(Metrics):
+class MetricsTransform(Metrics):
     """
-    Class for capturing and computing load-related metrics.
+    Class for capturing and computing transform-related metrics.
 
-    This class tracks metrics related to the load phase of a task, including the number of records
-    loaded, throughput, and errors encountered during the process.
+    This class tracks metrics related to the transformation phase of a task, including the number of records
+    processed (input and output), throughput, and errors.
     """
 
-    records: int = 0  # Number of records loaded
+    records_in: int = 0  # Number of input records
+    records_out: int = 0  # Number of output records
     throughput: float = 0.0  # Number of records processed per second of duration
-    errors: int = 0  # Number of errors encountered during the load process
+    errors: int = 0  # Number of errors encountered in the transformation
 
-    def compute(self, records: int, errors: int = 0) -> None:
+    def compute(self, errors: int = 0) -> None:
         """
-        Computes load-related metrics based on the provided number of records and errors.
+        Computes transform-related metrics based on the provided input and output records.
 
-        This method calculates the number of records loaded, throughput, and errors encountered
-        during the load phase.
+        This method calculates the number of records processed, throughput, and errors encountered
+        during the transformation phase.
 
         Args:
-            records (int): The number of records loaded.
-            errors (int): The number of errors encountered during the load process. Defaults to 0.
+            records_in (int): The number of input records.
+            records_out (int): The number of output records.
+            errors (int): The number of errors encountered during the transformation. Defaults to 0.
         """
-        self.records = records
         self.errors = errors
-        self.throughput = self.records / self.duration if self.duration > 0 else 0.0
+        self.throughput = self.records_out / self.duration if self.duration > 0 else 0.0
 
     def validate(self) -> None:
         """
-        Validates the load metrics data.
+        Validates the transform metrics data.
 
         Checks for any invalid or unexpected values, such as negative values where they shouldn't exist,
         and issues warnings as appropriate.
@@ -63,8 +66,10 @@ class MetricsLoad(Metrics):
         Raises:
             ValueError: May be raised if the validation identifies critical issues.
         """
-        if self.records < 0:
-            logger.warning(f"Negative value for records: {self.records}")
+        if self.records_in < 0:
+            logger.warning(f"Negative value for records_in: {self.records_in}")
+        if self.records_out < 0:
+            logger.warning(f"Negative value for records_out: {self.records_out}")
         if self.errors < 0:
             logger.warning(f"Negative value for errors: {self.errors}")
         if self.throughput < 0:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /tests/test_infra/test_web/test_async_request.py                                    #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 11:13:46 pm                                                 #
-# Modified   : Tuesday August 27th 2024 04:51:01 pm                                                #
+# Modified   : Sunday September 1st 2024 03:21:40 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -52,7 +52,7 @@ APP_ID = 544007664
 @pytest.mark.asyncio
 class TestRequestAppData:  # pragma: no cover
     # ============================================================================================ #
-    @pytest.mark.skip(reason="working")
+    # @pytest.mark.skip(reason="working")
     @pytest.mark.asyncio1
     async def test_request_appdata(self, caplog: Any) -> None:
         start = datetime.now()
@@ -62,7 +62,7 @@ class TestRequestAppData:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
 
-        request = RequestAppData(genreId=CATEGORY, current_page=PAGE, limit=LIMIT)
+        request = RequestAppData(genreId=CATEGORY, page=PAGE, limit=LIMIT)
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 request.baseurl,

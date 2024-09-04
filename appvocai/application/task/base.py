@@ -11,23 +11,20 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 04:22:03 pm                                              #
-# Modified   : Sunday September 1st 2024 01:07:59 pm                                               #
+# Modified   : Sunday September 1st 2024 02:21:35 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from abc import ABC, abstractmethod
-from typing import Awaitable, Generic, TypeVar
+from typing import Any
 
-from appvocai.domain.response.base import ResponseAsync
 
 # ------------------------------------------------------------------------------------------------ #
-T = TypeVar('T')
-# ------------------------------------------------------------------------------------------------ #
-class Task(ABC, Generic[T]):
+class Task(ABC):
     """Abstract base class for Task objects."""
 
     @abstractmethod
-    def run(self, async_request: T) -> Awaitable[ResponseAsync]:
+    def run(self, *args: Any, **kwargs:Any) -> Any:
         """Executes the task."""
 

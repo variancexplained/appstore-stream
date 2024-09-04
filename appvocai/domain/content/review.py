@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 12:59:37 am                                              #
-# Modified   : Saturday August 31st 2024 06:13:06 pm                                               #
+# Modified   : Sunday September 1st 2024 02:18:04 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,13 +23,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict
 
-from appvocai.core.data import DataClass
+from appvocai.domain.content.base import Entity
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class AppReview(DataClass):
+class AppReview(Entity):
     """
     A dataclass representing a review for an application.
 

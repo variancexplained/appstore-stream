@@ -11,32 +11,23 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:29 pm                                               #
-# Modified   : Sunday September 1st 2024 01:31:05 pm                                               #
+# Modified   : Tuesday September 3rd 2024 07:51:54 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-import asyncio
-from typing import TypeVar
 
-from dependency_injector.wiring import Provide, inject
 
-from appvocai.application.observer.extract import ObserverExtractMetrics
+from appvocai.infra.base.config import Config
 from appvocai.application.task.base import Task
-from appvocai.container import AppVoCAIContainer
-from appvocai.domain.metrics.extract import MetricsExtract
-from appvocai.domain.request.appdata import RequestAsyncAppData
-from appvocai.domain.request.review import RequestAsyncAppReview
-from appvocai.domain.response.base import ResponseAsync
-from appvocai.infra.web.adapter import Adapter
-from appvocai.infra.web.asession import ASession
-from appvocai.infra.web.profile import SessionHistory
+from appvocai.infra.web.metrics import MetricsExtract
+from appvocai.domain.request.base import RequestAsync
+from appvocai.domain.response.response import ResponseAsync
+from appvocai.infra.web.extractor import ASession
+from appvocai.core.data import DataClass
 
 # ------------------------------------------------------------------------------------------------ #
-T = TypeVar('T')
-
-# ------------------------------------------------------------------------------------------------ #
-class TaskExtract(Task[T]):
+class TaskExtract(Task):
     """
     A base class for executing asynchronous extract tasks.
 
@@ -52,13 +43,7 @@ class TaskExtract(Task[T]):
         _adapter (Adapter): The adapter object that manages session behavior.
     """
 
-    @inject
-    def __init__(self,
-                 observer: ObserverExtractMetrics,
-                 session: ASession = Provide[AppVoCAIContainer.web.session],
-                 history: SessionHistory = Provide[AppVoCAIContainer.web.history],
-                 adapter: Adapter = Provide[AppVoCAIContainer.web.adapter],
-                 ) -> None:
+    def __init__(self, extractor: Extractor) -> None:
         """
         Initializes the TaskExtract class with the specified dependencies.
 
@@ -80,7 +65,7 @@ class TaskExtract(Task[T]):
         self._history = history
         self._adapter = adapter
 
-    async def run(self, async_request: T) -> ResponseAsync:
+    async def run(self, async_request: RequestAsync) -> ResponseAsync:
         """
         Executes the asynchronous task.
 
@@ -92,7 +77,7 @@ class TaskExtract(Task[T]):
         5. Notifies the observer of the computed metrics.
 
         Args:
-            async_request (T): The asynchronous request to be executed.
+            async_request (RequestAsync): The asynchronous request to be executed.
 
         Returns:
             ResponseAsync: The response from the asynchronous request.
@@ -131,39 +116,13 @@ class TaskExtract(Task[T]):
         return async_response
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskExtractAppData(TaskExtract[RequestAsyncAppData]):
-    """
-    A specialized TaskExtract class for handling RequestAsyncAppData types.
+class Extractor(DataClass):
+    """Encapsulates objects required by the Extact Task object."""
+    requestor: Requestor
+    session: ASession
 
-    This class uses a specific observer tailored for app data extraction tasks.
-    """
-
-    @inject
-    def __init__(self, observer: ObserverExtractMetrics = Provide[AppVoCAIContainer.observe.appdata_extract_observer]) -> None:
-        """
-        Initializes the TaskExtractAppData class with a specific observer.
-
-        Args:
-            observer (ObserverExtractMetrics): The observer specifically set up for
-                app data extraction tasks.
-        """
-        super().__init__(observer=observer)
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskExtractAppReview(TaskExtract[RequestAsyncAppReview]):
-    """
-    A specialized TaskExtract class for handling RequestAsyncAppReview types.
-
-    This class uses a specific observer tailored for app review extraction tasks.
-    """
-
-    @inject
-    def __init__(self, observer: ObserverExtractMetrics = Provide[AppVoCAIContainer.observe.appreview_extract_observer]) -> None:
-        """
-        Initializes the TaskExtractAppReview class with a specific observer.
-
-        Args:
-            observer (ObserverExtractMetrics): The observer specifically set up for
-                app review extraction tasks.
-        """
-        super().__init__(observer=observer)
+class ExtractorBuilder(ABC):
+    @
+    def __init__(self, config_cls: Config = Config)

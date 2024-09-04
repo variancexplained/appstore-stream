@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:14:31 pm                                              #
-# Modified   : Friday August 30th 2024 12:14:43 am                                                 #
+# Modified   : Monday September 2nd 2024 12:31:52 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,8 +28,8 @@ from uuid import uuid4
 from appvocai.application.job.project import Project
 from appvocai.application.task.base import Task
 from appvocai.core.data import DataClass
-from appvocai.core.date_time import format_duration, to_utc
 from appvocai.core.enum import JobStatus
+from appvocai.toolkit.date import format_duration, to_utc
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar('T', bound="Task")

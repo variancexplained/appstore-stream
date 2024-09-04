@@ -11,14 +11,45 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 03:13:34 pm                                               #
-# Modified   : Saturday August 31st 2024 04:11:39 pm                                               #
+# Modified   : Tuesday September 3rd 2024 09:44:14 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+# ------------------------------------------------------------------------------------------------ #
+#                               SETUP CONFIG SECTION                                               #
+# ------------------------------------------------------------------------------------------------ #
 setup:
   database:
     tables:
       category:
         tablename: category
         filepath: data/base/categories.csv
+
+# ------------------------------------------------------------------------------------------------ #
+#                               ASESSION CONFIG SECTION                                             #
+# ------------------------------------------------------------------------------------------------ #
+asession:
+  session_request_limit: 2000  # Maximum number of requests per session. Fixed for sessions
+  retries: 3  # Retries allowed. Set and fixed for all jobs and sessions
+  concurrency: 50 # Base concurrency. Reconfigured on a async request level
+  timeout: 30 # Seconds
+  connector: # Config for aiohttp.TCPConnector
+    use_dns_cache: True # Cache DNS to speed up connection
+    ttl_dns_cache: 10  # Cache expiration in seconds. None means cached forever. By default 10 seconds (optional).
+    limit: 200  # Maximum number of simultaneous connections
+    limit_per_host: 0 # No limit
+    enable_cleanup_closed: True # aiohttp additionally aborts underlining transport after 2 seconds.
+    keep-alive: False # Whether to keep the connection alive during the session
+    happy_eyeballs_delay: None # Seeconds to wait for a connection attempt to complete, before starting the next attempt in parallel
+  session: # Config for aiohttp.ClientSession
+
+    auto_decompress: True # Automatically decompress response body
+    connector_owner: False  # Whether the session is responsible for closing the connector when the session itself is closed.
+    trust_env: False # Whether to obtain proxy, ssl, and other config from environment variables.
+    raise_for_status: True # Automatically call ClientResponse.raise_for_status() for each response
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                  TASK CONFIG SECTION                                             #
+# ------------------------------------------------------------------------------------------------ #

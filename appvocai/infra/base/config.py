@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Saturday August 31st 2024 04:13:23 pm                                               #
+# Modified   : Tuesday September 3rd 2024 01:47:04 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,6 +25,7 @@ import yaml
 from dotenv import dotenv_values, load_dotenv
 
 from appvocai.core.data import NestedNamespace
+from appvocai.infra.web.header import BrowserHeaders
 
 # ------------------------------------------------------------------------------------------------ #
 load_dotenv()
@@ -108,6 +109,13 @@ class Config:
     @property
     def current_environment(self) -> str:
         return self._current_environment
+
+    #  ------------------------------------------------------------------------------------------- #
+    @property
+    def asession_config(self) -> NestedNamespace:
+        config = self.load_config()
+        return self.to_namespace(config["asession"])
+
 
     #  ------------------------------------------------------------------------------------------- #
     @property

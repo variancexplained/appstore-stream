@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/infra/web/base.py                                                         #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 08:20:44 am                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Tuesday September 3rd 2024 12:39:26 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,8 +20,8 @@
 
 from __future__ import annotations
 
-import logging
 from abc import ABC, abstractmethod
+from typing import Dict
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -29,21 +29,9 @@ class Header(ABC):
     """Interface for classes that serve up HTTP Headers."""
 
     @abstractmethod
-    def __iter__(self):
+    def __iter__(self) -> Header:
         """Initializes the iteration"""
 
     @abstractmethod
-    def __next__(self):
+    def __next__(self) -> Dict[str,str]:
         """Returns a randomly selected header."""
-
-
-# ------------------------------------------------------------------------------------------------ #
-class Throttle(ABC):
-    """Base class for HTTP request rate limiters"""
-
-    def __init__(self) -> None:
-        self._logger = logging.getLogger(f"{self.__class__.__name__}")
-
-    @abstractmethod
-    def delay(self, *args, **kwargs) -> int:
-        """Returns a delay time in milliseconds"""
