@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : set in workspace folder                                                             #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/core/data.py                                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
-# URL        : set in workspace folder                                                             #
+# URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:17:42 pm                                                 #
-# Modified   : Wednesday August 28th 2024 03:50:15 pm                                              #
+# Modified   : Thursday September 5th 2024 06:46:12 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -121,8 +121,8 @@ class DataClass(ABC):  # noqa
             return v.as_dict()
         elif isinstance(v, Enum):
             return v.value
-        elif isinstance(v,datetime):
-            return v.isoformat() + "Z"
+        elif isinstance(v, datetime):
+            return v.isoformat()
         else:
             return dict()
 

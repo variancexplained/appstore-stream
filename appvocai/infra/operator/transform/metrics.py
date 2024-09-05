@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Wednesday September 4th 2024 04:07:06 am                                            #
+# Modified   : Wednesday September 4th 2024 06:14:50 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,7 +19,7 @@
 import logging
 from dataclasses import dataclass
 
-from appvocai.infra.operator.base.metrics import Metrics
+from appvocai.infra.monitor.metrics import Metrics
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

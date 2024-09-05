@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 21st 2024 06:48:22 am                                              #
-# Modified   : Wednesday September 4th 2024 01:05:48 am                                            #
+# Modified   : Wednesday September 4th 2024 06:15:40 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -384,8 +384,8 @@ class SessionHistory:
                     )
                     ** 0.5
                 ) / stats.average
-            except ZeroDivisionError as e:
-                msg = f"Coefficient of variation for throughput is underfined for zero mean. Returning zero."
+            except ZeroDivisionError:
+                msg = "Coefficient of variation for throughput is underfined for zero mean. Returning zero."
                 self._logger.warning(msg)
                 stats.cv = 0
         return stats
@@ -414,8 +414,8 @@ class SessionHistory:
                 stats.cv = (
                     (sum((x - stats.average) ** 2 for x in rates) / len(rates)) ** 0.5
                 ) / stats.average
-            except ZeroDivisionError as e:
-                msg = f"Coefficient of variation for request rate is underfined for zero mean. Returning zero."
+            except ZeroDivisionError:
+                msg = "Coefficient of variation for request rate is underfined for zero mean. Returning zero."
                 self._logger.warning(msg)
                 stats.cv = 0
 
@@ -445,8 +445,8 @@ class SessionHistory:
                 stats.cv = (
                     (sum((x - stats.average) ** 2 for x in delays) / len(delays)) ** 0.5
                 ) / stats.average
-            except ZeroDivisionError as e:
-                msg = f"Coefficient of variation for delay is underfined for zero mean. Returning zero."
+            except ZeroDivisionError:
+                msg = "Coefficient of variation for delay is underfined for zero mean. Returning zero."
                 self._logger.warning(msg)
                 stats.cv = 0
         return stats
@@ -481,8 +481,8 @@ class SessionHistory:
                     )
                     ** 0.5
                 ) / stats.average
-            except ZeroDivisionError as e:
-                msg = f"Coefficient of variation for latency is underfined for zero mean. Returning zero."
+            except ZeroDivisionError:
+                msg = "Coefficient of variation for latency is underfined for zero mean. Returning zero."
                 self._logger.warning(msg)
                 stats.cv = 0
 

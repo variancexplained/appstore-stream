@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "appvocai"
+name = "appvocai-acquire"
 version = "0.0.1"
 description = "appvocai: App Data and Reviews, Delivered!"
 authors = [

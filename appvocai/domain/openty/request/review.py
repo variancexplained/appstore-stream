@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/request/review.py                                                  #
+# Filename   : /appvocai/domain/openty/request/review.py                                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 12:26:33 am                                                #
-# Modified   : Tuesday September 3rd 2024 08:52:49 pm                                              #
+# Modified   : Thursday September 5th 2024 04:57:03 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,7 +22,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Collection, Dict, Union
 
-from appvocai.core.enum import ContentType
+from appvocai.core.enum import DataType
 from appvocai.domain.request.base import Request, RequestAsync, RequestGen
 from appvocai.infra.web.header import STOREFRONT
 
@@ -70,8 +70,8 @@ class RequestAppReview(Request):
         return {}
 
     @property
-    def content_type(self) -> ContentType:
-        return ContentType.APPREVIEW
+    def data_type(self) -> DataType:
+        return DataType.APPREVIEW
 
 
 # ------------------------------------------------------------------------------------------------ #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:31:31 pm                                              #
-# Modified   : Tuesday September 3rd 2024 05:52:37 pm                                              #
+# Modified   : Thursday September 5th 2024 05:12:50 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Optional
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -106,7 +107,7 @@ class Category(Enum):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ContentType(Enum):
+class DataType(Enum):
     APPDATA = "AppData"
     APPREVIEW = "AppReview"
 
@@ -132,3 +133,23 @@ class ProjectFrequency(Enum):
     DAILY = "Daily"
     WEEKLY = "Weekly"
     MONTHLY = "Monthly"
+
+
+# ------------------------------------------------------------------------------------------------ #
+class Env(Enum):
+    DEVELOPMENT = ("dev", "Development Environment")
+    PRODUCTION = ("prod", "Production Environment")
+    TEST = ("test", "Test Environment")
+
+    def __new__(cls, value: str, description: str) -> Env:
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description  # type: ignore
+        return obj
+
+    @classmethod
+    def get(cls, value: str) -> Optional[Env]:
+        for env in Env:
+            if env.value == value:
+                return env
+        return None

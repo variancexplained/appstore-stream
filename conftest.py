@@ -11,38 +11,29 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Friday August 30th 2024 05:20:34 am                                                 #
+# Modified   : Wednesday September 4th 2024 09:09:36 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 
 import json
-import time
-from dataclasses import dataclass
 from typing import Any, Generator
 
-import numpy as np
 import pytest
-from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
-from appvocai.application.job.project import Project
-from appvocai.application.task.base import Task
-from appvocai.container import AppVoCAIContainer
-from appvocai.core.enum import *
 from appvocai.infra.base.config import Config
-from appvocai.infra.web.profile import (SessionHistory, SessionProfile,
-                                        SessionStats)
-from tests.test_infra.test_web.test_adapt import MockSessionHistory
 
 # from appvocai.container import AppVoCAIContainer
 
 
-
 # ------------------------------------------------------------------------------------------------ #
-collect_ignore = ["appvocai/infra/web/asession.py"]
-# mypy: ignore-errors
+collect_ignore = [
+    "appvocai/infra/*.*",
+    "appvocai/appla/*.*",
+    "appvocai/domain/openty/request/*.*",
+]
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -60,12 +51,12 @@ def mode() -> Generator[Any, Any, Any]:
 # ------------------------------------------------------------------------------------------------ #
 #                              DEPENDENCY INJECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=True)
-def container() -> Container:
-    container = AppVoCAIContainer()
-    container.init_resources()
-    container.wire(modules=["appvocai.infra.web.adapter"])
-    return container
+# @pytest.fixture(scope="function", autouse=False)
+# def container() -> Container:
+#     container = AppVoCAIContainer()
+#     container.init_resources()
+#     # container.wire(modules=["appvocai.infra.web.adapter"])
+#     return container
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -85,73 +76,3 @@ def appdata_json() -> Any:
 def custom_prometheus_registry() -> CollectorRegistry:
     """Creates a custom prometheus metrics registry."""
     return CollectorRegistry()
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                 SESSION HISTORY                                                  #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function", autouse=False)
-def session_history() -> SessionHistory:
-    """Creates a session profile object."""
-    history = SessionHistory()
-    for m in range(10):
-        profile = SessionProfile()
-        k = m / 100
-        time.sleep(k)
-        profile.send()
-        for i in range(10):
-            profile.send()
-            j = i / 100
-            time.sleep(j)
-            profile.add_latency(latency=np.random.random())
-        profile.recv()
-        history.add_metrics(profile=profile)
-    return history
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                     ADAPTER                                                      #
-# ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="function", autouse=False)
-# def adapter(container: AppVoCAIContainer) -> Adapter:
-
-#     baseline = container.session.baseline()
-#     rate = container.session.rate()
-#     concurrency = container.session.concurrency()
-#     exploit = container.session.exploit()
-#     adapter = container.session.adapter()
-
-#     baseline.next_stage = rate
-#     rate.next_stage = concurrency
-#     concurrency.next_stage = exploit
-#     exploit.next_stage = baseline
-
-#     return adapter
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                      MOCK HISTORY                                                #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="session", autouse=False)
-def mock_history(*args, **kwargs) -> MockSessionHistory:
-    return MockSessionHistory().get_latency_stats
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                       PROJECT                                                    #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="session", autouse=False)
-def project(*args, **kwargs) -> Project:
-    return Project(category=Category.EDUCATION, content_type=ContentType.APPREVIEW)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                    MOCK TASK                                                     #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="session", autouse=False)
-def mock_task(*args, **kwargs) -> Task:
-    class MockTask(Task):
-        def execute(*args, **kwargs):
-            pass
-    return MockTask()
-

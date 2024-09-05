@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/operator/error/observer.py                                          #
+# Filename   : /appvocai/infra/observer/observer.py                                                #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:53:14 pm                                               #
-# Modified   : Wednesday September 4th 2024 03:53:46 am                                            #
+# Modified   : Thursday September 5th 2024 04:57:03 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,9 +22,9 @@ from typing import TypeVar
 
 from prometheus_client import Counter
 
-from appvocai.core.enum import ContentType
-from appvocai.infra.operator.base.metrics import Metrics
-from appvocai.infra.operator.base.observer import Observer
+from appvocai.core.enum import DataType
+from appvocai.infra.monitor.metrics import Metrics
+from appvocai.infra.observer.base import Observer
 from appvocai.infra.operator.error.metrics import MetricsError
 
 # ------------------------------------------------------------------------------------------------ #
@@ -41,8 +41,8 @@ class ObserverError(Observer[MetricsError]):
     Observer class for updating transform-related Prometheus metrics.
     """
 
-    def __init__(self, content_type: ContentType):
-        self._content_type = content_type
+    def __init__(self, data_type: DataType):
+        self._data_type = data_type
         self._setup_metrics()
 
     def _setup_metrics(self) -> None:
@@ -54,7 +54,7 @@ class ObserverError(Observer[MetricsError]):
         self.errors_total = Counter(
             "appvocai_errors_total",
             "Number Of Errors",
-            ["content_type", "error_type", "operator"],
+            ["data_type", "error_type", "operator"],
         )
 
     def notify(self, metrics: MetricsError) -> None:
@@ -68,7 +68,7 @@ class ObserverError(Observer[MetricsError]):
         metrics.validate()
         try:
             self.errors_total.labels(
-                content_type=self._content_type.value,
+                data_type=self._data_type.value,
                 error_type=metrics.error_type.value,
                 operator=metrics.operator,
             ).inc()

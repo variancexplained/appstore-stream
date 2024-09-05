@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 04:54:23 pm                                              #
-# Modified   : Monday September 2nd 2024 01:27:07 am                                               #
+# Modified   : Thursday September 5th 2024 06:44:56 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -34,9 +34,10 @@ class TimePrecision(Enum):
         MILLISECONDS: Represents time precision up to milliseconds.
         MICROSECONDS: Represents time precision up to microseconds.
     """
-    MINUTES = 'minutes'
-    SECONDS = 'seconds'
-    MILLISECONDS = 'milliseconds'
+
+    MINUTES = "minutes"
+    SECONDS = "seconds"
+    MILLISECONDS = "milliseconds"
     MICROSECONDS = "microseconds"
 
 
@@ -61,7 +62,9 @@ class ThirdDateFormatter:
             Converts a duration in seconds to a human-readable string format.
     """
 
-    def to_iso8601_format(self, dt: datetime, precision: TimePrecision = TimePrecision.SECONDS) -> str:
+    def to_iso8601_format(
+        self, dt: datetime, precision: TimePrecision = TimePrecision.SECONDS
+    ) -> str:
         """
         Converts a datetime object to ISO 8601 format with the specified precision.
 
@@ -72,7 +75,7 @@ class ThirdDateFormatter:
         Returns:
             str: The formatted datetime string in ISO 8601 format.
         """
-        return dt.isoformat(sep='T', timespec=precision.value) + "Z"
+        return dt.isoformat(sep="T", timespec=precision.value) + "Z"
 
     def to_HTTP_format(self, dt: datetime) -> str:
         """
@@ -84,7 +87,7 @@ class ThirdDateFormatter:
         Returns:
             str: The formatted datetime string in HTTP date format.
         """
-        return dt.strftime('%a, %d %b %Y %H:%M:%S GMT')
+        return dt.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     def to_utc_datetime(self, dt: datetime, local_tz: Optional[str] = None) -> datetime:
         """
@@ -97,7 +100,9 @@ class ThirdDateFormatter:
         Returns:
             datetime: The converted datetime object in UTC.
         """
-        if dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) == timezone.utc.utcoffset(dt):
+        if dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) == timezone.utc.utcoffset(
+            dt
+        ):
             return dt  # Return the datetime as-is if it's already in UTC
 
         if dt.tzinfo is None:  # If naive datetime (no timezone info)
@@ -105,9 +110,11 @@ class ThirdDateFormatter:
                 local_timezone = pytz.timezone(local_tz)
                 dt = local_timezone.localize(dt)  # Localize naive datetime
             else:
-                dt = dt.replace(tzinfo=timezone.utc)  # Assume as UTC if no timezone is provided
+                dt = dt.replace(
+                    tzinfo=timezone.utc
+                )  # Assume as UTC if no timezone is provided
 
-        return dt.astimezone(timezone.utc)  # Convert to UTC if it's in a different timezone
+        return dt.astimezone()  # Convert to UTC if it's in a different timezone
 
     def from_iso8601(self, dt_string: str) -> datetime:
         """
@@ -119,7 +126,7 @@ class ThirdDateFormatter:
         Returns:
             datetime: The parsed datetime object.
         """
-        return datetime.strptime(dt_string, '%Y-%m-%dT%H:%M:%SZ')
+        return datetime.strptime(dt_string, "%Y-%m-%dT%H:%M:%SZ")
 
     def format_duration(self, seconds: float) -> str:
         """
@@ -136,9 +143,19 @@ class ThirdDateFormatter:
         elif seconds < 3600:
             minutes = seconds // 60
             remaining_seconds = seconds % 60
-            return f"{minutes} minutes" + (f" and {remaining_seconds} seconds" if remaining_seconds > 0 else "")
+            return f"{minutes} minutes" + (
+                f" and {remaining_seconds} seconds" if remaining_seconds > 0 else ""
+            )
         else:
             hours = seconds // 3600
             minutes = (seconds % 3600) // 60
             remaining_seconds = seconds % 60
-            return f"{hours} hours" + (f" {minutes} minutes" if minutes > 0 else "") + (f" and {round(remaining_seconds, 2)} seconds" if remaining_seconds > 0 else "")
+            return (
+                f"{hours} hours"
+                + (f" {minutes} minutes" if minutes > 0 else "")
+                + (
+                    f" and {round(remaining_seconds, 2)} seconds"
+                    if remaining_seconds > 0
+                    else ""
+                )
+            )

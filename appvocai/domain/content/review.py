@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 12:59:37 am                                              #
-# Modified   : Sunday September 1st 2024 02:18:04 pm                                               #
+# Modified   : Wednesday September 4th 2024 08:42:08 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,6 +27,8 @@ from appvocai.domain.content.base import Entity
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
+
+
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AppReview(Entity):
@@ -86,8 +88,8 @@ class AppReview(Entity):
             - Logs the successful creation of an AppReview object.
         """
         # Extract and validate mandatory fields
-        review_id = appreview_row.get('review_id')
-        app_id = appreview_row.get('app_id')
+        review_id = appreview_row.get("review_id")
+        app_id = appreview_row.get("app_id")
 
         # Ensure that the critical fields are present
         if not review_id or not app_id:
@@ -100,7 +102,7 @@ class AppReview(Entity):
             review_id=review_id,
             app_id=app_id,
             review=appreview_row.get("review", "No review text provided"),
-            review_length=appreview_row.get("review_length",0),
+            review_length=appreview_row.get("review_length", 0),
             review_date=appreview_row.get("review_date", datetime.min),
             reviewer_name=appreview_row.get("reviewer_name", "Anonymous"),
             rating=appreview_row.get("rating", 0),
@@ -111,5 +113,5 @@ class AppReview(Entity):
             reviews_url=appreview_row.get("reviews_url", ""),
             vote_url=appreview_row.get("vote_url", ""),
             customer_type=appreview_row.get("customer_type", "Unknown"),
-            extract_date=appreview_row.get("extract_date",datetime.min)
+            extract_date=appreview_row.get("extract_date", datetime.min),
         )

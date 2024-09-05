@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/operator/extract/metrics.py                                         #
+# Filename   : /appvocai/infra/web/metrics.py                                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Wednesday September 4th 2024 04:46:25 am                                            #
+# Modified   : Wednesday September 4th 2024 06:24:00 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass
 
 from appvocai.domain.response.response import ResponseAsync
-from appvocai.infra.operator.base.metrics import Metrics
+from appvocai.infra.monitor.metrics import Metrics
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class MetricsExtractor(Metrics):
+class MetricsASession(Metrics):
     """
     Class for capturing and computing extract-related metrics.
 

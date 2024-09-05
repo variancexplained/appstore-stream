@@ -11,39 +11,26 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:29 pm                                               #
-# Modified   : Tuesday September 3rd 2024 07:51:54 pm                                              #
+# Modified   : Thursday September 5th 2024 06:58:06 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 
 
-from appvocai.infra.base.config import Config
+from appvocai.application.metrics.extract import MetricsExtract
 from appvocai.application.task.base import Task
-from appvocai.infra.web.metrics import MetricsExtract
 from appvocai.domain.request.base import RequestAsync
 from appvocai.domain.response.response import ResponseAsync
-from appvocai.infra.web.extractor import ASession
-from appvocai.core.data import DataClass
+from appvocai.infra.observer.extract import ObserverASessionMetrics
+from appvocai.infra.web.asession import ASession
+
 
 # ------------------------------------------------------------------------------------------------ #
 class TaskExtract(Task):
-    """
-    A base class for executing asynchronous extract tasks.
+    """ """
 
-    This class handles the execution of asynchronous HTTP requests, metrics collection,
-    validation, and observer notification. It is designed to be subclassed for specific
-    types of extract tasks.
-
-    Attributes:
-        _observer (ObserverExtractMetrics): The observer that monitors and responds to
-            changes in metrics.
-        _session (ASession): The session object used to perform asynchronous HTTP requests.
-        _history (SessionHistory): The history object that tracks session data.
-        _adapter (Adapter): The adapter object that manages session behavior.
-    """
-
-    def __init__(self, extractor: Extractor) -> None:
+    def __init__(self, asession: ASession, observer: ObserverASessionMetrics) -> None:
         """
         Initializes the TaskExtract class with the specified dependencies.
 
@@ -58,7 +45,9 @@ class TaskExtract(Task):
             ValueError: If any of the required dependencies are not provided or invalid.
         """
         if not observer or not session or not history or not adapter:
-            raise ValueError("All dependencies (observer, session, history, adapter) must be provided.")
+            raise ValueError(
+                "All dependencies (observer, session, history, adapter) must be provided."
+            )
 
         self._observer = observer
         self._session = session
@@ -114,15 +103,3 @@ class TaskExtract(Task):
         self._observer.notify(metrics=metrics)
 
         return async_response
-
-# ------------------------------------------------------------------------------------------------ #
-class Extractor(DataClass):
-    """Encapsulates objects required by the Extact Task object."""
-    requestor: Requestor
-    session: ASession
-
-
-# ------------------------------------------------------------------------------------------------ #
-class ExtractorBuilder(ABC):
-    @
-    def __init__(self, config_cls: Config = Config)

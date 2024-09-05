@@ -4,26 +4,27 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/request/appdata.py                                                 #
+# Filename   : /appvocai/domain/openty/request/appdata.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Tuesday September 3rd 2024 08:52:54 pm                                              #
+# Modified   : Thursday September 5th 2024 04:57:03 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
+# %%
 from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
 from typing import Any, Collection, Dict, Union
 
-from appvocai.core.enum import ContentType
-from appvocai.domain.request.base import Request, RequestAsync, RequestGen
+from appvocai.core.enum import DataType
+from appvocai.domain.openty.request.base import Request, RequestAsync, RequestGen
 from appvocai.infra.web.header import BrowserHeaders
 
 # ------------------------------------------------------------------------------------------------ #
@@ -43,6 +44,7 @@ class RequestAppData(Request):
         header DefaultDict[str, str]: Header parameters
     """
 
+    data_type: DataType = DataType.APPDATA
     genreId: int = 0
     page: int = 0
     request_type: str = "appdata"
@@ -88,9 +90,11 @@ class RequestAppData(Request):
         }
         return params
 
-    @property
-    def content_type(self) -> ContentType:
-        return ContentType.APPDATA
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class RequestAsyncAppData(RequestAsync[RequestAppData]):
+    data_type: DataType = DataType.APPDATA
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -167,7 +171,7 @@ class RequestAppDataGen(RequestGen[RequestAsync[RequestAppData]]):
         batch_start_page = self._page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
-        async_request: RequestAsync[RequestAppData] = RequestAsync()
+        async_request: RequestAsyncAppData[RequestAppData] = RequestAsyncAppData()
 
         for page in range(batch_start_page, batch_stop_page):
             request = RequestAppData(
@@ -177,6 +181,7 @@ class RequestAppDataGen(RequestGen[RequestAsync[RequestAppData]]):
             )
             async_request.add_request(request=request)
             self._page += 1
+            self._request_count += 1
 
         # Create the Request Object
         return async_request

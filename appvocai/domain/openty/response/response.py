@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/response/response.py                                               #
+# Filename   : /appvocai/domain/openty/response/response.py                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Tuesday September 3rd 2024 11:02:04 pm                                              #
+# Modified   : Wednesday September 4th 2024 10:03:22 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,16 +21,14 @@ from __future__ import annotations
 import logging
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, TypeVar
+from datetime import datetime
+from typing import List, Optional, TypeVar
 from uuid import uuid4
 
 from aiohttp import ClientResponse, ClientResponseError
 
 from appvocai.core.data import DataClass
-from appvocai.core.enum import ContentType
 from appvocai.domain.request.base import Request
-from appvocai.infra.web.profile import SessionControl
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -41,31 +39,18 @@ logger = logging.getLogger(__name__)
 class ResponseAsync(DataClass):
     """Collection of Response objects as part of an asynchronous request."""
 
-    request_count: int = 0
+    id: str = ""
+    timestamp: Optional[datetime] = None
     response_count: int = 0
-    session_control: Optional[SessionControl] = None
     responses: List[Response] = field(default_factory=list)
 
-    def validate(self) -> None:
+    def __post_init__(self) -> None:
+        self.id = str(uuid4())
+        self.timestamp = datetime.now()
 
-        if not self.session_control:
-            msg = "session_control is None. It must be a valid SessionControl object. "
-            logger.exception(msg)
-            raise TypeError(msg)
-
-        if self.session_control.delay < 0:
-            msg = f"Negative values for delay {self.session_control.delay} are not permitted."
-            logger.exception(msg)
-            raise RuntimeError(msg)
-
-        if self.session_control.concurrency < 0:
-            msg = f"Negative values for concurrency {self.session_control.concurrency} are not permitted."
-            logger.exception(msg)
-            raise RuntimeError(msg)
-
-        if len(self.responses) == 0:
-            msg = "No responses in the ResponseAsync class"
-            logger.warning(msg)
+    def add_responses(self, responses: list) -> None:
+        self.responses = responses
+        self.response_count = len(responses)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -87,38 +72,21 @@ class Response(DataClass):
 
         server (str): The endpoint server. Default is an empty string.
         server_datetime (datetime): Datetime the server processed the request. Default is None.
-        cache_control (str): Cache control information. Default is an empty string.
-        x_cache (str): Information on caching behavior (e.g., X-Cache or X-Cache-Remote). Default is an empty string.
-        strict_transport_security (str): Security feature for HTTPS communication (e.g., Strict-Transport-Security). Default is an empty string.
         connection (str): Indicates how the connection is dispatched (e.g., keep-alive or close). Default is an empty string.
-        vary (str): Specifies the fields that might vary in responses (e.g., Vary). Default is an empty string.
 
         status (int): The HTTP return code. Default is 0.
         retries (int): Number of retries to obtain this response. Default is 0.
-        content (List[Dict[str,Any]]): A list of dictionaries containing the results from the request.
         content_type (str): Type of HTTP content returned (e.g., application/json). Default is an empty string.
         content_length (int): Size of content in response in bytes. Default is 0.
         encoding (str): Encoding used for the response (e.g., utf-8). Default is an empty string.
         response_datetime (datetime): Datetime the request was received. Default is None.
         latency (float): The latency of the request in seconds. Default is 0.0.
 
+        content (List[Dict[str,Any]]): A list of dictionaries containing the results from the request.
+
     """
 
-    # 1. Request Metadata
-    id: str = ""  # System generated UUID (default: "")
-    request_uuid: str = ""  # Endpoint's request UUID if available (default: "")
-    request_datetime: Optional[datetime] = (
-        None  # Datetime the request was sent (default: None)
-    )
-    method: str = "GET"  # The HTTP method used (GET, POST, etc.) (default: 'GET')
-    endpoint: str = ""  # The URL or endpoint being accessed (default: "")
-    content_type: Optional[ContentType] = (
-        None  # Type of content for which the request was made.
-    )
-    start_index: int = 0  # The index or offset requested (default: 0)
-    end_index: int = 0  # The index or offset requested (default: 0)
-
-    # 2. Server Metadata
+    # 1. Server Metadata
     server: str = ""  # The endpoint server (default: "")
     server_datetime: Optional[datetime] = (
         None  # Datetime the server processed the request (default: None)
@@ -133,10 +101,10 @@ class Response(DataClass):
     connection: str = ""  # How the connection is dispatched (default: "")
     vary: str = ""  # Specifies fields that might vary in responses (default: "")
 
-    # 3. Response Metadata
+    # 2. Response Metadata
     status: int = 0  # The HTTP return code (default: 0)
     retries: int = 0  # The number of retries to obtain this response.
-    content: List[Dict[str, Any]] = field(default_factory=list)  # The response content.
+
     content_length: int = 0  # Size of content in response in bytes (default: 0)
     encoding: str = ""  # Encoding used for the response (default: "")
     response_datetime: Optional[datetime] = (
@@ -144,24 +112,13 @@ class Response(DataClass):
     )
     latency: float = 0.0  # The latency of the request in seconds (default: 0.0)
 
+    #
+
     def __post_init__(self) -> None:
         self.id = str(uuid4())
 
-    def parse_request(self, request: T) -> None:
-        """Parses the request object and sets the request-related member variables.
-
-        Args:
-            request (Request): The request object containing relevant metadata.
-        """
-        # Set request metadata
-        self.request_uuid = request.id
-        self.request_datetime = request.date_time
-        self.endpoint = request.baseurl
-        self.content_type = request.content_type
-        self.start_index = request.start_index
-        self.end_index = request.end_index
-
-    async def parse_response(self, response: ClientResponse) -> None:
+    @classmethod
+    async def create(self, response: ClientResponse) -> None:
         """Parses the response object from aiohttp and sets the member variables.
 
         Args:
@@ -205,7 +162,7 @@ class Response(DataClass):
         self.status = response.status
         self.content_length = self.parse_content_length(response=response)
         self.encoding = response.headers.get("Content-Encoding", self.encoding)
-        self.response_datetime = datetime.now(timezone.utc)  # Current datetime in GMT
+        self.response_datetime = datetime.now()  # Current datetime in GMT
         self.latency = self.calculate_latency()
 
         try:

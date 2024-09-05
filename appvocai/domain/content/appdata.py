@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 12:47:38 am                                              #
-# Modified   : Monday September 2nd 2024 02:14:03 am                                               #
+# Modified   : Wednesday September 4th 2024 08:42:08 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from appvocai.domain.content.base import Entity
 from appvocai.toolkit.date import ThirdDateFormatter
@@ -32,6 +32,8 @@ from appvocai.toolkit.date import ThirdDateFormatter
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 dt_formatter = ThirdDateFormatter()
+
+
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AppData(Entity):
@@ -139,63 +141,84 @@ class AppData(Entity):
         """
         # Required fields with their respective default values if missing
         required_fields = [
-            'app_id', 'app_name', 'app_censored_name', 'bundle_id', 'description',
-            'category_id', 'category', 'rating_average', 'rating_average_current_version',
-            'rating_count', 'rating_count_current_version', 'developer_id',
-            'developer_name', 'release_date', 'release_date_current_version'
+            "app_id",
+            "app_name",
+            "app_censored_name",
+            "bundle_id",
+            "description",
+            "category_id",
+            "category",
+            "rating_average",
+            "rating_average_current_version",
+            "rating_count",
+            "rating_count_current_version",
+            "developer_id",
+            "developer_name",
+            "release_date",
+            "release_date_current_version",
         ]
 
         # Check if any required field is missing or None
-        missing_fields = [field for field in required_fields if not appdata_row.get(field)]
+        missing_fields = [
+            field for field in required_fields if not appdata_row.get(field)
+        ]
         if missing_fields:
             msg = f"Missing required fields: {', '.join(missing_fields)}"
             logger.exception(msg)
             raise ValueError(msg)
 
         # Extract and validate data
-        app_id = appdata_row['app_id']
+        app_id = appdata_row["app_id"]
         logger.info(f"Creating AppData object for app_id: {app_id}")
 
         # Create the AppData object using the provided data
         app_data = cls(
             app_id=app_id,
-            app_name=appdata_row['app_name'],
-            app_censored_name=appdata_row['app_censored_name'],
-            bundle_id=appdata_row['bundle_id'],
-            description=appdata_row['description'],
-            category_id=appdata_row['category_id'],
-            category=appdata_row['category'],
+            app_name=appdata_row["app_name"],
+            app_censored_name=appdata_row["app_censored_name"],
+            bundle_id=appdata_row["bundle_id"],
+            description=appdata_row["description"],
+            category_id=appdata_row["category_id"],
+            category=appdata_row["category"],
             categories=categories,
-            price=appdata_row.get('price', 0),
-            currency=appdata_row.get('currency', "USD"),
-            rating_average=appdata_row['rating_average'],
-            rating_average_current_version=appdata_row['rating_average_current_version'],
-            rating_average_current_version_change=appdata_row.get('rating_average_current_version_change', 0),
-            rating_average_current_version_pct_change=appdata_row.get('rating_average_current_version_pct_change', 0),
-            rating_count=appdata_row['rating_count'],
-            rating_count_current_version=appdata_row['rating_count_current_version'],
-            developer_id=appdata_row['developer_id'],
-            developer_name=appdata_row['developer_name'],
-            seller_name=appdata_row.get('seller_name'),
-            seller_url=appdata_row.get('seller_url'),
-            app_content_rating=appdata_row.get('app_content_rating'),
-            content_advisory_rating=appdata_row.get('content_advisory_rating'),
-            file_size_bytes=appdata_row.get('file_size_bytes'),
-            minimum_os_version=appdata_row.get('minimum_os_version'),
-            version=appdata_row.get('version'),
-            release_date=dt_formatter.from_iso8601(appdata_row['release_date']),
-            release_notes=appdata_row.get('release_notes'),
-            release_date_current_version=dt_formatter.from_iso8601(appdata_row['release_date_current_version']),
-            url_developer_view=appdata_row.get('url_developer_view'),
-            url_app_view=appdata_row.get('url_app_view'),
-            url_artwork_100=appdata_row.get('url_artwork_100'),
-            url_artwork_512=appdata_row.get('url_artwork_512'),
-            url_artwork_60=appdata_row.get('url_artwork_60'),
+            price=appdata_row.get("price", 0),
+            currency=appdata_row.get("currency", "USD"),
+            rating_average=appdata_row["rating_average"],
+            rating_average_current_version=appdata_row[
+                "rating_average_current_version"
+            ],
+            rating_average_current_version_change=appdata_row.get(
+                "rating_average_current_version_change", 0
+            ),
+            rating_average_current_version_pct_change=appdata_row.get(
+                "rating_average_current_version_pct_change", 0
+            ),
+            rating_count=appdata_row["rating_count"],
+            rating_count_current_version=appdata_row["rating_count_current_version"],
+            developer_id=appdata_row["developer_id"],
+            developer_name=appdata_row["developer_name"],
+            seller_name=appdata_row.get("seller_name"),
+            seller_url=appdata_row.get("seller_url"),
+            app_content_rating=appdata_row.get("app_content_rating"),
+            content_advisory_rating=appdata_row.get("content_advisory_rating"),
+            file_size_bytes=appdata_row.get("file_size_bytes"),
+            minimum_os_version=appdata_row.get("minimum_os_version"),
+            version=appdata_row.get("version"),
+            release_date=dt_formatter.from_iso8601(appdata_row["release_date"]),
+            release_notes=appdata_row.get("release_notes"),
+            release_date_current_version=dt_formatter.from_iso8601(
+                appdata_row["release_date_current_version"]
+            ),
+            url_developer_view=appdata_row.get("url_developer_view"),
+            url_app_view=appdata_row.get("url_app_view"),
+            url_artwork_100=appdata_row.get("url_artwork_100"),
+            url_artwork_512=appdata_row.get("url_artwork_512"),
+            url_artwork_60=appdata_row.get("url_artwork_60"),
             urls_screenshot_ipad=appdata_row.get("urls_screenshot_ipad"),
             urls_screenshot=appdata_row.get("urls_screenshot"),
             iphone_support=appdata_row.get("iphone_support", True),
             ipad_support=appdata_row.get("ipad_support", True),
-            extract_date=dt_formatter.from_iso8601(appdata_row['extract_date']),
+            extract_date=dt_formatter.from_iso8601(appdata_row["extract_date"]),
         )
 
         # Log the successful creation of an AppData object
@@ -244,7 +267,7 @@ class AppData(Entity):
             "url_artwork_60": self.url_artwork_60,
             "urls_screenshot_ipad": self.urls_screenshot_ipad,
             "urls_screenshot": self.urls_screenshot,
-            "extract_date": self.extract_date
+            "extract_date": self.extract_date,
         }
 
     def export_categories(self) -> List[Dict[str, int]]:
@@ -255,9 +278,13 @@ class AppData(Entity):
             List[Dict[int, int]]: A list of dictionaries, each representing a category record with app_id and category_id.
         """
         if self.categories:
-            return [{"app_id": self.app_id, "category_id": category_id} for category_id in self.categories]
+            return [
+                {"app_id": self.app_id, "category_id": category_id}
+                for category_id in self.categories
+            ]
         else:
             return []
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                     RAW APPDATA                                                  #
@@ -303,40 +330,44 @@ class RawAppData(BaseModel):
     supported_devices: Optional[List[str]] = field(default_factory=lambda: None)
 
     @classmethod
-    def create(cls, content: Dict[str,Any]) -> RawAppData:
+    def create(cls, content: Dict[str, Any]) -> RawAppData:
         return cls(
-            app_id = content['trackId'],
-            app_name = content['trackName'],
-            app_censored_name = content['trackCensoredName'],
-            bundle_id = content['bundleId'],
-            description = content['description'],
-            category_id = content['primaryGenreId'],
-            category = content['primaryGenreName'],
-            price = content['price'],
-            currency = content['currency'],
-            rating_average = content['averageUserRating'],
-            rating_average_current_version = content['averageUserRatingForCurrentVersion'],
-            rating_count = content['userRatingCount'],
-            rating_count_current_version = content['userRatingCountForCurrentVersion'],
-            developer_id = content['artistId'],
-            developer_name = content['artistName'],
-            release_date = dt_formatter.from_iso8601(content['releaseDate']),
-            release_date_current_version = dt_formatter.from_iso8601(content['currentVersionReleaseDate']),
-            categories = content.get('genreIds'),
-            url_developer_view = content.get('artistViewUrl'),
-            seller_name = content.get('sellerName'),
-            seller_url = content.get('sellerUrl'),
-            app_content_rating = content.get('trackContentRating'),
-            content_advisory_rating = content.get('contentAdvisoryRating'),
-            file_size_bytes = content.get('fileSizeBytes'),
-            minimum_os_version = content.get('minimumOsVersion'),
-            version = content.get('version'),
-            release_notes = content.get('releaseNotes'),
-            url_artwork_100 = content.get('artworkUrl100'),
-            url_app_view = content.get('trackViewUrl'),
-            url_artwork_512 = content.get('artworkUrl512'),
-            url_artwork_60 = content.get('artworkUrl60'),
-            urls_screenshot_ipad = content.get('ipadScreenshotUrls'),
-            urls_screenshot = content.get('screenshotUrls'),
-            supported_devices = content.get('supportedDevices',[])
+            app_id=content["trackId"],
+            app_name=content["trackName"],
+            app_censored_name=content["trackCensoredName"],
+            bundle_id=content["bundleId"],
+            description=content["description"],
+            category_id=content["primaryGenreId"],
+            category=content["primaryGenreName"],
+            price=content["price"],
+            currency=content["currency"],
+            rating_average=content["averageUserRating"],
+            rating_average_current_version=content[
+                "averageUserRatingForCurrentVersion"
+            ],
+            rating_count=content["userRatingCount"],
+            rating_count_current_version=content["userRatingCountForCurrentVersion"],
+            developer_id=content["artistId"],
+            developer_name=content["artistName"],
+            release_date=dt_formatter.from_iso8601(content["releaseDate"]),
+            release_date_current_version=dt_formatter.from_iso8601(
+                content["currentVersionReleaseDate"]
+            ),
+            categories=content.get("genreIds"),
+            url_developer_view=content.get("artistViewUrl"),
+            seller_name=content.get("sellerName"),
+            seller_url=content.get("sellerUrl"),
+            app_content_rating=content.get("trackContentRating"),
+            content_advisory_rating=content.get("contentAdvisoryRating"),
+            file_size_bytes=content.get("fileSizeBytes"),
+            minimum_os_version=content.get("minimumOsVersion"),
+            version=content.get("version"),
+            release_notes=content.get("releaseNotes"),
+            url_artwork_100=content.get("artworkUrl100"),
+            url_app_view=content.get("trackViewUrl"),
+            url_artwork_512=content.get("artworkUrl512"),
+            url_artwork_60=content.get("artworkUrl60"),
+            urls_screenshot_ipad=content.get("ipadScreenshotUrls"),
+            urls_screenshot=content.get("screenshotUrls"),
+            supported_devices=content.get("supportedDevices", []),
         )

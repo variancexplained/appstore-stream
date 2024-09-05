@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
 # Filename   : /appvocai/application/job/project.py                                                #
@@ -11,20 +11,19 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 01:30:04 am                                              #
-# Modified   : Thursday August 29th 2024 12:22:00 am                                               #
+# Modified   : Thursday September 5th 2024 08:31:52 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-
+# %%
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
-from uuid import uuid4
 
+from appvocai import Passport
 from appvocai.core.data import DataClass
-from appvocai.core.enum import (Category, ContentType, ProjectFrequency,
-                                ProjectStatus)
+from appvocai.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -34,9 +33,10 @@ class Project(DataClass):
     Represents a scraping project, encapsulating the related configuration and state.
 
     Attributes:
+        passport (Passport): The identity for the Project
         category (Category): The category of the project, defined in the Category enum.
-        content_type (ContentType): The type of data being scraped (e.g., "AppData", "AppReview"),
-            defined in the ContentType enum.
+        data_type (DataType): The type of data being scraped (e.g., "AppData", "AppReview"),
+            defined in the DataType enum.
         id (str): Unique identifier for the project; auto-generated if not provided during initialization.
         frequency (ProjectFrequency): The frequency of scraping jobs, defaulting to WEEKLY.
         max_page_processed (int): The highest page processed for the project, used to track the progress of scraping.
@@ -49,16 +49,26 @@ class Project(DataClass):
         status (ProjectStatus): Current status of the project, defaulting to IDLE.
     """
 
-    category: Category                          # Category of the project, defined in the Category enum.
-    content_type: ContentType                   # Type of data being scraped, defined in ContentType enum.
-    id: str = ""                                # Unique identifier for the project; initialized in __post_init__.
-    frequency: ProjectFrequency = ProjectFrequency.WEEKLY  # Frequency of scraping jobs; defaults to WEEKLY.
-    max_page_processed: int = 0                 # The highest page processed for the project; starts at 0.
-    last_page_processed: int = 0                # Last page processed; will be the starting page for resume jobs.
-    last_job_executed: Optional[datetime] = None  # UTC Timestamp of the last executed job; None if never executed.
-    next_scheduled_job: Optional[datetime] = None  # Timestamp of the next scheduled job; None if not scheduled.
-    job_count: int = 0                          # Total number of jobs created; starts at 0.
-    job_successes: int = 0                      # Number of successful jobs; starts at 0.
+    category: Category  # Category of the project, defined in the Category enum.
+    data_type: DataType  # Type of data being scraped, defined in DataType enum.
+    passport: Optional[Passport] = None
+    frequency: ProjectFrequency = (
+        ProjectFrequency.WEEKLY
+    )  # Frequency of scraping jobs; defaults to WEEKLY.
+    max_page_processed: int = (
+        0  # The highest page processed for the project; starts at 0.
+    )
+    last_page_processed: int = (
+        0  # Last page processed; will be the starting page for resume jobs.
+    )
+    last_job_executed: Optional[datetime] = (
+        None  # UTC Timestamp of the last executed job; None if never executed.
+    )
+    next_scheduled_job: Optional[datetime] = (
+        None  # Timestamp of the next scheduled job; None if not scheduled.
+    )
+    job_count: int = 0  # Total number of jobs created; starts at 0.
+    job_successes: int = 0  # Number of successful jobs; starts at 0.
     status: ProjectStatus = ProjectStatus.IDLE  # Project status; defaults to IDLE.
 
     def __post_init__(self) -> None:
@@ -68,8 +78,8 @@ class Project(DataClass):
         This method is called automatically after the object is created, ensuring that
         the project has a unique identifier for tracking purposes.
         """
-        if not self.id:
-            self.id = str(uuid4())  # Generate a UUID for the project ID
+        if not self.passport:
+            self.passport = Passport(self)
 
     @property
     def success_rate(self) -> float:
@@ -116,5 +126,13 @@ class Project(DataClass):
         It also sets the last_job_executed to the current UTC time to reflect when the job completed.
         """
         self.job_successes += 1
-        self.last_job_executed = datetime.now(timezone.utc)  # Set the last executed time to now in UTC
+        self.last_job_executed = (
+            datetime.now()
+        )  # Set the last executed time to now in UTC
         self.status = ProjectStatus.IDLE
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Usage
+project = Project(category=Category.BOOKS, data_type=DataType.APPREVIEW)
+print(project.passport)

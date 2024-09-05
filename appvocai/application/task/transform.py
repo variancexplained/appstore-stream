@@ -11,14 +11,14 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:38 pm                                               #
-# Modified   : Tuesday September 3rd 2024 07:51:46 pm                                              #
+# Modified   : Thursday September 5th 2024 06:58:06 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 import logging
 from abc import abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Generic, List, TypeVar
 
 from dependency_injector.wiring import Provide, inject
@@ -203,7 +203,7 @@ class TaskTransformAppData(TaskTransform[AppData]):
             url_artwork_60=raw_data.url_artwork_60,
             urls_screenshot_ipad=raw_data.urls_screenshot_ipad,
             urls_screenshot=raw_data.urls_screenshot,
-            extract_date=datetime.now(timezone.utc),
+            extract_date=datetime.now(),
         )
         return appdata
 

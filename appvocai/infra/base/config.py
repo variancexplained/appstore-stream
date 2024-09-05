@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Wednesday September 4th 2024 04:51:58 am                                            #
+# Modified   : Wednesday September 4th 2024 09:56:53 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,6 +23,7 @@ from typing import Any, Dict, Union, cast
 
 import yaml
 from dotenv import dotenv_values, load_dotenv
+from git import Optional
 
 from appvocai.core.data import NestedNamespace
 
@@ -110,9 +111,9 @@ class Config:
 
     #  ------------------------------------------------------------------------------------------- #
     @property
-    def extractor(self) -> NestedNamespace:
+    def asession(self) -> NestedNamespace:
         config = self.load_config()
-        return self.to_namespace(config["extractor"])
+        return self.to_namespace(config["asession"])
 
     #  ------------------------------------------------------------------------------------------- #
     @property
@@ -159,10 +160,10 @@ class Config:
     #  ------------------------------------------------------------------------------------------- #
     def get_environment(self) -> str:
         """
-        Gets the environment variable
+        Gets the environment
 
         Returns:
-            str: The value of the environment variable.
+            str: The value of the environment.
         """
         return os.getenv("ENV", "dev")
 
@@ -172,6 +173,16 @@ class Config:
         Load environment variables from the .env file.
         """
         load_dotenv(self._env_file_path, override=True)
+
+    #  ------------------------------------------------------------------------------------------- #
+    def get_env_var(self, key: str) -> Optional[str]:
+        """
+        Gets an environment variable
+
+        Returns:
+            str: The value of the requested environmet variable.
+        """
+        return os.getenv(key)
 
     #  ------------------------------------------------------------------------------------------- #
     def load_config(self) -> Dict[str, Any]:

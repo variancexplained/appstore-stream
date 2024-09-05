@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/operator/base/observer.py                                           #
+# Filename   : /appvocai/infra/observer/base.py                                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:52:56 pm                                               #
-# Modified   : Wednesday September 4th 2024 03:53:19 am                                            #
+# Modified   : Thursday September 5th 2024 04:57:03 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from typing import Generic, TypeVar
 
 from prometheus_client import start_http_server
 
-from appvocai.core.enum import ContentType
+from appvocai.core.enum import DataType
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar("T")
@@ -38,7 +38,7 @@ class Observer(ABC, Generic[T]):
     It includes a content type to differentiate between different kinds of monitored content.
     """
 
-    def __init__(self, content_type: ContentType, port: int = 8000):
+    def __init__(self, data_type: DataType, port: int = 8000):
         """
         Initializes the Prometheus server and sets up necessary metrics.
 
@@ -46,7 +46,7 @@ class Observer(ABC, Generic[T]):
             port (int): The port on which the Prometheus server should be exposed. Defaults to 8000.
         """
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        self._content_type = content_type
+        self._data_type = data_type
         self.port = port
         self._start_server()
         self._setup_metrics()
