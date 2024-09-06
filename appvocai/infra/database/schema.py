@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 30th 2024 02:42:23 am                                                 #
-# Modified   : Friday September 6th 2024 09:43:02 am                                               #
+# Modified   : Friday September 6th 2024 10:29:59 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -142,9 +142,7 @@ schema = {
             i1 INT,
             i2 INT,
             i3 INT,
-            PRIMARY KEY (job_id, task_id),
             INDEX idx_data_type (data_type),
-            INDEX idx_task_type (task_type),
-            FOREIGN KEY (job_id) REFERENCES job(job_id)
+            INDEX idx_task_type (task_type)
 );""",
 }

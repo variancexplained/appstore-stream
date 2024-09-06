@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 08:33:31 am                                               #
-# Modified   : Friday September 6th 2024 09:47:27 am                                               #
+# Modified   : Friday September 6th 2024 10:47:44 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -57,15 +57,15 @@ class MetricsGen:
         self.task_id += 1
         self.request_id += 1
         return ExtractMetrics(
-            job_id=self.job_id % 5,
+            job_id=self.job_id % NUM_METRICS_PER_JOB,
             data_type=random.choice(data_types),
-            task_id=self.task_id % 5,
+            task_id=self.task_id % NUM_METRICS_PER_TASK,
             task_type=random.choice(task_types),
-            request_id=self.request_id % 5,
+            request_id=self.request_id,
             dt_started=datetime.now() - timedelta(days=random.randint(0, 3)),
             dt_stopped=datetime.now() - timedelta(days=random.randint(4, 6)),
             duration=random.randint(1000, 10000),
-            instances=random.randint(10, 100),
+            requests=random.randint(10, 100),
             latency_min=random.random(),
             latency_average=random.random(),
             latency_median=random.random(),
@@ -85,6 +85,28 @@ class MetricsGen:
 @pytest.mark.metrics
 class TestExtractMetrics:  # pragma: no cover
     # ============================================================================================ #
+    def test_setup(self, caplog, container) -> None:
+        start = datetime.now()
+        logger.info(
+            f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.db.mysql()
+        query = "DELETE FROM metrics;"
+        params = {}
+        with db as database:
+            database.execute(query=query, params=params)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            f"\n\nCompleted {self.__class__.__name__} {inspect.stack()[0][3]} in {duration} seconds at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
     def test_add(self, caplog, container) -> None:
         start = datetime.now()
         logger.info(
@@ -94,7 +116,7 @@ class TestExtractMetrics:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         metrics_gen = MetricsGen()
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         for i in range(NUM_METRICS):
             metrics = metrics_gen.gen()
             repo.add(metrics=metrics)
@@ -119,9 +141,9 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
-        for i in range(1, NUM_METRICS_PER_JOB + 1):
-            metrics = repo.get_task_metrics(job_id=i)
+        repo = ExtractMetricsRepo(database=db)
+        for i in range(NUM_METRICS_PER_JOB):
+            metrics = repo.get_job_metrics(job_id=i)
             assert len(metrics) == NUM_METRICS_PER_JOB
             assert isinstance(metrics, pd.DataFrame)
             logging.debug(metrics)
@@ -144,8 +166,8 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
-        for i in range(1, NUM_METRICS_PER_TASK + 1):
+        repo = ExtractMetricsRepo(database=db)
+        for i in range(NUM_METRICS_PER_TASK):
             metrics = repo.get_task_metrics(task_id=i)
             assert len(metrics) == NUM_METRICS_PER_TASK
             assert isinstance(metrics, pd.DataFrame)
@@ -169,7 +191,7 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         metrics = repo.get_task_type_metrics(task_type=TaskType.EXTRACT)
         assert isinstance(metrics, pd.DataFrame)
         logging.debug(metrics)
@@ -200,7 +222,7 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         metrics = repo.get_data_type_metrics(data_type=DataType.APPDATA)
         assert isinstance(metrics, pd.DataFrame)
         logging.debug(metrics)
@@ -227,7 +249,7 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         repo.remove_job_metrics(job_id=1)
         metrics = repo.get_job_metrics(job_id=1)
         assert isinstance(metrics, pd.DataFrame)
@@ -252,11 +274,11 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         repo.remove_job_metrics(job_id=1)
         metrics = repo.get_job_metrics(job_id=1)
         assert isinstance(metrics, pd.DataFrame)
-        assert len(metrics) == NUM_METRICS - NUM_METRICS_PER_JOB
+        assert len(metrics) == 0
         logging.debug(metrics)
 
         # ---------------------------------------------------------------------------------------- #
@@ -277,7 +299,7 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         repo.remove_all()
         metrics = repo.get_all()
         assert isinstance(metrics, pd.DataFrame)
@@ -302,7 +324,7 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
-        repo = ExtractMetricsRepo(database=db.mysql)
+        repo = ExtractMetricsRepo(database=db)
         repo.remove_all()
         metrics = repo.get_all()
         assert isinstance(metrics, pd.DataFrame)

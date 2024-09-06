@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 07:42:43 am                                               #
-# Modified   : Friday September 6th 2024 09:41:41 am                                               #
+# Modified   : Friday September 6th 2024 10:46:37 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -134,12 +134,12 @@ class ExtractMetricsRepo(Repo):
         """
         query = """
                 INSERT INTO metrics (
-                    job_id, data_type, task_id, task_type, instance_id, starttime, stoptime, duration, instances,
+                    job_id, data_type, task_id, task_type, instance_id, dt_started, dt_stopped, duration, instances,
                     latency_min, latency_average, latency_median, latency_max, latency_std,
                     throughput_min, throughput_average, throughput_median, throughput_max, throughput_std,
                     f1, f2
                 ) VALUES (
-                    :job_id, :data_type, :task_id, :task_type, :instance_id, :starttime, :stoptime, :duration, :requests,
+                    :job_id, :data_type, :task_id, :task_type, :request_id, :dt_started, :dt_stopped, :duration, :requests,
                     :latency_min, :latency_average, :latency_median, :latency_max, :latency_std,
                     :throughput_min, :throughput_average, :throughput_median, :throughput_max, :throughput_std,
                     :speedup, :size
@@ -148,6 +148,9 @@ class ExtractMetricsRepo(Repo):
 
         with self._database as db:
             db.execute(query=query, params=params)
+
+    def get(self, id: int) -> ExtractMetrics:
+        raise NotImplementedError
 
     def get_all(self) -> pd.DataFrame:
         """
@@ -190,8 +193,15 @@ class ExtractMetricsRepo(Repo):
         params: Dict[str, Any] = {}
 
         with self._database as db:
-            data = db.query(query, params)
-            data.rename(columns={"f1": "speedup", "f2": "size"})
+            data = db.query(query=query, params=params)
+            data.rename(
+                columns={
+                    "f1": "speedup",
+                    "f2": "size",
+                    "instance_id": "request_id",
+                    "instances": "requests",
+                }
+            )
             return data
 
     def get_job_metrics(self, job_id: int) -> pd.DataFrame:
@@ -236,8 +246,15 @@ class ExtractMetricsRepo(Repo):
         params = {"job_id": job_id}
 
         with self._database as db:
-            data = db.query(query, params)
-            data.rename(columns={"f1": "speedup", "f2": "size"})
+            data = db.query(query=query, params=params)
+            data.rename(
+                columns={
+                    "f1": "speedup",
+                    "f2": "size",
+                    "instance_id": "request_id",
+                    "instances": "requests",
+                }
+            )
             return data
 
     def get_task_metrics(self, task_id: int) -> pd.DataFrame:
@@ -282,8 +299,15 @@ class ExtractMetricsRepo(Repo):
         params = {"task_id": task_id}
 
         with self._database as db:
-            data = db.query(query, params)
-            data.rename(columns={"f1": "speedup", "f2": "size"})
+            data = db.query(query=query, params=params)
+            data.rename(
+                columns={
+                    "f1": "speedup",
+                    "f2": "size",
+                    "instance_id": "request_id",
+                    "instances": "requests",
+                }
+            )
             return data
 
     def get_data_type_metrics(self, data_type: DataType) -> pd.DataFrame:
@@ -328,8 +352,15 @@ class ExtractMetricsRepo(Repo):
         params = {"data_type": data_type.value}
 
         with self._database as db:
-            data = db.query(query, params)
-            data.rename(columns={"f1": "speedup", "f2": "size"})
+            data = db.query(query=query, params=params)
+            data.rename(
+                columns={
+                    "f1": "speedup",
+                    "f2": "size",
+                    "instance_id": "request_id",
+                    "instances": "requests",
+                }
+            )
             return data
 
     def get_task_type_metrics(self, task_type: TaskType) -> pd.DataFrame:
@@ -374,8 +405,15 @@ class ExtractMetricsRepo(Repo):
         params = {"task_type": task_type.value}
 
         with self._database as db:
-            data = db.query(query, params)
-            data.rename(columns={"f1": "speedup", "f2": "size"})
+            data = db.query(query=query, params=params)
+            data.rename(
+                columns={
+                    "f1": "speedup",
+                    "f2": "size",
+                    "instance_id": "request_id",
+                    "instances": "requests",
+                }
+            )
             return data
 
     def getall(self) -> pd.DataFrame:
@@ -414,8 +452,15 @@ class ExtractMetricsRepo(Repo):
         params: Dict[str, Any] = {}
 
         with self._database as db:
-            data = db.query(query, params)
-            data.rename(columns={"f1": "speedup", "f2": "size"})
+            data = db.query(query=query, params=params)
+            data.rename(
+                columns={
+                    "f1": "speedup",
+                    "f2": "size",
+                    "instance_id": "request_id",
+                    "instances": "requests",
+                }
+            )
             return data
 
     def remove_job_metrics(self, job_id: int) -> None:
@@ -430,7 +475,7 @@ class ExtractMetricsRepo(Repo):
             params = {"job_id": job_id}
 
             with self._database as db:
-                db.execute(query, params)
+                db.execute(query=query, params=params)
         else:
             msg = f"Removal of metrics for job {job_id} aborted."
             self._logger.info(msg)
@@ -446,7 +491,7 @@ class ExtractMetricsRepo(Repo):
             params: Dict[str, Any] = {}
 
             with self._database as db:
-                db.execute(query, params)
+                db.execute(query=query, params=params)
         else:
             msg = "Removal of metrics aborted."
             self._logger.info(msg)
