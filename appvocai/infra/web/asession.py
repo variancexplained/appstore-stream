@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Thursday September 5th 2024 06:58:10 am                                             #
+# Modified   : Friday September 6th 2024 05:45:34 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,9 +22,9 @@ from typing import List, Optional
 
 import aiohttp
 
-from appvocai.application.metrics.extract import MetricsASession
-from appvocai.domain.openty.request.base import Request, RequestAsync
-from appvocai.domain.openty.response.response import Response, ResponseAsync
+from appvocai.application.metrics.extract import MetricsAsyncSession
+from appvocai.domain.artifact.request.base import AsyncRequest, Request
+from appvocai.domain.artifact.response.response import Response, ResponseAsync
 from appvocai.infra.base.config import Config
 from appvocai.infra.operator.error.metrics import MetricsError
 from appvocai.infra.web.adapter import Adapter
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 #                                   EXTRACTOR                                                      #
 # ------------------------------------------------------------------------------------------------ #
-class ASession:
+class AsyncSession:
     """
     Manages asynchronous HTTP requests and processes them using configured adapters and observers.
 
@@ -50,7 +50,7 @@ class ASession:
         timeout (aiohttp.ClientTimeout): The timeout settings for the session.
         cookie_jar (aiohttp.DummyCookieJar): The cookie jar to use for managing cookies in the session.
         adapter (Adapter): An adapter for handling session control and rate/concurrency adaptation.
-        observer (ObserverASessionMetrics): An observer for collecting and reporting task metrics.
+        observer (ObserverAsyncSessionMetrics): An observer for collecting and reporting task metrics.
         error_observer (ObserverError): An observer for collecting and reporting error metrics.
         config_cls (type[Config], optional): The configuration class to use. Defaults to `Config`.
 
@@ -59,7 +59,7 @@ class ASession:
         _timeout (aiohttp.ClientTimeout): Stores the provided timeout settings.
         _cookie_jar (aiohttp.DummyCookieJar): Stores the provided cookie jar.
         _adapter (Adapter): Stores the provided adapter for session control.
-        _observer (ObserverASessionMetrics): Stores the provided observer for task metrics.
+        _observer (ObserverAsyncSessionMetrics): Stores the provided observer for task metrics.
         _error_observer (ObserverError): Stores the provided observer for error metrics.
         _config (Config): The extracted configuration instance.
         _session_request_limit (int): Maximum number of requests per session.
@@ -83,16 +83,18 @@ class ASession:
         self._config: Config = config_cls()
         self._connector: aiohttp.TCPConnector = connector
         self._timeout: aiohttp.ClientTimeout = aiohttp.ClientTimeout(
-            total=self._config.asession.timeout
+            total=self._config.async_session.timeout
         )
         self._cookie_jar = cookie_jar
         self._adapter = adapter
         self._observer = observer
         self._error_observer = error_observer
 
-        self._session_request_limit: int = self._config.asession.session_request_limit
-        self._retries: int = self._config.asession.retries
-        self._concurrency: int = self._config.asession.concurrency
+        self._session_request_limit: int = (
+            self._config.async_session.session_request_limit
+        )
+        self._retries: int = self._config.async_session.retries
+        self._concurrency: int = self._config.async_session.concurrency
         self._proxies = self._config.proxy
 
         self._session_request_count: int = 0
@@ -112,12 +114,12 @@ class ASession:
             await self._session.close()
             self._session_active = False
 
-    async def get(self, async_request: RequestAsync[Request]) -> ResponseAsync:
+    async def get(self, async_request: AsyncRequest[Request]) -> ResponseAsync:
         """
         Executes asynchronous HTTP GET requests, processes the responses, and returns them.
 
         Args:
-            async_request (RequestAsync[Request]): The asynchronous request object containing individual requests.
+            async_request (AsyncRequest[Request]): The asynchronous request object containing individual requests.
 
         Returns:
             ResponseAsync: The response object containing the individual responses and related metadata.
@@ -148,18 +150,18 @@ class ASession:
         if self._reset_session_if_expired():
             await self._create_session()
 
-        metrics = MetricsASession()
+        metrics = MetricsAsyncSession()
         metrics.compute(async_response=response)
         self._observer.notify(metrics=metrics)
 
         return response
 
-    def _create_profile(self, async_request: RequestAsync[Request]) -> SessionProfile:
+    def _create_profile(self, async_request: AsyncRequest[Request]) -> SessionProfile:
         """
         Creates a session profile for tracking request and response metrics.
 
         Args:
-            async_request (RequestAsync[Request]): The asynchronous request object.
+            async_request (AsyncRequest[Request]): The asynchronous request object.
 
         Returns:
             SessionProfile: The profile object for tracking session metrics.
@@ -283,8 +285,8 @@ class ASession:
                 self._session = aiohttp.ClientSession(
                     connector=self._connector,
                     timeout=self._timeout,
-                    trust_env=self._config.asession.trust_env,
-                    raise_for_status=self._config.asession.raise_for_status,
+                    trust_env=self._config.async_session.trust_env,
+                    raise_for_status=self._config.async_session.raise_for_status,
                     cookie_jar=self._cookie_jar,
                 )
                 self._session_request_count = 0

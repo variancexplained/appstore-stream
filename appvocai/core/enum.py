@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:31:31 pm                                              #
-# Modified   : Friday September 6th 2024 07:25:45 am                                               #
+# Modified   : Friday September 6th 2024 05:18:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -113,7 +113,7 @@ class DataType(Enum):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskType(Enum):
+class OperationType(Enum):
     EXTRACT = "Extract"
     TRANSFORM = "Transform"
     LOAD = "Load"
@@ -126,7 +126,7 @@ class ProjectStatus(Enum):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class JobStatus(Enum):
+class Status(Enum):
     CREATED = "Created"
     SCHEDULED = "Scheduled"
     IN_PROGRESS = "In Progress"

@@ -4,48 +4,34 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/base.py                                                            #
+# Filename   : /appvocai/domain/artifact/base.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday September 4th 2024 07:34:05 pm                                            #
-# Modified   : Thursday September 5th 2024 12:45:50 am                                             #
+# Modified   : Friday September 6th 2024 04:41:38 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Operation Base Module"""
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
+from abc import ABC
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
-from appvocai.core.data import DataClass
-from appvocai.infra.base.config import Config
-
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class Entity(DataClass):
-    """Defines a base class for appdata and appreview classes."""
+from appvocai.core.enum import OperationType
+from appvocai.infra.identity.passport import ArtifactPassport, TaskPassport
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class Sensor(DataClass):
-    """Base class for subclasses that monitor and collect data on processes."""
+class Artifact(ABC):
+    """Defines a base class for the classes of objects passed among Tasks."""
 
-    id: Optional[str] = None
-    created: Optional[datetime] = None
-    environment: Optional[Env] = None
-    version: str = "0.1.0"
-    tags: List[str] = field(default_factory=list)
-
-    def __post_init__(self) -> None:
-        """Initializes the entity after dataclass construction."""
-        self.created = datetime.now()
-        env = Config().get_environment()
-        self.environment = Env.get(value=env)
-        if not self.id or not hasattr(self, "id"):
-            self.id = OpentyIDX().get_next_id(self)
+    def __init__(
+        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
+    ) -> None:
+        self.passport = ArtifactPassport(self, task_passport)
+        self.operation_type: Optional[OperationType] = None

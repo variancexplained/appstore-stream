@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 09:04:54 pm                                               #
-# Modified   : Wednesday September 4th 2024 06:24:00 pm                                            #
+# Modified   : Friday September 6th 2024 05:44:43 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -97,7 +97,7 @@ class ErrorType(Enum):
         general error categories (e.g., 3xx for redirection, 4xx for client errors, 5xx for server errors).
 
         Args:
-            operator (str): The name of the operator (e.g., "ASession", "TransformAppData").
+            operator (str): The name of the operator (e.g., "AsyncSession", "TransformAppData").
             error_code (int): The numeric error code to be mapped to an ErrorType.
 
         Returns:

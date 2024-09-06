@@ -4,33 +4,32 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/web/monitor.py                                                      #
+# Filename   : /appvocai/application/operation/base.py                                             #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday September 5th 2024 01:16:16 am                                             #
-# Modified   : Friday September 6th 2024 05:44:42 pm                                               #
+# Created    : Wednesday August 28th 2024 04:22:03 pm                                              #
+# Modified   : Friday September 6th 2024 03:56:36 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Web Monitoring Module"""
-from dataclasses import dataclass, field
-from typing import List, Optional
+from abc import ABC, abstractmethod
+from typing import Any
 
-from appvocai.domain.artifact.monitor.event import CompteRendu, Event
+from appvocai.core.enum import OperationType
 
 
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-class AsyncSessionCR(CompteRendu):
-    session: Optional[Event] = None
-    requests: List[Event] = field(default_factory=list)
+class Operation(ABC):
+    """Abstract base class for Task objects."""
 
-    def set_session_event(self, session: Event) -> None:
-        self.session = session
+    @abstractmethod
+    def run(self, *args: Any, **kwargs: Any) -> Any:
+        """Executes the task."""
 
-    def add_request_event(self, request: Event) -> None:
-        self.requests.append(request)
+    @abstractmethod
+    def operation_type(self) -> OperationType:
+        """An OperationType Enum value, EXTRACT, TRANSFORM, or LOAD"""

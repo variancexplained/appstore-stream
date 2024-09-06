@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/openty/request/review.py                                           #
+# Filename   : /appvocai/domain/artifact/request/review.py                                         #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 12:26:33 am                                                #
-# Modified   : Thursday September 5th 2024 04:57:03 am                                             #
+# Modified   : Friday September 6th 2024 06:49:04 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import Any, Collection, Dict, Union
 
 from appvocai.core.enum import DataType
-from appvocai.domain.request.base import Request, RequestAsync, RequestGen
+from appvocai.domain.request.base import AsyncRequest, Request, RequestGen
 from appvocai.infra.web.header import STOREFRONT
 
 # ------------------------------------------------------------------------------------------------ #
@@ -73,9 +73,14 @@ class RequestAppReview(Request):
     def data_type(self) -> DataType:
         return DataType.APPREVIEW
 
+    def __init__(
+        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
+    ) -> None:
+        super().__init__(task_passport=task_passport)
+
 
 # ------------------------------------------------------------------------------------------------ #
-class RequestAppReviewGen(RequestGen[RequestAsync[RequestAppReview]]):
+class RequestAppReviewGen(RequestGen[AsyncRequest[RequestAppReview]]):
     """Encapsulates an asynchronous AppData request generation.
 
     Args:
@@ -128,7 +133,7 @@ class RequestAppReviewGen(RequestGen[RequestAsync[RequestAppReview]]):
 
         return self
 
-    def __next__(self) -> RequestAsync[RequestAppReview]:
+    def __next__(self) -> AsyncRequest[RequestAppReview]:
         """Generates the next batch of asynchronous AppData requests.
 
         Returns:
@@ -148,7 +153,7 @@ class RequestAppReviewGen(RequestGen[RequestAsync[RequestAppReview]]):
         batch_start_page = self._page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
-        async_request: RequestAsync[RequestAppReview] = RequestAsync()
+        async_request: AsyncRequest[RequestAppReview] = AsyncRequest()
 
         for page in range(batch_start_page, batch_stop_page):
             request = RequestAppReview(

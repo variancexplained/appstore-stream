@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/web/metrics.py                                                      #
+# Filename   : /appvocai/application/metrics/extract.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Wednesday September 4th 2024 06:24:00 pm                                            #
+# Modified   : Friday September 6th 2024 05:44:42 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class MetricsASession(Metrics):
+class MetricsAsyncSession(Metrics):
     """
     Class for capturing and computing extract-related metrics.
 

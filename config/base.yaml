@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 03:13:34 pm                                               #
-# Modified   : Wednesday September 4th 2024 06:23:18 pm                                            #
+# Modified   : Friday September 6th 2024 05:45:33 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -29,7 +29,7 @@ setup:
 # ------------------------------------------------------------------------------------------------ #
 #                               EXTRACTOR CONFIG SECTION                                           #
 # ------------------------------------------------------------------------------------------------ #
-asession:
+async_session:
   session_request_limit: 2000  # Maximum number of requests per session. Fixed for sessions
   retries: 3  # Retries allowed. Set and fixed for all jobs and sessions
   concurrency: 50 # Base concurrency. Reconfigured on a async request level

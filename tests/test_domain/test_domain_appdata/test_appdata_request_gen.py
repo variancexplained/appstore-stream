@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday September 4th 2024 11:50:48 pm                                            #
-# Modified   : Friday September 6th 2024 09:55:54 am                                               #
+# Modified   : Friday September 6th 2024 05:07:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,7 +21,7 @@ import logging
 # from appvocai.domain.openty.request.appdata import (
 #     RequestAppData,
 #     RequestAppDataGen,
-#     RequestAsyncAppData,
+#     AsyncRequestAppData,
 # )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -59,7 +59,7 @@ single_line = f"\n{100 * '-'}"
 #         )
 #         n_requests = 0
 #         for arequest in gen:
-#             assert isinstance(arequest, RequestAsyncAppData)
+#             assert isinstance(arequest, AsyncRequestAppData)
 #             assert arequest.request_count == BATCH_SIZE
 #             for request in arequest.requests:
 #                 assert isinstance(request, RequestAppData)

@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/task/transform.py                                             #
+# Filename   : /appvocai/application/operation/transform.py                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:38 pm                                               #
-# Modified   : Thursday September 5th 2024 06:58:06 am                                             #
+# Modified   : Friday September 6th 2024 05:27:51 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ from dependency_injector.wiring import Provide, inject
 from pydantic import ValidationError
 
 from appvocai.application.observer.transform import ObserverTransformMetrics
-from appvocai.application.task.base import Task
+from appvocai.application.operation.base import Task
 from appvocai.container import AppVoCAIContainer
 from appvocai.domain.content.appdata import AppData, RawAppData
 from appvocai.domain.content.base import Entity
@@ -37,7 +37,7 @@ T = TypeVar("T", bound="Entity")
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskTransform(Task, Generic[T]):
+class TransformOperation(Task, Generic[T]):
     """
     A base class for executing asynchronous transform tasks.
 
@@ -95,9 +95,9 @@ class TaskTransform(Task, Generic[T]):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskTransformAppData(TaskTransform[AppData]):
+class TransformOperationAppData(TaskTransform[AppData]):
     """
-    A specialized TaskTransform class for handling RequestAsyncAppData types.
+    A specialized TaskTransform class for handling AsyncRequestAppData types.
 
     This class uses a specific observer tailored for app data transformion tasks.
     """
@@ -209,9 +209,9 @@ class TaskTransformAppData(TaskTransform[AppData]):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskTransformAppReview(TaskTransform):
+class TransformOperationAppReview(TaskTransform):
     """
-    A specialized TaskTransform class for handling RequestAsyncAppReview types.
+    A specialized TaskTransform class for handling AsyncRequestAppReview types.
 
     This class uses a specific observer tailored for app review transformion tasks.
     """

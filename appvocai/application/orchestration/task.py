@@ -4,33 +4,38 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/web/monitor.py                                                      #
+# Filename   : /appvocai/application/orchestration/task.py                                         #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday September 5th 2024 01:16:16 am                                             #
-# Modified   : Friday September 6th 2024 05:44:42 pm                                               #
+# Created    : Friday September 6th 2024 04:34:13 pm                                               #
+# Modified   : Friday September 6th 2024 05:27:01 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Web Monitoring Module"""
-from dataclasses import dataclass, field
-from typing import List, Optional
-
-from appvocai.domain.artifact.monitor.event import CompteRendu, Event
+"""Task Module"""
+from appvocai import JobPassport, TaskPassport
+from appvocai.core.enum import Status
+from appvocai.domain.artifact.request.base import AsyncRequest
 
 
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-class AsyncSessionCR(CompteRendu):
-    session: Optional[Event] = None
-    requests: List[Event] = field(default_factory=list)
+class Task:
+    def __init__(self, job_passport: JobPassport, async_request: AsyncRequest):
+        self.passport = TaskPassport(owner=self, job_passport=job_passport)
+        self._async_request = async_request
+        self.status = Status.CREATED
 
-    def set_session_event(self, session: Event) -> None:
-        self.session = session
+    def execute(self) -> None:
+        # Run the pipeline from Extract to Load
+        self.status = Status.IN_PROGRESS
+        self.run_operations()
+        self.status = Status.COMPLETED
 
-    def add_request_event(self, request: Event) -> None:
-        self.requests.append(request)
+    def run_operations(self) -> None:
+        extract_result = ExtractOperation().run(artifact=self._async_request)
+        transform_result = TransformOperation().run(artifact=extract_result)
+        LoadOperation().run(transform_result)

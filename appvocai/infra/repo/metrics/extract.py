@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 07:42:43 am                                               #
-# Modified   : Friday September 6th 2024 10:46:37 am                                               #
+# Modified   : Friday September 6th 2024 04:48:20 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,41 +22,18 @@ import logging
 from typing import Any, Dict
 
 import pandas as pd
-from sqlalchemy.types import BIGINT, DATETIME, FLOAT, INTEGER, VARCHAR
 
-from appvocai.core.enum import DataType, TaskType
-from appvocai.domain.metrics.extract import ExtractMetrics
+from appvocai.core.enum import DataType, OperationType
+from appvocai.domain.metrics.metrics import ExtractMetrics
 from appvocai.domain.repo.base import Repo
 from appvocai.infra.database.mysql import MySQLDatabase
 
-# ------------------------------------------------------------------------------------------------ #
-DTYPES = {
-    "job_id": BIGINT,
-    "data_type": VARCHAR(255),
-    "task_id": VARCHAR(255),
-    "task_type": VARCHAR(255),
-    "instance_id": INTEGER,
-    "dt_started": DATETIME,
-    "dt_stopped": DATETIME,
-    "duration": FLOAT,
-    "instances": INTEGER,
-    "latency_min": FLOAT,
-    "latency_average": FLOAT,
-    "latency_median": FLOAT,
-    "latency_max": FLOAT,
-    "latency_std": FLOAT,
-    "throughput_min": FLOAT,
-    "throughput_average": FLOAT,
-    "throughput_median": FLOAT,
-    "throughput_max": FLOAT,
-    "throughput_std": FLOAT,
-}
 # ------------------------------------------------------------------------------------------------ #
 #                                  EXTRACT METRICS REPO                                            #
 # ------------------------------------------------------------------------------------------------ #
 
 
-class ExtractMetricsRepo(Repo):
+class MetricsRepo(Repo):
     """
     Repository class for managing ExtractMetrics data in the 'metrics' table.
 
@@ -89,8 +66,8 @@ class ExtractMetricsRepo(Repo):
     get_data_type_metrics(data_type: DataType) -> pd.DataFrame
         Retrieves metrics based on the `data_type` and returns them as a Pandas DataFrame.
 
-    get_task_type_metrics(task_type: TaskType) -> pd.DataFrame
-        Retrieves metrics based on the `task_type` and returns them as a Pandas DataFrame.
+    get_operation_type_metrics(operation_type: OperationType) -> pd.DataFrame
+        Retrieves metrics based on the `operation_type` and returns them as a Pandas DataFrame.
 
     getall() -> pd.DataFrame
         Retrieves all records from the 'metrics' table and returns them as a Pandas DataFrame.
@@ -134,12 +111,12 @@ class ExtractMetricsRepo(Repo):
         """
         query = """
                 INSERT INTO metrics (
-                    job_id, data_type, task_id, task_type, instance_id, dt_started, dt_stopped, duration, instances,
+                    project_id, job_id,  task_id, data_type, operation_type, dt_started, dt_stopped, duration, instances,
                     latency_min, latency_average, latency_median, latency_max, latency_std,
                     throughput_min, throughput_average, throughput_median, throughput_max, throughput_std,
                     f1, f2
                 ) VALUES (
-                    :job_id, :data_type, :task_id, :task_type, :request_id, :dt_started, :dt_stopped, :duration, :requests,
+                    :project_id, :job_id, :task_id, :data_type, :operation_type, :dt_started, :dt_stopped, :duration, :instances,
                     :latency_min, :latency_average, :latency_median, :latency_max, :latency_std,
                     :throughput_min, :throughput_average, :throughput_median, :throughput_max, :throughput_std,
                     :speedup, :size
@@ -167,11 +144,11 @@ class ExtractMetricsRepo(Repo):
             A Pandas DataFrame containing the metrics for the specified job.
         """
         query = """
-        SELECT  job_id,
-                data_type,
+        SELECT  project_id,
+                job_id,
                 task_id,
-                task_type,
-                instance_id,
+                data_type,
+                operation_type,
                 dt_started,
                 dt_stopped,
                 duration,
@@ -219,11 +196,11 @@ class ExtractMetricsRepo(Repo):
             A Pandas DataFrame containing the metrics for the specified job.
         """
         query = """
-        SELECT  job_id,
-                data_type,
+        SELECT  project_id,
+                job_id,
                 task_id,
-                task_type,
-                instance_id,
+                data_type,
+                operation_type,
                 dt_started,
                 dt_stopped,
                 duration,
@@ -240,7 +217,7 @@ class ExtractMetricsRepo(Repo):
                 throughput_std,
                 f1,
                 f2
-      FROM metrics
+      FROM metrics;
         WHERE job_id = :job_id;
         """
         params = {"job_id": job_id}
@@ -272,11 +249,11 @@ class ExtractMetricsRepo(Repo):
             A Pandas DataFrame containing the metrics for the specified task.
         """
         query = """
-        SELECT  job_id,
-                data_type,
+        SELECT  project_id,
+                job_id,
                 task_id,
-                task_type,
-                instance_id,
+                data_type,
+                operation_type,
                 dt_started,
                 dt_stopped,
                 duration,
@@ -293,7 +270,7 @@ class ExtractMetricsRepo(Repo):
                 throughput_std,
                 f1,
                 f2
-      FROM metrics
+      FROM metrics;
         WHERE task_id = :task_id;
         """
         params = {"task_id": task_id}
@@ -325,11 +302,11 @@ class ExtractMetricsRepo(Repo):
             A Pandas DataFrame containing the metrics for the specified data type.
         """
         query = """
-        SELECT  job_id,
-                data_type,
+        SELECT  project_id,
+                job_id,
                 task_id,
-                task_type,
-                instance_id,
+                data_type,
+                operation_type,
                 dt_started,
                 dt_stopped,
                 duration,
@@ -346,7 +323,7 @@ class ExtractMetricsRepo(Repo):
                 throughput_std,
                 f1,
                 f2
-      FROM metrics
+      FROM metrics;
         WHERE data_type = :data_type;
         """
         params = {"data_type": data_type.value}
@@ -363,13 +340,13 @@ class ExtractMetricsRepo(Repo):
             )
             return data
 
-    def get_task_type_metrics(self, task_type: TaskType) -> pd.DataFrame:
+    def get_operation_type_metrics(self, operation_type: OperationType) -> pd.DataFrame:
         """
         Retrieves metrics based on the specified task type.
 
         Parameters:
         ----------
-        task_type : TaskType
+        operation_type : OperationType
             The type of task for which to retrieve metrics (e.g., Extract, Load).
 
         Returns:
@@ -378,11 +355,11 @@ class ExtractMetricsRepo(Repo):
             A Pandas DataFrame containing the metrics for the specified task type.
         """
         query = """
-        SELECT  job_id,
-                data_type,
+        SELECT  project_id,
+                job_id,
                 task_id,
-                task_type,
-                instance_id,
+                data_type,
+                operation_type,
                 dt_started,
                 dt_stopped,
                 duration,
@@ -399,10 +376,10 @@ class ExtractMetricsRepo(Repo):
                 throughput_std,
                 f1,
                 f2
-      FROM metrics
-        WHERE task_type = :task_type;
+      FROM metrics;
+        WHERE operation_type = :operation_type;
         """
-        params = {"task_type": task_type.value}
+        params = {"operation_type": operation_type.value}
 
         with self._database as db:
             data = db.query(query=query, params=params)
@@ -426,11 +403,11 @@ class ExtractMetricsRepo(Repo):
             A Pandas DataFrame containing all the records from the metrics table.
         """
         query = """
-        SELECT  job_id,
-                data_type,
+        SELECT  project_id,
+                job_id,
                 task_id,
-                task_type,
-                instance_id,
+                data_type,
+                operation_type,
                 dt_started,
                 dt_stopped,
                 duration,
@@ -447,7 +424,7 @@ class ExtractMetricsRepo(Repo):
                 throughput_std,
                 f1,
                 f2
-        FROM metrics
+      FROM metrics;
         """
         params: Dict[str, Any] = {}
 

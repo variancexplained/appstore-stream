@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 30th 2024 02:42:23 am                                                 #
-# Modified   : Friday September 6th 2024 10:29:59 am                                               #
+# Modified   : Friday September 6th 2024 03:24:56 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,7 +26,7 @@ schema = {
         category VARCHAR(64) NOT NULL,
         bookmark INTEGER NOT NULL DEFAULT 0,
         n_jobs INTEGER NOT NULL DEFAULT 0,
-        last_job_id VARCHAR(255),
+        last_job_id BIGINT,
         dt_last_job_started DATETIME,
         dt_last_job_ended DATETIME,
         dt_created DATETIME,
@@ -117,15 +117,15 @@ schema = {
             FOREIGN KEY (category_id) REFERENCES category(category_id)
         );""",
     "metrics": """CREATE TABLE IF NOT EXISTS metrics (
+            project_id INTEGER NOT NULL,
             job_id BIGINT NOT NULL,
+            task_id BIGINT NOT NULL,
             data_type VARCHAR(255) NOT NULL,
-            task_id VARCHAR(255) NOT NULL,
-            task_type VARCHAR(255) NOT NULL,
-            instance_id INT NOT NULL,
+            operation_type VARCHAR(255) NOT NULL,
+            instances INT NOT NULL,
             dt_started DATETIME NOT NULL,
             dt_stopped DATETIME NOT NULL,
             duration FLOAT NOT NULL,
-            instances INT NOT NULL,
             latency_min FLOAT NOT NULL,
             latency_average FLOAT NOT NULL,
             latency_median FLOAT NOT NULL,
@@ -143,6 +143,6 @@ schema = {
             i2 INT,
             i3 INT,
             INDEX idx_data_type (data_type),
-            INDEX idx_task_type (task_type)
+            INDEX idx_operation_type (operation_type)
 );""",
 }

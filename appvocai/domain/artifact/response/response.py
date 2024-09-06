@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/openty/response/response.py                                        #
+# Filename   : /appvocai/domain/artifact/response/response.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Wednesday September 4th 2024 10:03:22 pm                                            #
+# Modified   : Friday September 6th 2024 04:18:10 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -77,7 +77,7 @@ class Response(DataClass):
         status (int): The HTTP return code. Default is 0.
         retries (int): Number of retries to obtain this response. Default is 0.
         content_type (str): Type of HTTP content returned (e.g., application/json). Default is an empty string.
-        content_length (int): Size of content in response in bytes. Default is 0.
+        size (int): Size of content in response in bytes. Default is 0.
         encoding (str): Encoding used for the response (e.g., utf-8). Default is an empty string.
         response_datetime (datetime): Datetime the request was received. Default is None.
         latency (float): The latency of the request in seconds. Default is 0.0.
@@ -105,7 +105,7 @@ class Response(DataClass):
     status: int = 0  # The HTTP return code (default: 0)
     retries: int = 0  # The number of retries to obtain this response.
 
-    content_length: int = 0  # Size of content in response in bytes (default: 0)
+    size: int = 0  # Size of content in response in bytes (default: 0)
     encoding: str = ""  # Encoding used for the response (default: "")
     response_datetime: Optional[datetime] = (
         None  # Datetime the request was received (default: None)
@@ -134,7 +134,7 @@ class Response(DataClass):
             - connection: Extracted from the 'Connection' header if available.
             - vary: Extracted from the 'Vary' header if available.
             - status: HTTP return code from the response object.
-            - content_length: Extracted from the 'Content-Length' header if available.
+            - size: Extracted from the 'Content-Length' header if available.
             - encoding: Extracted from the 'Content-Encoding' header if available.
             - response_datetime: The current datetime when the response is processed.
         """
@@ -160,7 +160,7 @@ class Response(DataClass):
 
         # Set response metadata
         self.status = response.status
-        self.content_length = self.parse_content_length(response=response)
+        self.size = self.parse_size(response=response)
         self.encoding = response.headers.get("Content-Encoding", self.encoding)
         self.response_datetime = datetime.now()  # Current datetime in GMT
         self.latency = self.calculate_latency()
@@ -187,7 +187,7 @@ class Response(DataClass):
         else:
             return 0
 
-    def parse_content_length(self, response: ClientResponse) -> int:
+    def parse_size(self, response: ClientResponse) -> int:
         try:
             return int(response.headers["Content-Length"])
         except KeyError:

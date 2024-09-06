@@ -4,57 +4,50 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/task/extract.py                                               #
+# Filename   : /appvocai/application/operation/extract.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:29 pm                                               #
-# Modified   : Thursday September 5th 2024 06:58:06 am                                             #
+# Modified   : Friday September 6th 2024 05:49:32 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 
 
-from appvocai.application.metrics.extract import MetricsExtract
-from appvocai.application.task.base import Task
-from appvocai.domain.request.base import RequestAsync
-from appvocai.domain.response.response import ResponseAsync
-from appvocai.infra.observer.extract import ObserverASessionMetrics
-from appvocai.infra.web.asession import ASession
+from appvocai.application.operation.base import Operation
+from appvocai.core.enum import OperationType
+from appvocai.domain.artifact.request.base import AsyncRequest
+from appvocai.domain.artifact.response.response import ResponseAsync
+from appvocai.infra.web.asession import AsyncSession
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TaskExtract(Task):
+class ExtractOperation(Operation):
     """ """
 
-    def __init__(self, asession: ASession, observer: ObserverASessionMetrics) -> None:
+    __OPERATION_TYPE = OperationType.EXTRACT
+
+    def __init__(self, async_session: AsyncSession) -> None:
         """
         Initializes the TaskExtract class with the specified dependencies.
 
         Args:
             observer (ObserverExtractMetrics): The observer that will monitor and
                 report on metrics.
-            session (ASession): The session object for performing asynchronous HTTP requests.
+            session (AsyncSession): The session object for performing asynchronous HTTP requests.
             history (SessionHistory): The session history for tracking past requests.
             adapter (Adapter): The adapter for managing session behavior.
 
         Raises:
             ValueError: If any of the required dependencies are not provided or invalid.
         """
-        if not observer or not session or not history or not adapter:
-            raise ValueError(
-                "All dependencies (observer, session, history, adapter) must be provided."
-            )
+        self._async_session = async_session
 
-        self._observer = observer
-        self._session = session
-        self._history = history
-        self._adapter = adapter
-
-    async def run(self, async_request: RequestAsync) -> ResponseAsync:
+    async def run(self, async_request: AsyncRequest) -> ResponseAsync:
         """
         Executes the asynchronous task.
 
@@ -66,7 +59,7 @@ class TaskExtract(Task):
         5. Notifies the observer of the computed metrics.
 
         Args:
-            async_request (RequestAsync): The asynchronous request to be executed.
+            async_request (AsyncRequest): The asynchronous request to be executed.
 
         Returns:
             ResponseAsync: The response from the asynchronous request.
@@ -74,17 +67,12 @@ class TaskExtract(Task):
         Raises:
             Exception: If the HTTP request fails or the response validation fails.
         """
-        metrics = MetricsExtract()
-
+        # Stamp the passport as we move through operations customs.
+        async_request.passport.operation_type = self.__OPERATION_TYPE
         try:
-            # Collect pre-execution metrics
-            metrics.pre()
 
             # Execute the asynchronous HTTP request
             async_response = await self._session.get(async_request=async_request)
-
-            # Collect post-execution metrics
-            metrics.post()
 
             # Validate the response
             async_response.validate()

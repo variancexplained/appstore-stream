@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/repo/job.py                                                         #
+# Filename   : /appvocai/infra/repo/orchestration/job.py                                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 01:28:02 am                                                   #
-# Modified   : Thursday September 5th 2024 06:58:08 am                                             #
+# Modified   : Friday September 6th 2024 05:45:34 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -91,9 +91,9 @@ class JobRepo(AppLayerRepo):
             circuit_breaker_short_circuit_404s_window_size,
             circuit_breaker_short_circuit_errors_failure_rate_threshold,
             circuit_breaker_short_circuit_errors_window_size,
-            request_asession_max_concurrency,
-            request_asession_retries,
-            request_asession_timeout,
+            request_async_session_max_concurrency,
+            request_async_session_retries,
+            request_async_session_timeout,
             request_athrottle_base_rate,
             request_athrottle_burn_in,
             request_athrottle_max_rate,
@@ -144,9 +144,9 @@ class JobRepo(AppLayerRepo):
             %(circuit_breaker_short_circuit_404s_window_size)s,
             %(circuit_breaker_short_circuit_errors_failure_rate_threshold)s,
             %(circuit_breaker_short_circuit_errors_window_size)s,
-            %(request_asession_max_concurrency)s,
-            %(request_asession_retries)s,
-            %(request_asession_timeout)s,
+            %(request_async_session_max_concurrency)s,
+            %(request_async_session_retries)s,
+            %(request_async_session_timeout)s,
             %(request_athrottle_base_rate)s,
             %(request_athrottle_burn_in)s,
             %(request_athrottle_max_rate)s,
@@ -202,15 +202,15 @@ class JobRepo(AppLayerRepo):
             "circuit_breaker_short_circuit_404s_window_size": jobdata.circuit_breaker.short_circuit_404s_window_size,
             "circuit_breaker_short_circuit_errors_failure_rate_threshold": jobdata.circuit_breaker.short_circuit_errors_failure_rate_threshold,
             "circuit_breaker_short_circuit_errors_window_size": jobdata.circuit_breaker.short_circuit_errors_window_size,
-            "request_asession_max_concurrency": jobdata.asession.max_concurrency,
-            "request_asession_retries": jobdata.asession.retries,
-            "request_asession_timeout": jobdata.asession.timeout,
-            "request_athrottle_base_rate": jobdata.asession.athrottle.base_rate,
-            "request_athrottle_burn_in": jobdata.asession.athrottle.burn_in,
-            "request_athrottle_max_rate": jobdata.asession.athrottle.max_rate,
-            "request_athrottle_min_rate": jobdata.asession.athrottle.min_rate,
-            "request_athrottle_temperature": jobdata.asession.athrottle.temperature,
-            "request_athrottle_window_size": jobdata.asession.athrottle.window_size,
+            "request_async_session_max_concurrency": jobdata.async_session.max_concurrency,
+            "request_async_session_retries": jobdata.async_session.retries,
+            "request_async_session_timeout": jobdata.async_session.timeout,
+            "request_athrottle_base_rate": jobdata.async_session.athrottle.base_rate,
+            "request_athrottle_burn_in": jobdata.async_session.athrottle.burn_in,
+            "request_athrottle_max_rate": jobdata.async_session.athrottle.max_rate,
+            "request_athrottle_min_rate": jobdata.async_session.athrottle.min_rate,
+            "request_athrottle_temperature": jobdata.async_session.athrottle.temperature,
+            "request_athrottle_window_size": jobdata.async_session.athrottle.window_size,
             "request_generator_batch_size": jobdata.request_generator.batch_size,
         }
         with self._database as conn:

@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/job/job.py                                                    #
+# Filename   : /appvocai/application/orchestration/job.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:14:31 pm                                              #
-# Modified   : Thursday September 5th 2024 07:09:40 am                                             #
+# Modified   : Friday September 6th 2024 05:18:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,10 +25,10 @@ from datetime import datetime
 from typing import List, Optional, TypeVar
 
 from appvocai import Passport
-from appvocai.application.job.project import Project
-from appvocai.application.task.base import Task
+from appvocai.application.operation.base import Task
+from appvocai.application.orchestration.project import Project
 from appvocai.core.data import DataClass
-from appvocai.core.enum import JobStatus
+from appvocai.core.enum import Status
 from appvocai.toolkit.date import to_utc
 
 # ------------------------------------------------------------------------------------------------ #
@@ -63,7 +63,7 @@ class Job(DataClass):
         _completed (Optional[datetime]): Date and time the job was completed.
         _execution_time (float): The amount of time the job has run in seconds.
         last_page (int): The last page processed during scraping.
-        status (JobStatus): Current status of the job from the JobStatus enum.
+        status (Status): Current status of the job from the Status enum.
         cancellation_reason (Optional[str]): Reason for cancellation if applicable.
         success_rate (float): Percentage of successful scraping jobs.
         retry_count (int): Count of how many times the job has been retried.
@@ -83,9 +83,7 @@ class Job(DataClass):
     _execution_time: float = 0  # The amount of time the job has run in seconds.
     start_page: int = 0  # The start page for scaping.
     last_page: int = 0  # The last page processed during scraping.
-    status: JobStatus = (
-        JobStatus.CREATED
-    )  # Current status of the job from the JobStatus enum.
+    status: Status = Status.CREATED  # Current status of the job from the Status enum.
     cancellation_reason: Optional[str] = None  # Reason for cancellation if applicable.
     retry_count: int = 0  # Count of how many times the job has been retried.
     max_retries: int = 3  # Maximum number of retries allowed.
@@ -143,26 +141,26 @@ class Job(DataClass):
         if scheduled < datetime.now():
             logger.error("Scheduled time cannot be in the past.")
             raise ValueError("Scheduled time cannot be in the past.")
-        if self.status not in {JobStatus.CREATED, JobStatus.SCHEDULED}:
+        if self.status not in {Status.CREATED, Status.SCHEDULED}:
             logger.error(
                 f"Cannot schedule job {self.id} from status {self.status.value}."
             )
             raise RuntimeError(
                 f"Cannot schedule job {self.id} from status {self.status.value}."
             )
-        self.status = JobStatus.SCHEDULED
+        self.status = Status.SCHEDULED
         self.scheduled = to_utc(dt=scheduled)
         self.updated = datetime.now()
         logger.info(f"{self.description} has been scheduled for {self.scheduled}.")
 
     def start(self) -> None:
         """Start the job and update its status and last updated time."""
-        if self.status not in {JobStatus.CREATED, JobStatus.SCHEDULED}:
+        if self.status not in {Status.CREATED, Status.SCHEDULED}:
             msg = f"Cannot start job {self.id} from status {self.status.value}."
             logger.error(msg)
             raise RuntimeError(msg)
 
-        self.status = JobStatus.RUNNING
+        self.status = Status.RUNNING
         self.started = datetime.now()
         self.updated = self.started
         self.project.job_started()
@@ -190,7 +188,7 @@ class Job(DataClass):
         Args:
             reason (Optional[str]): Reason for cancellation if applicable.
         """
-        self.status = JobStatus.CANCELED  # Update job status to CANCELED
+        self.status = Status.CANCELED  # Update job status to CANCELED
         self.updated = datetime.now()
         self.cancellation_reason = reason
         logger.info(f"{self.description} canceled at {self.updated}.")
@@ -200,7 +198,7 @@ class Job(DataClass):
     def fail(self) -> None:
         """Mark the job as failed, update its status, and reset the task index."""
         self._check_running()
-        self.status = JobStatus.FAILED  # Update job status to FAILED
+        self.status = Status.FAILED  # Update job status to FAILED
         self.updated = datetime.now()  # Update the last updated time
         self._task_idx = 0  # Reset the task index for a new attempt
         logger.info(f"{self.description} failed at {self.updated}.")
@@ -214,7 +212,7 @@ class Job(DataClass):
         """
         self._check_running()
         self.completed = datetime.now()
-        self.status = JobStatus.COMPLETED
+        self.status = Status.COMPLETED
         self.updated = self.completed
         self.project.job_completed()
 
@@ -231,7 +229,7 @@ class Job(DataClass):
         if self.retry_count < self.max_retries:
             self.retry_count += 1  # Increment the retry count
             self._task_idx = 0  # Reset the task index for a new attempt
-            self.status = JobStatus.RUNNING  # Reset in case status is failed.
+            self.status = Status.RUNNING  # Reset in case status is failed.
             self.started = datetime.now()  # Reset start time
             self.updated = self.started
             logger.info(f"Retry #{self.retry_count} for {self.description}")
@@ -245,7 +243,7 @@ class Job(DataClass):
         Add a new task to the job's task list.
 
         Args:
-            task (Task): The task to be added to the job.
+            task (Operation): The task to be added to the job.
 
         Raises:
             TypeError: If the provided task is not of type Task.
@@ -261,14 +259,14 @@ class Job(DataClass):
 
     def _check_running(self) -> None:
         """Ensure the job is running before performing certain actions."""
-        if self.status != JobStatus.RUNNING:
+        if self.status != Status.RUNNING:
             raise RuntimeError(
                 f"The job must be running before this action can be performed. Current status is {self.status.value}"
             )
 
     def _check_retry(self) -> None:
         """Ensure the job is running before performing certain actions."""
-        if self.status not in {JobStatus.FAILED, JobStatus.CANCELED}:
+        if self.status not in {Status.FAILED, Status.CANCELED}:
             raise RuntimeError(
                 f"The job {self.id} must be failed or canceled before this action can be performed. Current status is {self.status.value}"
             )

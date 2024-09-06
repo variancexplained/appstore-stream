@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/openty/request/base.py                                             #
+# Filename   : /appvocai/domain/artifact/request/base.py                                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Thursday September 5th 2024 06:58:10 am                                             #
+# Modified   : Friday September 6th 2024 06:48:19 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,28 +22,32 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
-from uuid import uuid4
 
-from appvocai.core.identity import Openty
+from appvocai.domain.artifact.base import Artifact
+from appvocai.infra.identity.passport import TaskPassport
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar("T", bound="Request")
-U = TypeVar("U", bound="RequestAsync[Request]")
+U = TypeVar("U", bound="AsyncRequest[Request]")
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class Request(Openty, ABC):
+class Request(Artifact):
     """
-    Abstract base class for individual HTTP requests, inheriting from the Openty class.
+    Abstract base class for individual HTTP requests, inheriting from the Artifact class.
 
-    Inherited Attributes from Openty:
+    This class provides a base structure for managing HTTP requests as artifacts within the system.
+    Each request is tied to a specific task via the `task_passport` and handles request-level attributes
+    like HTTP method, sent time, and abstract methods to define request-specific details like headers,
+    base URL, and parameters.
+
+    Inherited Attributes from Artifact:
         entype (DataType): The type of the entity, distinguishing between different operation types.
         id (str): A unique identifier for the entity.
         created (Optional[datetime]): The timestamp when the entity was initially created.
         modified (Optional[datetime]): The timestamp when the entity was last modified.
-        environment (Optional[Env]): The environment in which the entity operates (e.g., Development, Production),
-                                     determined automatically based on configuration.
+        environment (Optional[Env]): The environment in which the entity operates (e.g., Development, Production).
         version (str): The version of the entity or schema, defaulting to "0.1.0".
         tags (List[str]): A list of tags associated with the entity for categorization or labeling.
 
@@ -61,7 +65,6 @@ class Request(Openty, ABC):
 
     sent: Optional[datetime] = None  # Datetime the request was sent.
     method: str = "GET"  # The HTTP method used (GET, POST, etc.) (default: 'GET')
-    metrics: Metrics
 
     @property
     @abstractmethod
@@ -88,40 +91,63 @@ class Request(Openty, ABC):
     def end_index(self) -> int:
         """Returns the ending index for the request, if applicable."""
 
+    def __init__(
+        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
+    ) -> None:
+        """
+        Initializes the Request object, inheriting from Artifact and associating the request with a task.
+
+        Args:
+            task_passport (TaskPassport): The passport of the task associated with this request.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(task_passport=task_passport)
+
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class RequestAsync(Openty, Generic[T]):
+class AsyncRequest(Artifact, Generic[T]):
     """
-    Encapsulates a list of asynchronous requests, inheriting from the Openty class.
+    A class representing a batch of asynchronous requests, inheriting from Artifact.
 
-    Inherited Attributes from Openty:
+    This class manages a collection of asynchronous requests, tracking the number of requests
+    and providing methods to add new requests to the batch. It ensures the modified timestamp is
+    updated whenever a request is added.
+
+    Inherited Attributes from Artifact:
         entype (DataType): The type of the entity, distinguishing between different operation types.
-        id (str): A unique identifier for the entity, generated automatically if not provided.
+        id (str): A unique identifier for the entity.
         created (Optional[datetime]): The timestamp when the entity was initially created.
         modified (Optional[datetime]): The timestamp when the entity was last modified.
-        environment (Optional[Env]): The environment in which the entity operates (e.g., Development, Production),
-                                     determined automatically based on configuration.
+        environment (Optional[Env]): The environment in which the entity operates (e.g., Development, Production).
         version (str): The version of the entity or schema, defaulting to "0.1.0".
         tags (List[str]): A list of tags associated with the entity for categorization or labeling.
-        size: Method inherited from Openty that calculates the total size of the object, including its attributes.
 
     Attributes:
-        request_count (int): The number of requests contained within this object. Defaults to 0.
-        requests (List[T]): A list of requests of type T, which is a generic type parameter. Defaults to an empty list.
+        request_count (int): The number of requests in the batch. Defaults to 0.
+        requests (List[T]): A list of requests in the batch.
 
     Methods:
-        __post_init__: Initializes the entity by generating a unique ID and setting the current timestamp.
-        add_request: Adds a request to the list of requests, increments the request count, and updates the modified timestamp.
+        add_request(request: T) -> None:
+            Adds a new request to the list of requests and updates the modified timestamp.
     """
 
     request_count: int = 0
     requests: List[T] = field(default_factory=list)
 
-    def __post_init__(self) -> None:
-        """Initializes the entity after dataclass construction."""
-        self.id = str(uuid4())
-        self.created = datetime.now()
+    def __init__(
+        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
+    ) -> None:
+        """
+        Initializes the AsyncRequest object, associating it with a task.
+
+        Args:
+            task_passport (TaskPassport): The passport of the task associated with this batch of requests.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(task_passport=task_passport)
 
     def add_request(self, request: T) -> None:
         """
@@ -138,15 +164,40 @@ class RequestAsync(Openty, Generic[T]):
 
 # ------------------------------------------------------------------------------------------------ #
 class RequestGen(ABC, Generic[U]):
+    """
+    Abstract base class for generating requests asynchronously.
+
+    This class serves as a generator for requests, implementing the iterator protocol
+    with `__iter__` and `__next__` methods that are meant to be implemented by subclasses.
+    It associates each generated request with a specific task via the `task_passport`.
+
+    Attributes:
+        _task_passport (TaskPassport): The passport of the task associated with this request generation.
+
+    Abstract Methods:
+        __iter__() -> RequestGen[U]:
+            Initializes the generation of requests, making the class iterable.
+        __next__() -> U:
+            Generates the next request in the sequence.
+    """
+
+    def __init__(
+        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
+    ) -> None:
+        """
+        Initializes the RequestGen object, associating it with a task.
+
+        Args:
+            task_passport (TaskPassport): The passport of the task associated with this request generator.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
+        self._task_passport = task_passport
 
     @abstractmethod
     def __iter__(self) -> RequestGen[U]:
-        """Initalizes the generation of Requests"""
+        """Initializes the generation of requests, making the class iterable."""
 
     @abstractmethod
     def __next__(self) -> U:
-        """Generates the next request"""
-
-
-# ------------------------------------------------------------------------------------------------ #
-# %%
+        """Generates the next request in the sequence."""

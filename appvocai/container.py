@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Friday September 6th 2024 07:04:07 am                                               #
+# Modified   : Friday September 6th 2024 05:48:26 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ from dependency_injector import containers, providers
 from appvocai.infra.base.config import Config
 from appvocai.infra.database.mysql import MySQLDatabase
 
-# from appvocai.infra.web.asession import ASession
+# from appvocai.infra.web.asession import AsyncSession
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -51,7 +51,7 @@ class PersistenceContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 #                                 EXTRACTOR CONTAINER                                              #
 # ------------------------------------------------------------------------------------------------ #
-# class ASessionContainer(containers.DeclarativeContainer):
+# class AsyncSessionContainer(containers.DeclarativeContainer):
 
 #     config = providers.Configuration()
 
@@ -62,14 +62,14 @@ class PersistenceContainer(containers.DeclarativeContainer):
 #     # Connector for working with HTTP and HTTPS via TCP sockets.
 #     connector = providers.Singleton(
 #         aiohttp.TCPConnector,
-#         use_dns_cache=config.asession.connector.use_dns_cache,
-#         ttl_dns_cache=config.asession.connector.ttl_dns_cache,
-#         limit=config.asession.connector.limit,
-#         limit_per_host=config.asession.connector.limit_per_host,
-#         enable_cleanup_closed=config.asession.connector.enable_cleanup_closed,
-#         keepalive_timeout=config.asession.connector.keepalive_timeout,
-#         force_close=config.asession.connector.force_close,
-#         happy_eyeballs_delay=config.asession.connector.happy_eyeballs_delay,
+#         use_dns_cache=config.async_session.connector.use_dns_cache,
+#         ttl_dns_cache=config.async_session.connector.ttl_dns_cache,
+#         limit=config.async_session.connector.limit,
+#         limit_per_host=config.async_session.connector.limit_per_host,
+#         enable_cleanup_closed=config.async_session.connector.enable_cleanup_closed,
+#         keepalive_timeout=config.async_session.connector.keepalive_timeout,
+#         force_close=config.async_session.connector.force_close,
+#         happy_eyeballs_delay=config.async_session.connector.happy_eyeballs_delay,
 #     )
 
 #     # Controls the adapter metrics and statistics history
