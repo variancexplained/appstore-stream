@@ -11,58 +11,46 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Thursday September 5th 2024 04:57:03 am                                             #
+# Modified   : Friday September 6th 2024 07:04:07 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Framework Dependency Container"""
-# import logging
-# import logging.config  # pragma: no cover
+import logging
+import logging.config  # pragma: no cover
 
-# import aiohttp
-# from dependency_injector import containers, providers
+from dependency_injector import containers, providers
 
-# from appvocai.core.enum import DataType
-# from appvocai.infra.base.config import Config
-# from appvocai.infra.database.mysql import MySQLDatabase
-# from appvocai.infra.observer.extract import ObserverASessionMetrics
-# from appvocai.infra.observer.load import ObserverLoadMetrics
-# from appvocai.infra.observer.transform import ObserverTransformMetrics
-# from appvocai.infra.web.adapter import (
-#     AdapterBaselineStage,
-#     AdapterConcurrencyExploreStage,
-#     AdapterExploitStage,
-#     AdapterRateExploreStage,
-# )
+from appvocai.infra.base.config import Config
+from appvocai.infra.database.mysql import MySQLDatabase
 
-# # from appvocai.infra.web.asession import ASession
-# from appvocai.infra.web.profile import SessionHistory
+# from appvocai.infra.web.asession import ASession
 
 
-# # ------------------------------------------------------------------------------------------------ #
-# #                                        LOGGING                                                   #
-# # ------------------------------------------------------------------------------------------------ #
-# class LoggingContainer(containers.DeclarativeContainer):
-#     config = providers.Configuration()
+# ------------------------------------------------------------------------------------------------ #
+#                                        LOGGING                                                   #
+# ------------------------------------------------------------------------------------------------ #
+class LoggingContainer(containers.DeclarativeContainer):
+    config = providers.Configuration()
 
-#     logging = providers.Resource(
-#         logging.config.dictConfig,
-#         config=config.logging,
-#     )
-
-
-# # ------------------------------------------------------------------------------------------------ #
-# #                                      PERSISTENCE                                                 #
-# # ------------------------------------------------------------------------------------------------ #
-# class PersistenceContainer(containers.DeclarativeContainer):
-
-#     mysql = providers.Singleton(MySQLDatabase)
+    logging = providers.Resource(
+        logging.config.dictConfig,
+        config=config.logging,
+    )
 
 
-# # ------------------------------------------------------------------------------------------------ #
-# #                                 EXTRACTOR CONTAINER                                              #
-# # ------------------------------------------------------------------------------------------------ #
+# ------------------------------------------------------------------------------------------------ #
+#                                      PERSISTENCE                                                 #
+# ------------------------------------------------------------------------------------------------ #
+class PersistenceContainer(containers.DeclarativeContainer):
+
+    mysql = providers.Singleton(MySQLDatabase)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 EXTRACTOR CONTAINER                                              #
+# ------------------------------------------------------------------------------------------------ #
 # class ASessionContainer(containers.DeclarativeContainer):
 
 #     config = providers.Configuration()
@@ -109,31 +97,15 @@
 #     )
 
 
-# # ------------------------------------------------------------------------------------------------ #
-# #                                   METRICS OBSERVERS                                              #
-# # ------------------------------------------------------------------------------------------------ #
-# class ObserverContainer(containers.DeclarativeContainer):
+# ------------------------------------------------------------------------------------------------ #
+#                                       FRAMEWORK                                                  #
+# ------------------------------------------------------------------------------------------------ #
+class AppVoCAIContainer(containers.DeclarativeContainer):
 
-#     asession_observer = providers.Singleton(
-#         ObserverASessionMetrics, data_type=DataType.APPDATA
-#     )
-#     transform_observer = providers.Singleton(
-#         ObserverTransformMetrics, data_type=DataType.APPDATA
-#     )
-#     load_observer = providers.Singleton(ObserverLoadMetrics, data_type=DataType.APPDATA)
+    config_filepath = Config().filepath
 
+    config = providers.Configuration(yaml_files=[config_filepath])
 
-# # ------------------------------------------------------------------------------------------------ #
-# #                                       FRAMEWORK                                                  #
-# # ------------------------------------------------------------------------------------------------ #
-# class AppVoCAIContainer(containers.DeclarativeContainer):
+    logs = providers.Container(LoggingContainer, config=config)
 
-#     config_filepath = Config().filepath
-
-#     config = providers.Configuration(yaml_files=[config_filepath])
-
-#     logs = providers.Container(LoggingContainer, config=config)
-
-#     db = providers.Container(PersistenceContainer)
-
-#     asession = providers.Container(ASessionContainer)
+    db = providers.Container(PersistenceContainer)

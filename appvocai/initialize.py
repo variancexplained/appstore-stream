@@ -11,14 +11,14 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Saturday August 31st 2024 04:58:25 pm                                               #
+# Modified   : Friday September 6th 2024 07:02:09 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 """Application Setup Module"""
 import logging
-from typing import Dict, Literal
+from typing import Dict
 
 import pandas as pd
 from sqlalchemy.types import INTEGER, VARCHAR
@@ -31,6 +31,8 @@ from appvocai.infra.database.schema import schema
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
+
+
 # ------------------------------------------------------------------------------------------------ #
 def load_database(database: MySQLDatabase, config: Config) -> None:
     """
@@ -47,7 +49,7 @@ def load_database(database: MySQLDatabase, config: Config) -> None:
     """
     load_category_table(database=database, config=config)
 
-# ------------------------------------------------------------------------------------------------ #
+
 # ------------------------------------------------------------------------------------------------ #
 def load_category_table(database: MySQLDatabase, config: Config) -> None:
     """
@@ -80,7 +82,7 @@ def load_category_table(database: MySQLDatabase, config: Config) -> None:
         TABLE_NAME = config.setup["database"]["tables"]["category"]["tablename"]
         CATEGORY_FILEPATH = config.setup["database"]["tables"]["category"]["filepath"]
 
-    DTYPE = {'category': VARCHAR(64), 'category_id': INTEGER}
+    DTYPE = {"category": VARCHAR(64), "category_id": INTEGER}
 
     # Read category data from the specified CSV file
     categories = pd.read_csv(CATEGORY_FILEPATH, index_col=None)
@@ -96,7 +98,9 @@ def load_category_table(database: MySQLDatabase, config: Config) -> None:
         db.execute(schema["category"])
 
         # Insert the data using 'append' to avoid dropping the newly created table
-        db.insert(data=categories, table_name=TABLE_NAME, dtype=DTYPE, if_exists="append")
+        db.insert(
+            data=categories, table_name=TABLE_NAME, dtype=DTYPE, if_exists="append"
+        )
 
         # Re-enable foreign key checks
         db.execute("SET FOREIGN_KEY_CHECKS = 1;")
@@ -137,6 +141,7 @@ def setup_database(database: MySQLDatabase, schema: Dict[str, str]) -> None:
         dba.create_table(table_name=table_name, ddl=ddl)
     logger.info("Tables created.")
 
+
 # ------------------------------------------------------------------------------------------------ #
 def setup_dependencies() -> AppVoCAIContainer:
     """
@@ -159,6 +164,7 @@ def setup_dependencies() -> AppVoCAIContainer:
     container.wire(modules=[__name__])
     logger.info("Dependency Container Created and Wired")
     return container
+
 
 # ------------------------------------------------------------------------------------------------ #
 def main() -> None:
@@ -189,7 +195,6 @@ def main() -> None:
     setup_database(database=database, schema=schema)
     load_database(database=database, config=config)
     print(f"Environment {config.current_environment} setup complete.")
-
 
 
 # ------------------------------------------------------------------------------------------------ #

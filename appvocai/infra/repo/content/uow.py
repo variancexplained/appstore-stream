@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI - Acquire                                                                  #
+# Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/repo/uow.py                                                         #
+# Filename   : /appvocai/infra/repo/content/uow.py                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 08:58:35 pm                                                   #
-# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
+# Modified   : Friday September 6th 2024 08:48:12 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,10 +19,10 @@
 import logging
 
 from appvocai.infra.database.base import Database
-from appvocai.infra.repo.appdata import AppDataRepo
-from appvocai.infra.repo.job import JobRepo
+from appvocai.infra.repo.content.appdata import AppDataRepo
+from appvocai.infra.repo.content.review import ReviewRepo
+from appvocai.infra.repo.orchestration.job import JobRepo
 from appvocai.infra.repo.project import ProjectRepo
-from appvocai.infra.repo.review import ReviewRepo
 
 
 # ------------------------------------------------------------------------------------------------ #

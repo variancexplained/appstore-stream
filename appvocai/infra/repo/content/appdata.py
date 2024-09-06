@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/repo/appdata.py                                                     #
+# Filename   : /appvocai/infra/repo/content/appdata.py                                             #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Sunday September 1st 2024 06:55:49 pm                                               #
+# Modified   : Friday September 6th 2024 08:48:02 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -28,6 +28,7 @@ from appvocai.infra.database.mysql import MySQLDatabase
 from appvocai.infra.exceptions.database import DatabaseError
 
 # ------------------------------------------------------------------------------------------------ #
+
 
 class AppDataRepo(Repo):
     """
@@ -84,9 +85,12 @@ class AppDataRepo(Repo):
 
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to retrieve app data for app_id '{id_value}': {e}")
-            raise DatabaseError(f"An error occurred while retrieving app data for app_id '{id_value}'") from e
-
+            self._logger.exception(
+                f"Failed to retrieve app data for app_id '{id_value}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while retrieving app data for app_id '{id_value}'"
+            ) from e
 
     def get_app_categories(self, id_value: int) -> List[int]:
         """
@@ -123,10 +127,12 @@ class AppDataRepo(Repo):
 
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to retrieve category IDs for app_id '{id_value}': {e}")
-            raise DatabaseError(f"An error occurred while retrieving category IDs for app_id '{id_value}'") from e
-
-
+            self._logger.exception(
+                f"Failed to retrieve category IDs for app_id '{id_value}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while retrieving category IDs for app_id '{id_value}'"
+            ) from e
 
     def get(self, id_value: int) -> AppData:
         """Retrieve app data by ID and return an AppData object.
@@ -151,7 +157,6 @@ class AppDataRepo(Repo):
         appdata_row = self.get_appdata(id_value)
         categories = self.get_app_categories(id_value)
         return AppData.create(appdata_row=appdata_row, categories=categories)
-
 
     def get_by_category(self, category: Category) -> pd.DataFrame:
         """
@@ -182,10 +187,12 @@ class AppDataRepo(Repo):
 
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to retrieve app data for category '{category.name}': {e}")
-            raise DatabaseError(f"An error occurred while retrieving app data for category '{category.name}'") from e
-
-
+            self._logger.exception(
+                f"Failed to retrieve app data for category '{category.name}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while retrieving app data for category '{category.name}'"
+            ) from e
 
     def add(self, app_data_list: List[AppData]) -> None:
         """
@@ -280,49 +287,49 @@ class AppDataRepo(Repo):
                 extract_date = VALUES(extract_date)
             """
 
-            # Prepare parameters for batch insert
+        # Prepare parameters for batch insert
         param_list = [
-                {
-                    "app_id": app_data.app_id,
-                    "app_name": app_data.app_name,
-                    "app_censored_name": app_data.app_censored_name,
-                    "bundle_id": app_data.bundle_id,
-                    "description": app_data.description,
-                    "category_id": app_data.category_id,
-                    "category": app_data.category,
-                    "price": app_data.price,
-                    "currency": app_data.currency,
-                    "rating_average": app_data.rating_average,
-                    "rating_average_current_version": app_data.rating_average_current_version,
-                    "rating_average_current_version_change": app_data.rating_average_current_version_change,
-                    "rating_average_current_version_pct_change": app_data.rating_average_current_version_pct_change,
-                    "rating_count": app_data.rating_count,
-                    "rating_count_current_version": app_data.rating_count_current_version,
-                    "developer_id": app_data.developer_id,
-                    "developer_name": app_data.developer_name,
-                    "seller_name": app_data.seller_name,
-                    "seller_url": app_data.seller_url,
-                    "app_content_rating": app_data.app_content_rating,
-                    "content_advisory_rating": app_data.content_advisory_rating,
-                    "file_size_bytes": app_data.file_size_bytes,
-                    "minimum_os_version": app_data.minimum_os_version,
-                    "version": app_data.version,
-                    "release_date": app_data.release_date,
-                    "release_notes": app_data.release_notes,
-                    "release_date_current_version": app_data.release_date_current_version,
-                    "url_developer_view": app_data.url_developer_view,
-                    "url_app_view": app_data.url_app_view,
-                    "url_artwork_100": app_data.url_artwork_100,
-                    "url_artwork_512": app_data.url_artwork_512,
-                    "url_artwork_60": app_data.url_artwork_60,
-                    "urls_screenshot_ipad": app_data.urls_screenshot_ipad,
-                    "urls_screenshot": app_data.urls_screenshot,
-                    "iphone_support": app_data.iphone_support,
-                    "ipad_support": app_data.ipad_support,
-                    "extract_date": app_data.extract_date
-                }
-                for app_data in app_data_list
-            ]
+            {
+                "app_id": app_data.app_id,
+                "app_name": app_data.app_name,
+                "app_censored_name": app_data.app_censored_name,
+                "bundle_id": app_data.bundle_id,
+                "description": app_data.description,
+                "category_id": app_data.category_id,
+                "category": app_data.category,
+                "price": app_data.price,
+                "currency": app_data.currency,
+                "rating_average": app_data.rating_average,
+                "rating_average_current_version": app_data.rating_average_current_version,
+                "rating_average_current_version_change": app_data.rating_average_current_version_change,
+                "rating_average_current_version_pct_change": app_data.rating_average_current_version_pct_change,
+                "rating_count": app_data.rating_count,
+                "rating_count_current_version": app_data.rating_count_current_version,
+                "developer_id": app_data.developer_id,
+                "developer_name": app_data.developer_name,
+                "seller_name": app_data.seller_name,
+                "seller_url": app_data.seller_url,
+                "app_content_rating": app_data.app_content_rating,
+                "content_advisory_rating": app_data.content_advisory_rating,
+                "file_size_bytes": app_data.file_size_bytes,
+                "minimum_os_version": app_data.minimum_os_version,
+                "version": app_data.version,
+                "release_date": app_data.release_date,
+                "release_notes": app_data.release_notes,
+                "release_date_current_version": app_data.release_date_current_version,
+                "url_developer_view": app_data.url_developer_view,
+                "url_app_view": app_data.url_app_view,
+                "url_artwork_100": app_data.url_artwork_100,
+                "url_artwork_512": app_data.url_artwork_512,
+                "url_artwork_60": app_data.url_artwork_60,
+                "urls_screenshot_ipad": app_data.urls_screenshot_ipad,
+                "urls_screenshot": app_data.urls_screenshot,
+                "iphone_support": app_data.iphone_support,
+                "ipad_support": app_data.ipad_support,
+                "extract_date": app_data.extract_date,
+            }
+            for app_data in app_data_list
+        ]
 
         try:
             # Execute the batch upsert query
@@ -337,8 +344,7 @@ class AppDataRepo(Repo):
             # Log the exception and raise a custom DatabaseError
             msg = f"Failed to execute upsert of appdata.\n{e}"
             self._logger.exception(msg)
-            raise DatabaseError(f"An error occurred while upserting appdata.") from e
-
+            raise DatabaseError("An error occurred while upserting appdata.") from e
 
     def _add_app_categories(self, app_id: int, categories: List[int]) -> None:
         """
@@ -370,7 +376,6 @@ class AppDataRepo(Repo):
         if not categories:
             return
 
-
         try:
             # First delete existing categories for the app
             delete_query = """
@@ -391,8 +396,12 @@ class AppDataRepo(Repo):
 
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to update categories for app_id '{app_id}': {e}")
-            raise DatabaseError(f"An error occurred while updating categories for app_id '{app_id}'") from e
+            self._logger.exception(
+                f"Failed to update categories for app_id '{app_id}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while updating categories for app_id '{app_id}'"
+            ) from e
 
     def remove(self, id_value: int) -> None:
         self._remove_app_data(id_value=id_value)
@@ -436,12 +445,13 @@ class AppDataRepo(Repo):
                 db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
-            raise Exception(f"Failed to delete category_app data with ID {id_value}: {str(e)}")
+            raise Exception(
+                f"Failed to delete category_app data with ID {id_value}: {str(e)}"
+            )
 
     def remove_by_category_id(self, category_id: int) -> None:
         self._remove_appdata_by_category_id(category_id=category_id)
         self._remove_appdata_categories_by_category_id(category_id=category_id)
-
 
     def _remove_appdata_by_category_id(self, category_id: int) -> None:
         """
@@ -461,8 +471,9 @@ class AppDataRepo(Repo):
                 db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
-            raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
-
+            raise Exception(
+                f"Failed to delete entries with category ID {category_id}: {str(e)}"
+            )
 
     def _remove_appdata_categories_by_category_id(self, category_id: int) -> None:
         """
@@ -482,7 +493,9 @@ class AppDataRepo(Repo):
                 db.execute(query, params)
         except Exception as e:
             # Handle exceptions or log them as necessary
-            raise Exception(f"Failed to delete entries with category ID {category_id}: {str(e)}")
+            raise Exception(
+                f"Failed to delete entries with category ID {category_id}: {str(e)}"
+            )
 
     def remove_all(self) -> None:
         """
@@ -494,13 +507,14 @@ class AppDataRepo(Repo):
         Returns:
             None
         """
-        confirmation = input("Are you sure you want to delete all entries from the appdata tables? (yes/no): ")
-        if confirmation.lower() != 'yes':
+        confirmation = input(
+            "Are you sure you want to delete all entries from the appdata tables? (yes/no): "
+        )
+        if confirmation.lower() != "yes":
             self._logger.info("Deletion canceled.")
             return
         else:
             self._remove_all_appdata()
-
 
     def _remove_all_appdata(self) -> None:
         """

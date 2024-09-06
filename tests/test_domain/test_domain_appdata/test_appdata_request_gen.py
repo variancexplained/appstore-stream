@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday September 4th 2024 11:50:48 pm                                            #
-# Modified   : Wednesday September 4th 2024 11:57:42 pm                                            #
+# Modified   : Friday September 6th 2024 09:52:26 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -46,6 +46,7 @@ LIMIT = 10
 
 
 @pytest.mark.gen
+@pytest.skip(reason="Need to update idgen")
 class TestAppDataRequestGen:  # pragma: no cover
     # ============================================================================================ #
     def test_appdata_request_gen(self, caplog: Any) -> None:

@@ -1,0 +1,7 @@
+DROP DATABASE IF EXISTS appvocai_dev --;
+DROP DATABASE IF EXISTS appvocai_test --;
+DROP DATABASE IF EXISTS appvocai_prod --;
+
+CREATE DATABASE IF NOT EXISTS appvocai_dev;
+CREATE DATABASE IF NOT EXISTS appvocai_test;
+CREATE DATABASE IF NOT EXISTS appvocai_prod;

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : AppVoCAI-Acquire                                                                    #
+# Project    : AppVoCAI - Acquire                                                                  #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/openty/__init__.py                                                 #
+# Filename   : /appvocai/infra/repo/__init__.py                                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Tuesday August 27th 2024 10:32:05 am                                                #
-# Modified   : Friday September 6th 2024 07:19:47 am                                               #
+# Created    : Wednesday July 24th 2024 11:08:04 pm                                                #
+# Modified   : Tuesday August 27th 2024 06:26:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Wednesday September 4th 2024 09:09:36 pm                                            #
+# Modified   : Friday September 6th 2024 09:47:18 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,18 +21,17 @@ import json
 from typing import Any, Generator
 
 import pytest
+from dependency_injector.containers import Container
 from prometheus_client import CollectorRegistry
 
+from appvocai.container import AppVoCAIContainer
 from appvocai.infra.base.config import Config
-
-# from appvocai.container import AppVoCAIContainer
-
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [
     "appvocai/infra/*.*",
-    "appvocai/appla/*.*",
-    "appvocai/domain/openty/request/*.*",
+    "appvocai/application/*.*",
+    "appvocai/domain/openty/*.*",
 ]
 
 
@@ -51,12 +50,11 @@ def mode() -> Generator[Any, Any, Any]:
 # ------------------------------------------------------------------------------------------------ #
 #                              DEPENDENCY INJECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="function", autouse=False)
-# def container() -> Container:
-#     container = AppVoCAIContainer()
-#     container.init_resources()
-#     # container.wire(modules=["appvocai.infra.web.adapter"])
-#     return container
+@pytest.fixture(scope="function", autouse=False)
+def container() -> Container:
+    container = AppVoCAIContainer()
+    container.init_resources()
+    return container
 
 
 # ------------------------------------------------------------------------------------------------ #
