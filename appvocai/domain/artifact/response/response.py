@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Friday September 6th 2024 04:18:10 pm                                               #
+# Modified   : Saturday September 7th 2024 07:40:55 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,16 +19,16 @@
 from __future__ import annotations
 
 import logging
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, TypeVar
-from uuid import uuid4
+from typing import Any, Dict, List, Optional, Union
 
 from aiohttp import ClientResponse, ClientResponseError
+from pympler import asizeof
 
 from appvocai.core.data import DataClass
-from appvocai.domain.request.base import Request
+from appvocai.domain.artifact.base import Artifact
+from appvocai.infra.identity.passport import OperationPassport
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -36,54 +36,107 @@ logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class ResponseAsync(DataClass):
-    """Collection of Response objects as part of an asynchronous request."""
+class AsyncResponse(Artifact):
+    """
+    A collection of Request/Response objects resulting from an asynchronous request.
 
-    id: str = ""
-    timestamp: Optional[datetime] = None
+    This class holds the results of an asynchronous operation, specifically a list of response objects
+    generated from the requests made. It keeps track of the total number of responses and allows adding
+    new responses to the collection.
+
+    Attributes:
+    -----------
+    response_count : int
+        The total number of responses collected from the asynchronous operation. Default is 0.
+    responses : List[Response]
+        A list of `Response` objects, each representing the result of an individual request in the asynchronous
+        operation. Initialized as an empty list by default.
+
+    Methods:
+    --------
+    __init__(operation_passport: OperationPassport) -> None
+        Initializes the `AsyncResponse` object with an `OperationPassport`, inherited from the `Artifact` class.
+
+    add_responses(responses: List[Response]) -> None
+        Adds a list of `Response` objects to the `AsyncResponse` and updates the `response_count` accordingly.
+
+    Parameters:
+    -----------
+    operation_passport : OperationPassport
+        An object representing the passport of the operation, which contains metadata about the operation, task,
+        and project related to the responses.
+    """
+
     response_count: int = 0
     responses: List[Response] = field(default_factory=list)
 
-    def __post_init__(self) -> None:
-        self.id = str(uuid4())
-        self.timestamp = datetime.now()
+    def __init__(self, operation_passport: OperationPassport) -> None:
+        """
+        Initializes the `AsyncResponse` with an `OperationPassport`, which provides the context for the
+        asynchronous operation.
 
-    def add_responses(self, responses: list) -> None:
-        self.responses = responses
+        Parameters:
+        -----------
+        operation_passport : OperationPassport
+            Metadata related to the operation that generated the responses, including task and project IDs,
+            data type, and category.
+        """
+        super().__init__(operation_passport=operation_passport)
+
+    def add_responses(self, responses: List[Response]) -> None:
+        """
+        Adds a list of `Response` objects to the `AsyncResponse` collection and updates the response count.
+
+        Parameters:
+        -----------
+        responses : List[Response]
+            A list of `Response` objects to be added to the collection.
+
+        The `response_count` is updated to reflect the number of responses added.
+        """
         self.response_count = len(responses)
-
-
-# ------------------------------------------------------------------------------------------------ #
-T = TypeVar("T", bound="Request")
+        self.responses: List[Response] = responses
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class Response(DataClass):
-    """Abstract base class for Responses.
+class ResponseHeaders(DataClass):
+    """
+    A class to represent the HTTP response headers and related metadata from a server response.
+
+    This class extracts and stores important server and response metadata, such as the server name,
+    the HTTP status code, the size of the response content, and the timestamps for when the request
+    was processed by the server and received by the client.
 
     Attributes:
-        id (str): System generated UUID. Default is an empty string.
-        request_uuid (str): Endpoint's request UUID if available. Default is an empty string.
-        request_datetime (datetime): Datetime the request was sent. Default is None.
-        method (str): The HTTP method used (GET, POST, etc.). Default is 'GET'.
-        endpoint (str): The URL or endpoint being accessed. Default is an empty string.
-        index (int): The index or offset requested. Default is 0.
+    -----------
+    server : str
+        The name of the server from which the response originated (default: empty string).
+    server_datetime : Optional[datetime]
+        The datetime when the server processed the request, parsed from the "Date" header (default: None).
+    connection : str
+        Information about how the connection was dispatched (e.g., keep-alive or close) (default: empty string).
+    status : int
+        The HTTP status code of the response (default: 0).
+    size : int
+        The size of the content in the response, in bytes (default: 0).
+    response_datetime : Optional[datetime]
+        The datetime when the client received the response (default: None).
 
-        server (str): The endpoint server. Default is an empty string.
-        server_datetime (datetime): Datetime the server processed the request. Default is None.
-        connection (str): Indicates how the connection is dispatched (e.g., keep-alive or close). Default is an empty string.
+    Methods:
+    --------
+    __init__(response: ClientResponse) -> None
+        Initializes the `ResponseHeaders` object by extracting relevant metadata from the given `ClientResponse` object.
 
-        status (int): The HTTP return code. Default is 0.
-        retries (int): Number of retries to obtain this response. Default is 0.
-        content_type (str): Type of HTTP content returned (e.g., application/json). Default is an empty string.
-        size (int): Size of content in response in bytes. Default is 0.
-        encoding (str): Encoding used for the response (e.g., utf-8). Default is an empty string.
-        response_datetime (datetime): Datetime the request was received. Default is None.
-        latency (float): The latency of the request in seconds. Default is 0.0.
+    parse_date(date_str: str) -> Optional[datetime]
+        A helper method to parse a date string from the response headers into a `datetime` object.
+        If the date is not present or cannot be parsed, it returns `None`.
 
-        content (List[Dict[str,Any]]): A list of dictionaries containing the results from the request.
-
+    parse_size(response: ClientResponse) -> int
+        A helper method to extract and calculate the size of the response content. It first attempts
+        to retrieve the size from the `Content-Length` header. If this is not present, it tries to
+        infer the size based on the JSON content or the response itself. If all else fails, it logs
+        a warning and returns 0.
     """
 
     # 1. Server Metadata
@@ -91,109 +144,201 @@ class Response(DataClass):
     server_datetime: Optional[datetime] = (
         None  # Datetime the server processed the request (default: None)
     )
-    cache_control: str = ""  # Cache control information (default: "")
-    x_cache: str = (
-        ""  # Information on caching behavior (X-Cache or X-Cache-Remote) (default: "")
-    )
-    strict_transport_security: str = (
-        ""  # Security feature for HTTPS communication (default: "")
-    )
+
     connection: str = ""  # How the connection is dispatched (default: "")
-    vary: str = ""  # Specifies fields that might vary in responses (default: "")
 
     # 2. Response Metadata
     status: int = 0  # The HTTP return code (default: 0)
-    retries: int = 0  # The number of retries to obtain this response.
-
     size: int = 0  # Size of content in response in bytes (default: 0)
-    encoding: str = ""  # Encoding used for the response (default: "")
     response_datetime: Optional[datetime] = (
         None  # Datetime the request was received (default: None)
     )
-    latency: float = 0.0  # The latency of the request in seconds (default: 0.0)
 
-    #
-
-    def __post_init__(self) -> None:
-        self.id = str(uuid4())
-
-    @classmethod
-    async def create(self, response: ClientResponse) -> None:
-        """Parses the response object from aiohttp and sets the member variables.
-
-        Args:
-            response (ClientResponse): The response object from the HTTP request.
-
-        Updates:
-            - request_uuid: Extracted from response headers if available.
-            - server: Extracted from the 'Server' header if available.
-            - server_datetime: Extracted from the 'Date' header if available.
-            - cache_control: Extracted from the 'Cache-Control' header if available.
-            - x_cache: Extracted from the 'X-Cache' header if available.
-            - strict_transport_security: Extracted from the 'Strict-Transport-Security' header if available.
-            - connection: Extracted from the 'Connection' header if available.
-            - vary: Extracted from the 'Vary' header if available.
-            - status: HTTP return code from the response object.
-            - size: Extracted from the 'Content-Length' header if available.
-            - encoding: Extracted from the 'Content-Encoding' header if available.
-            - response_datetime: The current datetime when the response is processed.
+    def __init__(self, response: ClientResponse) -> None:
         """
-        # Override request metadata if available
-        self.request_uuid = response.headers.get(
-            "x-apple-request-uuid", self.request_uuid
-        )
+        Initializes the `ResponseHeaders` object by extracting metadata from the `ClientResponse`.
 
-        # Set server metadata
-        self.server = response.headers.get("Server", self.server)
+        Parameters:
+        -----------
+        response : ClientResponse
+            The response object from which to extract headers and other metadata, such as status code,
+            server name, content length, and date.
+
+        The initialization method assigns the server name, connection type, status code, content size,
+        and the server processing date. It also captures the time the response was received by the client.
+        """
+        # 1 Server Metadata
+        self.server = response.headers.get("Server", "")
         self.server_datetime = self.parse_date(
-            response.headers.get("Date", "")
-        )  # Only this needs conversion
-        self.cache_control = response.headers.get("Cache-Control", self.cache_control)
-        self.x_cache = response.headers.get(
-            "X-Cache", response.headers.get("X-Cache-Remote", "")
+            date_str=response.headers.get("Date", "")
         )
-        self.strict_transport_security = response.headers.get(
-            "Strict-Transport-Security", self.strict_transport_security
-        )
-        self.connection = response.headers.get("Connection", self.connection)
-        self.vary = response.headers.get("Vary", self.vary)
+        self.connection = response.headers.get("Connection", "")
 
-        # Set response metadata
+        # 2 Response Metadata
         self.status = response.status
         self.size = self.parse_size(response=response)
-        self.encoding = response.headers.get("Content-Encoding", self.encoding)
-        self.response_datetime = datetime.now()  # Current datetime in GMT
-        self.latency = self.calculate_latency()
-
-        try:
-            # Set response content
-            self.content = await response.json(content_type=None)
-        except ValueError as e:
-            logger.error(f"Failed to parse JSON response: {e}")
-            self.content = []  # Fallback to empty list or handle as needed
+        self.response_datetime = datetime.now()
 
     def parse_date(self, date_str: str) -> Optional[datetime]:
-        """Helper method to parse the date from the response headers."""
+        """
+        Parses the date from the response headers into a `datetime` object.
+
+        Parameters:
+        -----------
+        date_str : str
+            The date string extracted from the response headers (typically the "Date" header).
+
+        Returns:
+        --------
+        Optional[datetime]
+            A `datetime` object representing the parsed date, or `None` if the string is empty
+            or the parsing fails.
+        """
         if date_str:
             return datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S GMT")
         return None
 
-    def calculate_latency(self) -> float:
-        """Computes latency from request and response times."""
-        if isinstance(self.response_datetime, datetime) and isinstance(
-            self.request_datetime, datetime
-        ):
-            return (self.response_datetime - self.request_datetime).total_seconds()
-        else:
-            return 0
-
     def parse_size(self, response: ClientResponse) -> int:
+        """
+        Extracts and calculates the size of the response content using Pympler's asizeof for accurate measurement.
+
+        Parameters:
+        -----------
+        response : ClientResponse
+            The response object from which to calculate the size.
+
+        Returns:
+        --------
+        int
+            The total size of the response content in bytes. It first tries to use the 'Content-Length'
+            header, and if that is missing, it calculates the full memory size of the response object
+            using Pympler's asizeof to include all referenced objects.
+        """
         try:
+            # First try to get size from Content-Length header
             return int(response.headers["Content-Length"])
         except KeyError:
-            return sys.getsizeof(response.json(content_type=None))
-        except ClientResponseError:
-            return sys.getsizeof(response) - sys.getsizeof(response.headers)
-        except Exception:
-            logger.warning("Content length not provided and could not be inferred.")
-            return 0
+            # If Content-Length is not provided, calculate the full size using Pympler
+            try:
+                return int(asizeof.asizeof(response.json(content_type=None)))  # type: ignore
+            except ClientResponseError:
+                return int(
+                    asizeof.asizeof(response)  # type: ignore
+                )  # Fall back to full response object size
+            except Exception:
+                logger.warning("Content length not provided and could not be inferred.")
+                return 0
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class Response(Artifact):
+    """
+    Represents an HTTP response, containing the headers, content, and metadata such as timestamps and latency.
+
+    The `Response` class captures the full details of an HTTP response, including the headers, content,
+    the time the request was sent, the time it was received, and the resulting latency. It supports parsing
+    both headers and content from an asynchronous `ClientResponse` and includes mechanisms for recording
+    when the response is sent and received.
+
+    Attributes:
+    -----------
+    headers : ResponseHeaders
+        An object containing the parsed HTTP response headers.
+    content : Union[List[Dict[str, Any]], Dict[str, Any]]
+        The content of the HTTP response, which can be either a dictionary or a list of dictionaries, depending
+        on the response body.
+    dt_sent : Optional[datetime]
+        The timestamp representing when the request was sent (default: None).
+    dt_recv : Optional[datetime]
+        The timestamp representing when the response was received (default: None).
+    latency : float
+        The time difference (in seconds) between when the request was sent and when the response was received
+        (default: 0).
+
+    Methods:
+    --------
+    __init__(operation_passport: OperationPassport) -> None
+        Initializes the `Response` object and links it to the given `OperationPassport`, inheriting from `Artifact`.
+
+    async parse_response(response: ClientResponse) -> None
+        Asynchronously parses both the headers and content of the `ClientResponse` and updates the `Response` object.
+
+    _parse_header(response: ClientResponse) -> ResponseHeaders
+        Extracts and returns the HTTP headers from the `ClientResponse` as a `ResponseHeaders` object.
+
+    async _parse_content(response: ClientResponse) -> Union[List[Dict[str, Any]], Dict[str, Any]]
+        Asynchronously parses and returns the content of the `ClientResponse`, which can be either a dictionary
+        or a list of dictionaries, depending on the response format.
+
+    Parameters:
+    -----------
+    operation_passport : OperationPassport
+        The passport that contains metadata related to the operation, such as task and project information.
+    """
+
+    headers: ResponseHeaders
+    content: Union[List[Dict[str, Any]], Dict[str, Any]]
+
+    def __init__(self, operation_passport: OperationPassport) -> None:
+        """
+        Initializes the `Response` object with an `OperationPassport`, setting up the metadata context.
+
+        Parameters:
+        -----------
+        operation_passport : OperationPassport
+            Metadata related to the operation, which includes information such as task ID, job ID, and category.
+        """
+        super().__init__(operation_passport=operation_passport)
+
+    async def parse_response(self, response: ClientResponse) -> None:
+        """
+        Asynchronously parses the `ClientResponse` object, extracting both headers and content.
+
+        Parameters:
+        -----------
+        response : ClientResponse
+            The HTTP response object to be parsed.
+
+        This method first parses the headers, then asynchronously parses the content of the response.
+        """
+        self.headers = self._parse_header(response=response)
+        self.content = await self._parse_content(response=response)
+
+    def _parse_header(self, response: ClientResponse) -> ResponseHeaders:
+        """
+        Parses the HTTP response headers and returns a `ResponseHeaders` object.
+
+        Parameters:
+        -----------
+        response : ClientResponse
+            The HTTP response object from which to extract headers.
+
+        Returns:
+        --------
+        ResponseHeaders
+            An object containing parsed HTTP response header metadata such as server, connection, and date.
+        """
+        return ResponseHeaders(response=response)
+
+    async def _parse_content(
+        self, response: ClientResponse
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        """
+        Asynchronously parses the content of the HTTP response and returns it as a dictionary or list of dictionaries.
+
+        Parameters:
+        -----------
+        response : ClientResponse
+            The HTTP response object from which to extract content.
+
+        Returns:
+        --------
+        Union[List[Dict[str, Any]], Dict[str, Any]]
+            The parsed content of the response, which could be either a dictionary or a list of dictionaries,
+            depending on the structure of the response body.
+        """
+        content: Union[Dict[str, Any], List[Dict[str, Any]]] = await response.json(
+            content_type=None
+        )
+        return content

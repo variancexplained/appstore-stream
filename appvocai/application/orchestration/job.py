@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:14:31 pm                                              #
-# Modified   : Friday September 6th 2024 05:18:54 pm                                               #
+# Modified   : Friday September 6th 2024 07:19:28 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,11 +24,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional, TypeVar
 
-from appvocai import Passport
 from appvocai.application.operation.base import Task
 from appvocai.application.orchestration.project import Project
 from appvocai.core.data import DataClass
 from appvocai.core.enum import Status
+from appvocai.infra.identity.passport import JobPassport
 from appvocai.toolkit.date import to_utc
 
 # ------------------------------------------------------------------------------------------------ #
@@ -73,7 +73,7 @@ class Job(DataClass):
     """
 
     project: Project  # Project object.
-    passport: Optional[Passport] = None
+    passport: Optional[JobPassport] = None
     description: str = ""  # Job description.
     created: Optional[datetime] = None  # Date and time the job was created.
     scheduled: Optional[datetime] = None  # Date and time the job is scheduled to start.

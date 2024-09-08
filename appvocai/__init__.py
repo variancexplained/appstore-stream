@@ -11,15 +11,8 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 12:42:51 am                                                #
-# Modified   : Friday September 6th 2024 04:55:54 pm                                               #
+# Modified   : Friday September 6th 2024 08:44:52 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Identity Module"""
-from appvocai.infra.identity.passport import (
-    ArtifactPassport,
-    JobPassport,
-    ProjectPassport,
-    TaskPassport,
-)

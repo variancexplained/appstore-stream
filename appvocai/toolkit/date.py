@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 04:54:23 pm                                              #
-# Modified   : Thursday September 5th 2024 06:44:56 am                                             #
+# Modified   : Saturday September 7th 2024 06:19:54 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -75,7 +75,7 @@ class ThirdDateFormatter:
         Returns:
             str: The formatted datetime string in ISO 8601 format.
         """
-        return dt.isoformat(sep="T", timespec=precision.value) + "Z"
+        return dt.isoformat(sep="T", timespec=precision.value)
 
     def to_HTTP_format(self, dt: datetime) -> str:
         """

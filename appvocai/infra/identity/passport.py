@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 12:42:51 am                                                #
-# Modified   : Friday September 6th 2024 05:42:44 pm                                               #
+# Modified   : Saturday September 7th 2024 06:25:19 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,21 +22,24 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 from appvocai.application.orchestration.job import Job
 from appvocai.application.orchestration.project import Project
 from appvocai.application.orchestration.task import Task
 from appvocai.core.data import IMMUTABLE_TYPES, SEQUENCE_TYPES
-from appvocai.core.enum import Category, DataType, Env, OperationType
+from appvocai.core.enum import Category, DataType, Env
 from appvocai.domain.artifact.base import Artifact
 from appvocai.infra.base.config import Config
 from appvocai.infra.identity.idxgen import IDXGen
+from appvocai.toolkit.date import ThirdDateFormatter
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 idxgen = IDXGen()
+# ------------------------------------------------------------------------------------------------ #
+dt4mat = ThirdDateFormatter()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -211,8 +214,8 @@ class ProjectPassport(Passport):
         self.project_id = idxgen.next_idx
         self.category = category
         self.data_type = data_type
-        self.dt_modified: Optional[datetime] = None
-        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.dt_created.strftime('%Y%m%d')}-{self.project_id}"
+        self.dt_created = datetime.now()
+        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.project_id}"
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -271,8 +274,8 @@ class JobPassport(Passport):
         self.project_id = project_passport.project_id
         self.category = project_passport.category
         self.data_type = project_passport.data_type
-        self.dt_modified: Optional[datetime] = None
-        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.dt_created.strftime('%Y%m%d')}-{self.job_id}"
+        self.dt_created = datetime.now()
+        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.job_id}"
         self.creator = project_passport
 
 
@@ -337,9 +340,73 @@ class TaskPassport(Passport):
         self.project_id = job_passport.project_id
         self.category = job_passport.category
         self.data_type = job_passport.data_type
-        self.dt_modified: Optional[datetime] = None
-        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.dt_created.strftime('%Y%m%d')}-{self.task_id}"
+        self.dt_created = datetime.now()
+        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.task_id}"
         self.creator = job_passport
+
+
+# ------------------------------------------------------------------------------------------------ #
+class OperationPassport(Passport):
+    """
+    Represents a passport for an operation within a task, inheriting from the base `Passport` class.
+
+    This class is used to uniquely identify and encapsulate metadata related to a specific operation
+    within the context of a task. The `OperationPassport` stores IDs for the operation, task, job, project,
+    as well as details such as the category, data type, and creation timestamp. It also retains the
+    `TaskPassport` that initiated the operation, providing a link back to the task-level information.
+
+    Attributes:
+    -----------
+    operation_id : str
+        A unique identifier for the operation, generated using `idxgen.next_idx`.
+    task_id : str
+        The ID of the task associated with this operation, derived from the `task_passport`.
+    job_id : str
+        The ID of the job associated with this operation, derived from the `task_passport`.
+    project_id : str
+        The ID of the project associated with this operation, derived from the `task_passport`.
+    category : Enum
+        The category of the task (or operation) being executed, derived from the `task_passport`.
+    data_type : Enum
+        The type of data being processed during the task or operation, derived from the `task_passport`.
+    operation_type : str
+        The name of the class (`owner`), representing the type of operation being performed.
+    dt_created : str
+        The ISO 8601 formatted timestamp of when the operation was created.
+    name : str
+        A human-readable name for the operation, constructed using the operation type, data type, category,
+        and task ID.
+    creator : TaskPassport
+        The `TaskPassport` object representing the task that initiated this operation.
+    """
+
+    def __init__(self, owner: Task, task_passport: TaskPassport) -> None:
+        """
+        Initializes an `OperationPassport` instance with metadata about the operation.
+
+        Parameters:
+        -----------
+        owner : Task
+            The task object that owns this operation, used to derive the operation type.
+        task_passport : TaskPassport
+            The `TaskPassport` object containing task-level metadata such as task ID, job ID, project ID,
+            category, and data type.
+
+        The `OperationPassport` is constructed by copying relevant IDs and metadata from the `task_passport`
+        and generating a unique `operation_id`. It also captures the time the operation was created, and
+        assigns a human-readable name to the operation.
+        """
+        super().__init__()
+        self.operation_id = idxgen.next_idx
+        self.task_id = task_passport.task_id
+        self.job_id = task_passport.job_id
+        self.project_id = task_passport.project_id
+        self.category = task_passport.category
+        self.data_type = task_passport.data_type
+        self.operation_type = owner.__class__.__name__
+        self.dt_created = datetime.now()
+        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.task_id}"
+        self.creator = task_passport
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -390,7 +457,7 @@ class ArtifactPassport(Passport):
         and creator, and generates a name based on these attributes and the creation date.
     """
 
-    def __init__(self, owner: Artifact, task_passport: TaskPassport) -> None:
+    def __init__(self, owner: Artifact, operation_passport: OperationPassport) -> None:
         """
         Initializes the ArtifactPassport object with an owner and a reference to the task passport.
 
@@ -405,11 +472,13 @@ class ArtifactPassport(Passport):
         """
         super().__init__()
         self.artifact_id = idxgen.next_idx
-        self.job_id = task_passport.job_id
-        self.project_id = task_passport.project_id
-        self.task_id = task_passport.task_id
-        self.category = task_passport.category
-        self.data_type = task_passport.data_type
-        self.operation_type: Optional[OperationType] = None
-        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.dt_created.strftime('%Y%m%d')}-{self.task_id}"
-        self.creator = task_passport
+        self.operation_id = operation_passport.operation_id
+        self.job_id = operation_passport.job_id
+        self.project_id = operation_passport.project_id
+        self.task_id = operation_passport.task_id
+        self.category = operation_passport.category
+        self.data_type = operation_passport.data_type
+        self.operation_type = operation_passport.operation_type
+        self.dt_created = datetime.now()
+        self.name = f"{owner.__class__.__name__}-{self.data_type.value}-{self.category.value}-{self.task_id}"
+        self.creator = operation_passport

@@ -30,5 +30,9 @@
 		"psi-header.config": {
 
 		},
+		"yaml.format.printWidth": 100,
+		"editor.rulers": [
+			100
+		],
 	}
 }

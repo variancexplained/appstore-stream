@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:38 pm                                               #
-# Modified   : Friday September 6th 2024 05:27:51 pm                                               #
+# Modified   : Friday September 6th 2024 10:53:24 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -29,8 +29,8 @@ from appvocai.application.operation.base import Task
 from appvocai.container import AppVoCAIContainer
 from appvocai.domain.content.appdata import AppData, RawAppData
 from appvocai.domain.content.base import Entity
-from appvocai.domain.metrics.transform import MetricsTransform
-from appvocai.domain.response.response import ResponseAsync
+from appvocai.domain.monitor.transform import MetricsTransform
+from appvocai.domain.response.response import AsyncResponse
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar("T", bound="Entity")
@@ -63,7 +63,7 @@ class TransformOperation(Task, Generic[T]):
         self._observer = observer
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    def run(self, async_response: ResponseAsync) -> List[T]:
+    def run(self, async_response: AsyncResponse) -> List[T]:
         """ """
         metrics = MetricsTransform()
 
@@ -86,7 +86,7 @@ class TransformOperation(Task, Generic[T]):
 
     @abstractmethod
     def transform(
-        self, async_response: ResponseAsync, metrics: MetricsTransform
+        self, async_response: AsyncResponse, metrics: MetricsTransform
     ) -> List[T]:
         """Performs data specific transformations."""
 
@@ -119,7 +119,7 @@ class TransformOperationAppData(TaskTransform[AppData]):
         super().__init__(observer=observer)
 
     def transform(
-        self, async_response: ResponseAsync, metrics: MetricsTransform
+        self, async_response: AsyncResponse, metrics: MetricsTransform
     ) -> List[AppData]:
         """Conducts validation, updates metrics and transforms the data into a list of AppData Entities"""
         appdata_list = []
@@ -211,7 +211,7 @@ class TransformOperationAppData(TaskTransform[AppData]):
 # ------------------------------------------------------------------------------------------------ #
 class TransformOperationAppReview(TaskTransform):
     """
-    A specialized TaskTransform class for handling AsyncRequestAppReview types.
+    A specialized TaskTransform class for handling AsyncAppReviewRequest types.
 
     This class uses a specific observer tailored for app review transformion tasks.
     """
@@ -233,6 +233,6 @@ class TransformOperationAppReview(TaskTransform):
         super().__init__(observer=observer)
 
     def transform(
-        self, async_response: ResponseAsync, metrics: MetricsTransform
+        self, async_response: AsyncResponse, metrics: MetricsTransform
     ) -> List[Entity]:
         """Performs data specific transformations."""

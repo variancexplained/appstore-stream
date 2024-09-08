@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 30th 2024 02:42:23 am                                                 #
-# Modified   : Friday September 6th 2024 03:24:56 pm                                               #
+# Modified   : Saturday September 7th 2024 05:13:43 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -19,14 +19,14 @@
 """Module defines the database schema"""
 schema = {
     "project": """CREATE TABLE IF NOT EXISTS project(
-        project_id INTEGER NOT NULL,
+        project_id VARCHAR(32) NOT NULL,
         project_name VARCHAR(255) NOT NULL,
         data_type ENUM('AppData', 'Review') NOT NULL,
         category_id INTEGER NOT NULL,
         category VARCHAR(64) NOT NULL,
         bookmark INTEGER NOT NULL DEFAULT 0,
         n_jobs INTEGER NOT NULL DEFAULT 0,
-        last_job_id BIGINT,
+        last_job_id VARCHAR(32),
         dt_last_job_started DATETIME,
         dt_last_job_ended DATETIME,
         dt_created DATETIME,
@@ -40,9 +40,9 @@ schema = {
     );
     """,
     "job": """CREATE TABLE IF NOT EXISTS job (
-        job_id BIGINT NOT NULL PRIMARY KEY UNIQUE,
+        job_id VARCHAR(32) NOT NULL PRIMARY KEY UNIQUE,
         job_name VARCHAR(255) NOT NULL,
-        project_id INTEGER NOT NULL,
+        project_id VARCHAR(32) NOT NULL,
         project_name VARCHAR(255) NOT NULL,
         dataset ENUM('AppData', 'AppReview') NOT NULL,
         category_id INTEGER NOT NULL,
@@ -117,14 +117,15 @@ schema = {
             FOREIGN KEY (category_id) REFERENCES category(category_id)
         );""",
     "metrics": """CREATE TABLE IF NOT EXISTS metrics (
-            project_id INTEGER NOT NULL,
-            job_id BIGINT NOT NULL,
-            task_id BIGINT NOT NULL,
+            project_id VARCHAR(32) NOT NULL,
+            job_id VARCHAR(32) NOT NULL,
+            task_id VARCHAR(32) NOT NULL,
+            operation_id VARCHAR(32) NOT NULL,
             data_type VARCHAR(255) NOT NULL,
             operation_type VARCHAR(255) NOT NULL,
             instances INT NOT NULL,
             dt_started DATETIME NOT NULL,
-            dt_stopped DATETIME NOT NULL,
+            dt_ended DATETIME NOT NULL,
             duration FLOAT NOT NULL,
             latency_min FLOAT NOT NULL,
             latency_average FLOAT NOT NULL,
@@ -145,4 +146,18 @@ schema = {
             INDEX idx_data_type (data_type),
             INDEX idx_operation_type (operation_type)
 );""",
+    "error_log": """CREATE TABLE IF NOT EXISTS error_log (
+            project_id VARCHAR(32) NOT NULL,              -- ID of the project
+            job_id VARCHAR(32) NOT NULL,                  -- ID of the job
+            task_id VARCHAR(32) NOT NULL,                 -- ID of the task
+            operation_id VARCHAR(32) NOT NULL,            -- ID of the operation
+            data_type VARCHAR(100) NOT NULL,      -- The data type (e.g., appdata, reviews)
+            operation_type VARCHAR(100) NOT NULL, -- The type of operation (e.g., Extract, Transform, Load)
+            error_type VARCHAR(255),              -- The type of error (e.g., network, validation)
+            error_code INT,                       -- Specific error code (e.g., HTTP code, custom code)
+            error_description TEXT,               -- Detailed description of the error
+            dt_error DATETIME DEFAULT CURRENT_TIMESTAMP, -- The datetime the error occurred
+            PRIMARY KEY (project_id, job_id, task_id, dt_error)
+);
+""",
 }

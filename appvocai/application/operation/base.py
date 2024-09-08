@@ -11,25 +11,45 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 04:22:03 pm                                              #
-# Modified   : Friday September 6th 2024 03:56:36 pm                                               #
+# Modified   : Saturday September 7th 2024 05:55:44 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Generic, Optional, TypeVar
 
-from appvocai.core.enum import OperationType
+from appvocai.domain.artifact.base import Artifact
+from appvocai.infra.identity.passport import ArtifactPassport, TaskPassport
+
+# ------------------------------------------------------------------------------------------------ #
+T = TypeVar("T")
 
 
 # ------------------------------------------------------------------------------------------------ #
-class Operation(ABC):
+class Operation(ABC, Generic[T]):
     """Abstract base class for Task objects."""
 
     @abstractmethod
-    def run(self, *args: Any, **kwargs: Any) -> Any:
+    def run(
+        self, task_passport: TaskPassport, artifact: Artifact
+    ) -> Optional[Artifact]:
         """Executes the task."""
 
+    @property
+    def operation_type(self) -> str:
+        """Returns the operation type"""
+        return self.__class__.__name__
+
+    def check_in(self, task_passport: TaskPassport, artifact: Artifact) -> Artifact:
+        artifact.passport = ArtifactPassport(
+            owner=artifact, task_passport=task_passport
+        )
+        artifact.passport.operation_type = (
+            self.operation_type if self.operation_type else None
+        )
+        return artifact
+
     @abstractmethod
-    def operation_type(self) -> OperationType:
-        """An OperationType Enum value, EXTRACT, TRANSFORM, or LOAD"""
+    def check_out(self, artifact: T) -> T:
+        """Prepares content for the next stage"""

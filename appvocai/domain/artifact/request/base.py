@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Friday September 6th 2024 06:48:19 pm                                               #
+# Modified   : Saturday September 7th 2024 05:40:39 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -136,9 +136,7 @@ class AsyncRequest(Artifact, Generic[T]):
     request_count: int = 0
     requests: List[T] = field(default_factory=list)
 
-    def __init__(
-        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
-    ) -> None:
+    def __init__(self, task_passport: TaskPassport) -> None:
         """
         Initializes the AsyncRequest object, associating it with a task.
 

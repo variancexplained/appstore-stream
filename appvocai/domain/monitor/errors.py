@@ -4,33 +4,36 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/web/monitor.py                                                      #
+# Filename   : /appvocai/domain/monitor/errors.py                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday September 5th 2024 01:16:16 am                                             #
-# Modified   : Friday September 6th 2024 05:44:42 pm                                               #
+# Created    : Friday September 6th 2024 10:48:51 pm                                               #
+# Modified   : Friday September 6th 2024 10:51:38 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-"""Web Monitoring Module"""
-from dataclasses import dataclass, field
-from typing import List, Optional
+"""Error Metrics Module"""
+from dataclasses import dataclass
+from datetime import datetime
 
-from appvocai.domain.artifact.monitor.event import CompteRendu, Event
+from appvocai.core.data import DataClass
+from appvocai.core.enum import DataType, OperationType
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class AsyncSessionCR(CompteRendu):
-    session: Optional[Event] = None
-    requests: List[Event] = field(default_factory=list)
+class ErrorLog(DataClass):
 
-    def set_session_event(self, session: Event) -> None:
-        self.session = session
-
-    def add_request_event(self, request: Event) -> None:
-        self.requests.append(request)
+    project_id: int
+    job_id: int
+    task_id: int
+    data_type: DataType
+    operation_type: OperationType
+    error_type: str
+    error_code: int
+    error_description: str
+    dt_error: datetime

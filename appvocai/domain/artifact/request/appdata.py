@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Friday September 6th 2024 06:47:28 pm                                               #
+# Modified   : Friday September 6th 2024 08:17:43 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -101,7 +101,6 @@ class RequestAppData(Request):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AsyncRequestAppData(AsyncRequest[RequestAppData]):
-    data_type: DataType = DataType.APPDATA
 
     def __init__(self, task_passport: TaskPassport) -> None:
         super().__init__(task_passport=task_passport)

@@ -11,25 +11,41 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:29 pm                                               #
-# Modified   : Friday September 6th 2024 05:49:32 pm                                               #
+# Modified   : Saturday September 7th 2024 06:10:13 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
-
+from typing import TypeVar
 
 from appvocai.application.operation.base import Operation
-from appvocai.core.enum import OperationType
+from appvocai.application.orchestration.job import Job
+from appvocai.application.orchestration.project import Project
+from appvocai.application.orchestration.task import Task
+from appvocai.core.enum import Category, DataType
 from appvocai.domain.artifact.request.base import AsyncRequest
-from appvocai.domain.artifact.response.response import ResponseAsync
+from appvocai.domain.artifact.response.response import AsyncResponse
+from appvocai.infra.identity.passport import JobPassport, ProjectPassport, TaskPassport
 from appvocai.infra.web.asession import AsyncSession
+
+# ------------------------------------------------------------------------------------------------ #
+T = TypeVar("T")
+
+# ------------------------------------------------------------------------------------------------ #
+project = Project(category=Category.BOOKS, data_type=DataType.APPDATA)
+project_passport = ProjectPassport(
+    owner=project, category=Category.BOOKS, data_type=DataType.APPDATA
+)
+project.passport = project_passport
+job = Job(project=project)
+job.passport = JobPassport(owner=job, project_passport=project_passport)
+task = Task(job_passport=job.passport)
+tp = TaskPassport(owner=task, job_passport=job.passport)
 
 
 # ------------------------------------------------------------------------------------------------ #
-class ExtractOperation(Operation):
+class ExtractOperation(Operation):  # type: ignore
     """ """
-
-    __OPERATION_TYPE = OperationType.EXTRACT
 
     def __init__(self, async_session: AsyncSession) -> None:
         """
@@ -47,7 +63,7 @@ class ExtractOperation(Operation):
         """
         self._async_session = async_session
 
-    async def run(self, async_request: AsyncRequest) -> ResponseAsync:
+    async def run(self, task_passport: TaskPassport, async_request: AsyncRequest) -> T:  # type: ignore
         """
         Executes the asynchronous task.
 
@@ -62,20 +78,26 @@ class ExtractOperation(Operation):
             async_request (AsyncRequest): The asynchronous request to be executed.
 
         Returns:
-            ResponseAsync: The response from the asynchronous request.
+            AsyncResponse: The response from the asynchronous request.
 
         Raises:
             Exception: If the HTTP request fails or the response validation fails.
         """
-        # Stamp the passport as we move through operations customs.
-        async_request.passport.operation_type = self.__OPERATION_TYPE
+        async_request = self.check_in(
+            task_passport=task_passport, artifact=async_request
+        )  # type: ignore
+
         try:
 
             # Execute the asynchronous HTTP request
-            async_response = await self._session.get(async_request=async_request)
+            async_exaction_response = await self._async_session.get(
+                async_request=async_request
+            )
 
             # Validate the response
-            async_response.validate()
+            async_exaction_response.validate()
+
+            # Parse content
 
         except Exception as e:
             # Log or handle the error appropriately
@@ -83,11 +105,38 @@ class ExtractOperation(Operation):
             print(f"An error occurred during task execution: {e}")
             raise
 
-        # Compute and finalize metrics
-        metrics.compute(async_response=async_response)
-        metrics.validate()
+        return async_exaction_response
 
-        # Notify the observer with the finalized metrics
-        self._observer.notify(metrics=metrics)
 
-        return async_response
+eo = ExtractOperation()
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                             APPDATA EXTRACT OPERATION                                            #
+# ------------------------------------------------------------------------------------------------ #
+class AppDataExtractOperation(ExtractOperation[AsyncResponse]):
+    def __init__(self, async_session: AsyncSession) -> None:
+        super().__init__(async_session=async_session)
+
+    def check_out(self, response: AsyncResponse) -> AsyncResponse:  # type: ignore
+        """Prepares content for the next stage"""
+        for exaction in response.exactions:
+            exaction.response.content
+        for exaction in response.exactions:
+            if exaction.response:
+                exaction.response.content = exaction.response.content["results"]
+        return response
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                            APPREVIEW EXTRACT OPERATION                                           #
+# ------------------------------------------------------------------------------------------------ #
+class AppReviewExtractOperation(ExtractOperation[AsyncResponse]):
+    def __init__(self, async_session: AsyncSession) -> None:
+        super().__init__(async_session=async_session)
+
+    def check_out(self, async_exaction_response: AsyncResponse) -> AsyncResponse:
+        """Prepares content for the next stage"""
+        for exaction in async_exaction_response.exactions:
+            exaction.response.content = exaction.response.content["userReviewList"]
+        return async_exaction_response

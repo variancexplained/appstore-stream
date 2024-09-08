@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Friday September 6th 2024 05:48:26 pm                                               #
+# Modified   : Saturday September 7th 2024 08:51:28 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,6 +24,10 @@ from dependency_injector import containers, providers
 
 from appvocai.infra.base.config import Config
 from appvocai.infra.database.mysql import MySQLDatabase
+from appvocai.infra.monitor.errors import log_error
+from appvocai.infra.monitor.extract import ExtractMonitorDecorator
+from appvocai.infra.repo.monitor.errors import ErrorLogRepo
+from appvocai.infra.repo.monitor.extract import ExtractMetricsRepo
 
 # from appvocai.infra.web.asession import AsyncSession
 
@@ -41,7 +45,25 @@ class LoggingContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                      PERSISTENCE                                                 #
+#                                       MONITOR                                                    #
+# ------------------------------------------------------------------------------------------------ #
+class MonitorContainer(containers.DeclarativeContainer):
+
+    db = providers.DependenciesContainer()
+
+    metrics_extract_repo = providers.Singleton(ExtractMetricsRepo, database=db.mysql)
+
+    metrics_extract = providers.Singleton(
+        ExtractMonitorDecorator, repo=metrics_extract_repo
+    )
+
+    error_repo = providers.Singleton(ErrorLogRepo, database=db.mysql)
+
+    error = providers.Callable(log_error, repo=error_repo)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                      DATABASE                                                    #
 # ------------------------------------------------------------------------------------------------ #
 class PersistenceContainer(containers.DeclarativeContainer):
 
@@ -109,3 +131,5 @@ class AppVoCAIContainer(containers.DeclarativeContainer):
     logs = providers.Container(LoggingContainer, config=config)
 
     db = providers.Container(PersistenceContainer)
+
+    monitor = providers.Container(MonitorContainer, db)

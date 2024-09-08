@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 08:33:31 am                                               #
-# Modified   : Friday September 6th 2024 04:21:05 pm                                               #
+# Modified   : Friday September 6th 2024 11:29:27 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,8 +25,8 @@ import pandas as pd
 import pytest
 
 from appvocai.core.enum import DataType, OperationType
-from appvocai.domain.metrics.metrics import ExtractMetrics
-from appvocai.infra.repo.metrics.extract import ExtractMetricsRepo
+from appvocai.domain.monitor.extract import ExtractMetrics
+from appvocai.infra.repo.monitor.extract import ExtractMetricsRepo
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long
@@ -63,7 +63,7 @@ class MetricsGen:
             operation_type=random.choice(operation_types),
             request_id=self.request_id,
             dt_started=datetime.now() - timedelta(days=random.randint(0, 3)),
-            dt_stopped=datetime.now() - timedelta(days=random.randint(4, 6)),
+            dt_ended=datetime.now() - timedelta(days=random.randint(4, 6)),
             duration=random.randint(1000, 10000),
             requests=random.randint(10, 100),
             latency_min=random.random(),

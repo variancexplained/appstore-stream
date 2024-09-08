@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 05:31:25 pm                                                 #
-# Modified   : Friday September 6th 2024 07:02:09 am                                               #
+# Modified   : Saturday September 7th 2024 05:11:53 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -161,7 +161,7 @@ def setup_dependencies() -> AppVoCAIContainer:
     """
     container = AppVoCAIContainer()
     container.init_resources()
-    container.wire(modules=[__name__])
+    # container.wire(modules=[__name__])
     logger.info("Dependency Container Created and Wired")
     return container
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Friday September 6th 2024 09:47:18 am                                               #
+# Modified   : Friday September 6th 2024 07:22:44 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,9 +22,10 @@ from typing import Any, Generator
 
 import pytest
 from dependency_injector.containers import Container
-from prometheus_client import CollectorRegistry
 
+from appvocai.application.orchestration.project import Project
 from appvocai.container import AppVoCAIContainer
+from appvocai.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
 from appvocai.infra.base.config import Config
 
 # ------------------------------------------------------------------------------------------------ #
@@ -68,9 +69,14 @@ def appdata_json() -> Any:
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                  CUSTOM REGISTRY                                                 #
+#                                    PROJECT                                                       #
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="session", autouse=False)
-def custom_prometheus_registry() -> CollectorRegistry:
+def project() -> Project:
     """Creates a custom prometheus metrics registry."""
-    return CollectorRegistry()
+    return Project(
+        category=Category.HEALTH_FITNESS,
+        data_type=DataType.APPDATA,
+        frequency=ProjectFrequency.DAILY,
+        status=ProjectStatus.IDLE,
+    )

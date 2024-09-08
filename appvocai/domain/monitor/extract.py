@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/domain/metrics/metrics.py                                                 #
+# Filename   : /appvocai/domain/monitor/extract.py                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 07:20:22 am                                               #
-# Modified   : Friday September 6th 2024 04:31:31 pm                                               #
+# Modified   : Friday September 6th 2024 11:29:26 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,16 +27,16 @@ from appvocai.core.enum import DataType, OperationType
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class Metrics(DataClass):
+class ExtractMetrics(DataClass):
 
     project_id: int
     job_id: int
     task_id: int
     data_type: DataType
     operation_type: OperationType
-    instances: int = 0
+    requests: int = 0
     dt_started: Optional[datetime] = None
-    dt_stopped: Optional[datetime] = None
+    dt_ended: Optional[datetime] = None
     duration: float = 0.0
     latency_min: float = 0.0
     latency_average: float = 0.0

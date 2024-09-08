@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/job/project.py                                                #
+# Filename   : /appvocai/application/orchestration/project.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 01:30:04 am                                              #
-# Modified   : Thursday September 5th 2024 08:31:52 am                                             #
+# Modified   : Friday September 6th 2024 07:16:13 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,9 +21,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from appvocai import Passport
 from appvocai.core.data import DataClass
 from appvocai.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
+from appvocai.infra.identity.passport import ProjectPassport
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -37,7 +37,6 @@ class Project(DataClass):
         category (Category): The category of the project, defined in the Category enum.
         data_type (DataType): The type of data being scraped (e.g., "AppData", "AppReview"),
             defined in the DataType enum.
-        id (str): Unique identifier for the project; auto-generated if not provided during initialization.
         frequency (ProjectFrequency): The frequency of scraping jobs, defaulting to WEEKLY.
         max_page_processed (int): The highest page processed for the project, used to track the progress of scraping.
         last_page_processed (int): Last page processed will be used as the starting page for resume jobs.
@@ -51,7 +50,7 @@ class Project(DataClass):
 
     category: Category  # Category of the project, defined in the Category enum.
     data_type: DataType  # Type of data being scraped, defined in DataType enum.
-    passport: Optional[Passport] = None
+    passport: Optional[ProjectPassport] = None
     frequency: ProjectFrequency = (
         ProjectFrequency.WEEKLY
     )  # Frequency of scraping jobs; defaults to WEEKLY.
@@ -79,7 +78,9 @@ class Project(DataClass):
         the project has a unique identifier for tracking purposes.
         """
         if not self.passport:
-            self.passport = Passport(self)
+            self.passport = ProjectPassport(
+                self, category=self.category, data_type=self.data_type
+            )
 
     @property
     def success_rate(self) -> float:

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Wednesday September 4th 2024 01:06:09 am                                            #
+# Modified   : Saturday September 7th 2024 06:50:39 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,12 +22,14 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 from dependency_injector.providers import ConfigurationOption
 
 from appvocai.core.data import NestedNamespace
+from appvocai.domain.artifact.request.base import AsyncRequest, Request
+from appvocai.domain.artifact.response.response import Response
 from appvocai.infra.web.profile import (
     SessionControl,
     SessionHistory,
@@ -248,6 +250,7 @@ class Adapter:
         Args:
             initial_stage (AdapterBaselineStage): The initial stage to start the adaptation process.
         """
+        self._profile = SessionProfile()
         self._session_history: SessionHistory = history
         self._session_control: SessionControl = SessionControl()
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -303,7 +306,31 @@ class Adapter:
             raise TypeError(msg)
         self._stage = stage
 
-    def adapt_requests(self, profile: SessionProfile) -> None:
+    @property
+    def profile(self) -> SessionProfile:
+        """Property that exposes a SessionProfile object"""
+        return self._profile
+
+    def initialize(self, async_request: AsyncRequest[Request]) -> None:
+        """Initializes the adapter for an async request
+
+        Args:
+            async_request (AsyncRequest[Request]) an asynchronous request
+        """
+        self._profile = SessionProfile()
+        self._profile.requests = async_request.request_count if async_request else 0
+
+    def update_profile(self, responses: List[Response]) -> None:
+        """Updates the profile with latency information.
+
+        Args:
+            responses (List[Response]): List of Response objects
+        """
+        for response in responses:
+            self._profile.responses += 1
+            self._profile.add_latency(response.latency)
+
+    def adapt_requests(self) -> None:
         """Adapts the control values based on the session history.
 
         This method sets the session history and delegates the adaptation logic to the current stage.
@@ -311,7 +338,7 @@ class Adapter:
         Args:
             history (SessionHistory): The session history containing metrics for adaptation.
         """
-        self._session_history.add_profile(profile=profile)
+        self._session_history.add_profile(profile=self._profile)
         self._stage.adapt_requests()
 
     def transition_to_stage(self, stage: AdapterStage) -> None:

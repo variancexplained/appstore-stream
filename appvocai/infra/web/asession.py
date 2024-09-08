@@ -11,28 +11,31 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:42:55 am                                                   #
-# Modified   : Friday September 6th 2024 05:45:34 pm                                               #
+# Modified   : Saturday September 7th 2024 08:51:59 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 import asyncio
 import logging
-from typing import List, Optional
+from typing import Awaitable, List, Optional
 
 import aiohttp
 
-from appvocai.application.metrics.extract import MetricsAsyncSession
+from appvocai.container import AppVoCAIContainer
 from appvocai.domain.artifact.request.base import AsyncRequest, Request
-from appvocai.domain.artifact.response.response import Response, ResponseAsync
+from appvocai.domain.artifact.response.response import AsyncResponse, Response
 from appvocai.infra.base.config import Config
-from appvocai.infra.operator.error.metrics import MetricsError
+from appvocai.infra.identity.passport import OperationPassport
+from appvocai.infra.monitor.extract import ExtractMonitorDecorator
 from appvocai.infra.web.adapter import Adapter
 from appvocai.infra.web.header import BrowserHeaders
-from appvocai.infra.web.profile import SessionProfile
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
+# ------------------------------------------------------------------------------------------------ #
+monitor: ExtractMonitorDecorator = AppVoCAIContainer.monitor.metrics_extract()
+log_error = AppVoCAIContainer.monitor.error()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -87,8 +90,7 @@ class AsyncSession:
         )
         self._cookie_jar = cookie_jar
         self._adapter = adapter
-        self._observer = observer
-        self._error_observer = error_observer
+        self.monitor = monitor
 
         self._session_request_limit: int = (
             self._config.async_session.session_request_limit
@@ -102,6 +104,8 @@ class AsyncSession:
         self._session: Optional[aiohttp.ClientSession] = None
         self._headers: BrowserHeaders = BrowserHeaders()
 
+        self._passport: Optional[OperationPassport] = None
+
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     async def __enter__(self) -> None:
@@ -114,7 +118,11 @@ class AsyncSession:
             await self._session.close()
             self._session_active = False
 
-    async def get(self, async_request: AsyncRequest[Request]) -> ResponseAsync:
+    @property
+    def passport(self) -> Optional[OperationPassport]:
+        return self._passport
+
+    async def get(self, async_request: AsyncRequest[Request]) -> AsyncResponse:
         """
         Executes asynchronous HTTP GET requests, processes the responses, and returns them.
 
@@ -122,72 +130,65 @@ class AsyncSession:
             async_request (AsyncRequest[Request]): The asynchronous request object containing individual requests.
 
         Returns:
-            ResponseAsync: The response object containing the individual responses and related metadata.
+            AsyncResponse: The response object containing the individual responses and related metadata.
         """
-        profile = self._create_profile(async_request=async_request)
-        self._session_request_count += async_request.n
+        # Create a passport for this operation
+        self._passport = async_request.passport.creator
+
+        # Initialize the adapter for automatic rate limiting and concurrency throttling
+        self._adapter.initialize(async_request=async_request)
+        # Create a semaphore with the current concurrency value.
         semaphore = asyncio.Semaphore(self._concurrency)
+        # Assemble the async tasks from the requests
         tasks = [
             self.make_request(request, semaphore) for request in async_request.requests
         ]
+        # Make the requests
+        responses = await self._make_async_request(tasks)
+        # Execute rate and concurrency adaption
+        await self._adapt_rate_concurrency(responses=responses)
 
-        profile.send()
-        responses = await asyncio.gather(*tasks)
-        profile.recv()
-        profile = self._update_profile(profile=profile, responses=responses)
-        self._adapter.adapt_requests(profile=profile)
-        delay = self._adapter.session_control.delay
-        await asyncio.sleep(delay)
+        # Package the responses for the trip back
+        async_response = AsyncResponse(operation_passport=self._passport)
+        async_response.add_responses(responses=responses)
 
-        self._concurrency = int(self._adapter.session_control.concurrency)
-        response = ResponseAsync(
-            request_count=async_request.n,
-            response_count=len(responses),
-            session_control=self._adapter.session_control,
-            responses=responses,
-        )
+        # Increment the number of requests processed. The seesion
+        # will be recreated once a threshold of requests is reached.
+        self._session_request_count += async_request.request_count
 
+        # Check if time to rotate / reset sessions
         if self._reset_session_if_expired():
             await self._create_session()
 
-        metrics = MetricsAsyncSession()
-        metrics.compute(async_response=response)
-        self._observer.notify(metrics=metrics)
+        return async_response
 
-        return response
+    @monitor.operation
+    async def _make_async_request(
+        self, tasks: List[Awaitable[Response]]
+    ) -> List[Response]:
 
-    def _create_profile(self, async_request: AsyncRequest[Request]) -> SessionProfile:
-        """
-        Creates a session profile for tracking request and response metrics.
+        # Wrap the async request between the send and recv timestamps
+        self._adapter.profile.send()
+        # Await the response transactions (or exactions)
+        responses = await asyncio.gather(*tasks)
+        # Once compiled, stop the clock with the recv method
+        self._adapter.profile.recv()
+        return responses
 
-        Args:
-            async_request (AsyncRequest[Request]): The asynchronous request object.
+    async def _adapt_rate_concurrency(self, responses: List[Response]) -> None:
+        """Compute rate and concurrency for current conditions based on latency."""
+        # Update the metrics in the adapter
+        self._adapter.update_profile(responses=responses)
+        # Compute new request rate and concurrency
+        self._adapter.adapt_requests()
+        # Obtain the delay from the session control property and invoke async sleep
+        delay = self._adapter.session_control.delay
+        await asyncio.sleep(delay)
+        # Set the concurrency for the next request
+        self._concurrency = int(self._adapter.session_control.concurrency)
 
-        Returns:
-            SessionProfile: The profile object for tracking session metrics.
-        """
-        profile = SessionProfile()
-        profile.requests = async_request.n
-        return profile
-
-    def _update_profile(
-        self, profile: SessionProfile, responses: List[Response]
-    ) -> SessionProfile:
-        """
-        Updates the session profile with response metrics.
-
-        Args:
-            profile (SessionProfile): The session profile object.
-            responses (List[Response]): The list of response objects.
-
-        Returns:
-            SessionProfile: The updated session profile.
-        """
-        profile.responses = len(responses)
-        for response in responses:
-            profile.add_latency(response.latency)
-        return profile
-
+    @log_error
+    @monitor.event
     async def make_request(
         self, request: Request, semaphore: asyncio.Semaphore
     ) -> Optional[Response]:
@@ -201,13 +202,15 @@ class AsyncSession:
         Returns:
             Optional[Response]: The response object if the request is successful; None if all retries are exhausted.
         """
-        response = Response()
+
         headers = request.headers or next(self._headers)
+        attempts = 0
 
         async with semaphore:
-            while response.retries < self._retries:
+            while attempts < self._retries:
                 try:
-                    response.parse_request(request=request)
+
+                    # Make the request.
                     if self._session:
                         async with self._session.get(
                             headers=headers,
@@ -216,55 +219,24 @@ class AsyncSession:
                             params=request.params,
                         ) as resp:
                             resp.raise_for_status()
+                            # Instantiate a Response object to capture the HTTP response.
+                            if self.passport:
+                                response = Response(operation_passport=self.passport)
+                            else:
+                                msg = "The passport is None. Expected type OperationPassport."
+                                self._logger.exception(msg)
+                                raise RuntimeError(msg)
                             await response.parse_response(response=resp)
                             return response
+
                     else:
                         msg = "Session object is None"
                         self._logger.exception(msg)
                         raise TypeError(msg)
 
-                except aiohttp.ClientResponseError as e:
-                    if response.retries == self._retries - 1:
-                        metrics = MetricsError()
-                        metrics.retries += 1
-                        metrics.compute(
-                            operator=self.__class__.__name__, error_code=e.status
-                        )
-                        self._error_observer.notify(metrics=metrics)
-                    if 400 <= e.status < 500:
-                        self._logger.warning(
-                            f"ClientResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
-                        )
-
-                    elif 500 <= e.status < 600:
-                        self._logger.warning(
-                            f"ServerResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
-                        )
-                    else:
-                        self._logger.warning(
-                            f"UnexpectedResponseError: Response code: {e.status} - {e}. Retry #{metrics.retries}."
-                        )
-
-                except aiohttp.ClientError as e:
-                    metrics = MetricsError()
-                    metrics.retries += 1
-
-                    metrics.compute(operator=self.__class__.__name__, error_code=400)
-                    self._error_observer.notify(metrics=metrics)
-                    self._logger.warning(f"ClientError: {e}. Retry #{metrics.retries}.")
-
-                except Exception as e:
-                    metrics = MetricsError()
-                    metrics.retries += 1
-                    metrics.compute(operator=self.__class__.__name__, error_code=4000)
-                    self._error_observer.notify(metrics=metrics)
-                    self._logger.warning(
-                        f"Unknown Error: {e}. Retry #{metrics.retries}."
-                    )
-
-                finally:
-                    response.retries += 1
-                    await asyncio.sleep(2**metrics.retries)  # Exponential backoff
+                except Exception:
+                    attempts += 1
+                    await asyncio.sleep(2**attempts)  # Exponential backoff
 
             self._logger.error("Exhausted retries. Returning to calling environment.")
             return None
