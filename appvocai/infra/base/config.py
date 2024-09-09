@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 08:27:38 am                                                   #
-# Modified   : Friday September 6th 2024 05:45:34 pm                                               #
+# Modified   : Sunday September 8th 2024 08:37:52 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -114,6 +114,12 @@ class Config:
     def async_session(self) -> NestedNamespace:
         config = self.load_config()
         return self.to_namespace(config["async_session"])
+
+    #  ------------------------------------------------------------------------------------------- #
+    @property
+    def extract(self) -> NestedNamespace:
+        config = self.load_config()
+        return self.to_namespace(config["extract"])
 
     #  ------------------------------------------------------------------------------------------- #
     @property

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 08:33:31 am                                               #
-# Modified   : Friday September 6th 2024 11:29:27 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:51 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytest
 
-from appvocai.core.enum import DataType, OperationType
+from appvocai.core.enum import DataType, StageType
 from appvocai.domain.monitor.extract import ExtractMetrics
 from appvocai.infra.repo.monitor.extract import ExtractMetricsRepo
 
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 double_line = f"\n{100 * '='}"
 single_line = f"\n{100 * '-'}"
 
-operation_types = [OperationType.EXTRACT, OperationType.LOAD, OperationType.TRANSFORM]
+stage_types = [StageType.EXTRACT, StageType.LOAD, StageType.TRANSFORM]
 data_types = [DataType.APPDATA, DataType.APPREVIEW]
 
 NUM_METRICS = 16
@@ -60,7 +60,7 @@ class MetricsGen:
             job_id=self.job_id % NUM_METRICS_PER_JOB,
             data_type=random.choice(data_types),
             task_id=self.task_id % NUM_METRICS_PER_TASK,
-            operation_type=random.choice(operation_types),
+            stage_type=random.choice(stage_types),
             request_id=self.request_id,
             dt_started=datetime.now() - timedelta(days=random.randint(0, 3)),
             dt_ended=datetime.now() - timedelta(days=random.randint(4, 6)),
@@ -183,7 +183,7 @@ class TestExtractMetrics:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_get_operation_type_metrics(self, container, caplog) -> None:
+    def test_get_stage_type_metrics(self, container, caplog) -> None:
         start = datetime.now()
         logger.info(
             f"\n\nStarted {self.__class__.__name__} {inspect.stack()[0][3]} at {start.strftime('%I:%M:%S %p')} on {start.strftime('%m/%d/%Y')}"
@@ -192,17 +192,15 @@ class TestExtractMetrics:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         db = container.db.mysql()
         repo = ExtractMetricsRepo(database=db)
-        metrics = repo.get_operation_type_metrics(operation_type=OperationType.EXTRACT)
+        metrics = repo.get_stage_type_metrics(stage_type=StageType.EXTRACT)
         assert isinstance(metrics, pd.DataFrame)
         logging.debug(metrics)
 
-        metrics = repo.get_operation_type_metrics(
-            operation_type=OperationType.TRANSFORM
-        )
+        metrics = repo.get_stage_type_metrics(stage_type=StageType.TRANSFORM)
         assert isinstance(metrics, pd.DataFrame)
         logging.debug(metrics)
 
-        metrics = repo.get_operation_type_metrics(operation_type=OperationType.LOAD)
+        metrics = repo.get_stage_type_metrics(stage_type=StageType.LOAD)
         assert isinstance(metrics, pd.DataFrame)
         logging.debug(metrics)
 

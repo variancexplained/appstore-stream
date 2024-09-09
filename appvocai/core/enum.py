@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 02:31:31 pm                                              #
-# Modified   : Friday September 6th 2024 05:18:53 pm                                               #
+# Modified   : Sunday September 8th 2024 07:00:57 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -61,15 +61,15 @@ class Category(Enum):
 
     Methods:
         __new__(cls, code: int, name: str) -> Category:
-            Create a new instance of the Category enum, setting the value and display name.
+            Create a new instance of the Category enum, setting the value and description.
 
     Example Usage:
-        To access the category's display name and value:
+        To access the category's description and value:
 
         >>> category = Category.BOOKS
         >>> print(category.name)         # Output: 'BOOKS'
         >>> print(category.value)        # Output: 6018
-        >>> print(category.display_name) # Output: 'Books'
+        >>> print(category.description) # Output: 'Books'
     """
 
     BOOKS = (6018, "Books")
@@ -102,7 +102,7 @@ class Category(Enum):
     def __new__(cls, code: int, name: str) -> Category:
         obj = object.__new__(cls)
         obj._value_ = code
-        obj.display_name = name  # type: ignore
+        obj.display = name  # type: ignore
         return obj
 
 
@@ -113,7 +113,7 @@ class DataType(Enum):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class OperationType(Enum):
+class StageType(Enum):
     EXTRACT = "Extract"
     TRANSFORM = "Transform"
     LOAD = "Load"
@@ -130,9 +130,8 @@ class Status(Enum):
     CREATED = "Created"
     SCHEDULED = "Scheduled"
     IN_PROGRESS = "In Progress"
+    ENDED = "Ended"
     COMPLETED = "Completed"
-    FAILED = "Failed"
-    CANCELED = "Canceled"
 
 
 # ------------------------------------------------------------------------------------------------ #

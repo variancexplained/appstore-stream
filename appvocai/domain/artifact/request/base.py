@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:23:34 pm                                                 #
-# Modified   : Saturday September 7th 2024 05:40:39 am                                             #
+# Modified   : Saturday September 7th 2024 11:41:26 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,7 +24,6 @@ from datetime import datetime
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
 from appvocai.domain.artifact.base import Artifact
-from appvocai.infra.identity.passport import TaskPassport
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar("T", bound="Request")
@@ -43,7 +42,7 @@ class Request(Artifact):
     base URL, and parameters.
 
     Inherited Attributes from Artifact:
-        entype (DataType): The type of the entity, distinguishing between different operation types.
+        entype (DataType): The type of the entity, distinguishing between different stage types.
         id (str): A unique identifier for the entity.
         created (Optional[datetime]): The timestamp when the entity was initially created.
         modified (Optional[datetime]): The timestamp when the entity was last modified.
@@ -91,9 +90,7 @@ class Request(Artifact):
     def end_index(self) -> int:
         """Returns the ending index for the request, if applicable."""
 
-    def __init__(
-        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
-    ) -> None:
+    def __init__(self, *args: Any, **kwargs: Dict[str, Any]) -> None:
         """
         Initializes the Request object, inheriting from Artifact and associating the request with a task.
 
@@ -102,7 +99,6 @@ class Request(Artifact):
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(task_passport=task_passport)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -116,7 +112,7 @@ class AsyncRequest(Artifact, Generic[T]):
     updated whenever a request is added.
 
     Inherited Attributes from Artifact:
-        entype (DataType): The type of the entity, distinguishing between different operation types.
+        entype (DataType): The type of the entity, distinguishing between different stage types.
         id (str): A unique identifier for the entity.
         created (Optional[datetime]): The timestamp when the entity was initially created.
         modified (Optional[datetime]): The timestamp when the entity was last modified.
@@ -136,7 +132,7 @@ class AsyncRequest(Artifact, Generic[T]):
     request_count: int = 0
     requests: List[T] = field(default_factory=list)
 
-    def __init__(self, task_passport: TaskPassport) -> None:
+    def __init__(self) -> None:
         """
         Initializes the AsyncRequest object, associating it with a task.
 
@@ -145,7 +141,6 @@ class AsyncRequest(Artifact, Generic[T]):
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(task_passport=task_passport)
 
     def add_request(self, request: T) -> None:
         """
@@ -156,7 +151,6 @@ class AsyncRequest(Artifact, Generic[T]):
             request (T): The request to be added to the list of requests.
         """
         self.request_count += 1
-        self.modified = datetime.now()
         self.requests.append(request)
 
 
@@ -169,28 +163,12 @@ class RequestGen(ABC, Generic[U]):
     with `__iter__` and `__next__` methods that are meant to be implemented by subclasses.
     It associates each generated request with a specific task via the `task_passport`.
 
-    Attributes:
-        _task_passport (TaskPassport): The passport of the task associated with this request generation.
-
     Abstract Methods:
         __iter__() -> RequestGen[U]:
             Initializes the generation of requests, making the class iterable.
         __next__() -> U:
             Generates the next request in the sequence.
     """
-
-    def __init__(
-        self, *args: Any, task_passport: TaskPassport, **kwargs: Dict[str, Any]
-    ) -> None:
-        """
-        Initializes the RequestGen object, associating it with a task.
-
-        Args:
-            task_passport (TaskPassport): The passport of the task associated with this request generator.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
-        """
-        self._task_passport = task_passport
 
     @abstractmethod
     def __iter__(self) -> RequestGen[U]:

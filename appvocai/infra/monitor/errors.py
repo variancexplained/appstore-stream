@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday September 7th 2024 07:52:50 pm                                             #
-# Modified   : Saturday September 7th 2024 08:47:51 pm                                             #
+# Modified   : Sunday September 8th 2024 07:59:41 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -20,8 +20,8 @@ import functools
 from datetime import datetime
 from typing import Awaitable, Callable, TypeVar
 
+from appvocai.application.orchestration.context import JobContext
 from appvocai.domain.monitor.errors import ErrorLog
-from appvocai.infra.identity.passport import Passport
 from appvocai.infra.repo.monitor.errors import ErrorLogRepo
 
 F = TypeVar("F", bound=Callable[..., Awaitable])
@@ -31,44 +31,44 @@ F = TypeVar("F", bound=Callable[..., Awaitable])
 def log_error(repo: ErrorLogRepo) -> Callable[[F], F]:
     """
     Decorator for logging errors to the ErrorRepo via the add method,
-    but throws an unlogged exception if no valid passport is found.
+    but throws an unlogged exception if no valid context is found.
     """
 
     def decorator(func: Callable):
         @functools.wraps(func)
         async def wrapper(self, *args, **kwargs):
-            # Attempt to find a passport in the arguments
-            passport = None
+            # Attempt to find a context in the arguments
+            context = None
 
-            # Check positional arguments for a passport
+            # Check positional arguments for a context
             for arg in args:
-                if isinstance(arg, Passport):
-                    passport = arg
+                if isinstance(arg, JobContext):
+                    context = arg
                     break
 
-            # Check keyword arguments for a passport
-            if not passport:
+            # Check keyword arguments for a context
+            if not context:
                 for kwarg in kwargs.values():
-                    if isinstance(kwarg, Passport):
-                        passport = kwarg
+                    if isinstance(kwarg, JobContext):
+                        context = kwarg
                         break
 
-            # If no valid passport, raise an unlogged exception
-            if not passport:
+            # If no valid context, raise an unlogged exception
+            if not context:
                 raise RuntimeError(
-                    "Invalid passport: Passport is required but not found."
+                    "Invalid context: JobContext is required but not found."
                 )
 
             try:
                 return await func(self, *args, **kwargs)
             except Exception as e:
-                # If a passport is available, log the error
+                # If a context is available, log the error
                 error_log = ErrorLog(
-                    project_id=passport.project_id,
-                    job_id=passport.job_id,
-                    task_id=passport.task_id,
-                    data_type=passport.data_type,
-                    operation_type=passport.operation_type,
+                    project_id=context.project_id,
+                    job_id=context.job_id,
+                    task_id=context.task_id,
+                    data_type=context.data_type,
+                    stage_type=context.stage_type,
                     error_type=type(e).__name__,
                     error_code=getattr(
                         e, "status", 500
@@ -82,8 +82,6 @@ def log_error(repo: ErrorLogRepo) -> Callable[[F], F]:
 
                 # Optionally, you can also log the error using the logger
                 args[0]._logger.exception(f"Error occurred: {e}")
-
-                raise e  # Re-raise the exception after logging
 
         return wrapper
 

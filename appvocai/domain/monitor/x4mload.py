@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 07:20:22 am                                               #
-# Modified   : Friday September 6th 2024 11:29:27 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import Optional
 
 from appvocai.core.data import DataClass
-from appvocai.core.enum import DataType, OperationType
+from appvocai.core.enum import DataType, StageType
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -33,7 +33,7 @@ class X4MLoadMetrics(DataClass):
     job_id: int
     task_id: int
     data_type: DataType
-    operation_type: OperationType
+    stage_type: StageType
     instances: int = 0
     dt_started: Optional[datetime] = None
     dt_ended: Optional[datetime] = None

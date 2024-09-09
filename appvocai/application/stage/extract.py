@@ -4,47 +4,32 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/operation/extract.py                                          #
+# Filename   : /appvocai/application/stage/extract.py                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:29 pm                                               #
-# Modified   : Saturday September 7th 2024 06:10:13 pm                                             #
+# Modified   : Sunday September 8th 2024 08:40:35 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
 # ================================================================================================ #
 from typing import TypeVar
 
-from appvocai.application.operation.base import Operation
-from appvocai.application.orchestration.job import Job
-from appvocai.application.orchestration.project import Project
-from appvocai.application.orchestration.task import Task
-from appvocai.core.enum import Category, DataType
+from appvocai.application.stage.base import Stage
+from appvocai.core.enum import StageType
 from appvocai.domain.artifact.request.base import AsyncRequest
 from appvocai.domain.artifact.response.response import AsyncResponse
-from appvocai.infra.identity.passport import JobPassport, ProjectPassport, TaskPassport
 from appvocai.infra.web.asession import AsyncSession
 
 # ------------------------------------------------------------------------------------------------ #
 T = TypeVar("T")
 
-# ------------------------------------------------------------------------------------------------ #
-project = Project(category=Category.BOOKS, data_type=DataType.APPDATA)
-project_passport = ProjectPassport(
-    owner=project, category=Category.BOOKS, data_type=DataType.APPDATA
-)
-project.passport = project_passport
-job = Job(project=project)
-job.passport = JobPassport(owner=job, project_passport=project_passport)
-task = Task(job_passport=job.passport)
-tp = TaskPassport(owner=task, job_passport=job.passport)
-
 
 # ------------------------------------------------------------------------------------------------ #
-class ExtractOperation(Operation):  # type: ignore
+class ExtractStage(Stage):  # type: ignore
     """ """
 
     def __init__(self, async_session: AsyncSession) -> None:
@@ -63,7 +48,11 @@ class ExtractOperation(Operation):  # type: ignore
         """
         self._async_session = async_session
 
-    async def run(self, task_passport: TaskPassport, async_request: AsyncRequest) -> T:  # type: ignore
+    @property
+    def stage(self) -> StageType:
+        return StageType.EXTRACT
+
+    async def run(self, async_request: AsyncRequest) -> AsyncResponse:  # type: ignore
         """
         Executes the asynchronous task.
 
@@ -83,21 +72,11 @@ class ExtractOperation(Operation):  # type: ignore
         Raises:
             Exception: If the HTTP request fails or the response validation fails.
         """
-        async_request = self.check_in(
-            task_passport=task_passport, artifact=async_request
-        )  # type: ignore
-
+        async_request.context.stage = self.stage
         try:
 
             # Execute the asynchronous HTTP request
-            async_exaction_response = await self._async_session.get(
-                async_request=async_request
-            )
-
-            # Validate the response
-            async_exaction_response.validate()
-
-            # Parse content
+            async_response = await self._async_session.get(async_request=async_request)
 
         except Exception as e:
             # Log or handle the error appropriately
@@ -105,38 +84,4 @@ class ExtractOperation(Operation):  # type: ignore
             print(f"An error occurred during task execution: {e}")
             raise
 
-        return async_exaction_response
-
-
-eo = ExtractOperation()
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                             APPDATA EXTRACT OPERATION                                            #
-# ------------------------------------------------------------------------------------------------ #
-class AppDataExtractOperation(ExtractOperation[AsyncResponse]):
-    def __init__(self, async_session: AsyncSession) -> None:
-        super().__init__(async_session=async_session)
-
-    def check_out(self, response: AsyncResponse) -> AsyncResponse:  # type: ignore
-        """Prepares content for the next stage"""
-        for exaction in response.exactions:
-            exaction.response.content
-        for exaction in response.exactions:
-            if exaction.response:
-                exaction.response.content = exaction.response.content["results"]
-        return response
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                            APPREVIEW EXTRACT OPERATION                                           #
-# ------------------------------------------------------------------------------------------------ #
-class AppReviewExtractOperation(ExtractOperation[AsyncResponse]):
-    def __init__(self, async_session: AsyncSession) -> None:
-        super().__init__(async_session=async_session)
-
-    def check_out(self, async_exaction_response: AsyncResponse) -> AsyncResponse:
-        """Prepares content for the next stage"""
-        for exaction in async_exaction_response.exactions:
-            exaction.response.content = exaction.response.content["userReviewList"]
-        return async_exaction_response
+        return async_response

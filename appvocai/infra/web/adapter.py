@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 04:44:47 am                                                   #
-# Modified   : Saturday September 7th 2024 06:50:39 pm                                             #
+# Modified   : Saturday September 7th 2024 11:10:48 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -46,7 +46,7 @@ class Clock:
     """A simple clock utility to track elapsed time.
 
     This class provides methods to start, reset, and measure elapsed time,
-    useful for timing operations or managing delays in asynchronous processes.
+    useful for timing stages or managing delays in asynchronous processes.
     """
 
     def __init__(self) -> None:
@@ -123,8 +123,8 @@ class SessionControlValue:
         _value (float): The current value of the control parameter.
         _min_value (float): The minimum allowed value for the control parameter.
         _max_value (float): The maximum allowed value for the control parameter.
-        _additive_factor (float): The amount added to the value during increase operations.
-        _multiplicative_factor (float): The factor by which the value is multiplied during decrease operations.
+        _additive_factor (float): The amount added to the value during increase stages.
+        _multiplicative_factor (float): The factor by which the value is multiplied during decrease stages.
         _temperature (float): The standard deviation of the noise added to the value.
     """
 
@@ -143,8 +143,8 @@ class SessionControlValue:
             initial_value (float): The starting value of the control parameter. Defaults to 50.0.
             min_value (float): The minimum allowable value. Defaults to 50.0.
             max_value (float): The maximum allowable value. Defaults to 500.0.
-            additive_factor (float): The amount to add during increase operations. Defaults to 0.9.
-            multiplicative_factor (float): The factor to multiply during decrease operations. Defaults to 1.0.
+            additive_factor (float): The amount to add during increase stages. Defaults to 0.9.
+            multiplicative_factor (float): The factor to multiply during decrease stages. Defaults to 1.0.
             temperature (float, optional): The standard deviation of the noise to add to the value. Defaults to 0.0.
         """
         self._initial_value = initial_value
@@ -1005,7 +1005,7 @@ class AdapterRateExploreStage(AdapterExploreExploitStage):
         """
         Cleans up any resources or states related to the end of this stage.
 
-        This method is called at the end of the exploration stage to finalize operations.
+        This method is called at the end of the exploration stage to finalize stages.
         """
         super().end_stage()
 
@@ -1212,7 +1212,7 @@ class AdapterConcurrencyExploreStage(AdapterExploreExploitStage):
         """
         Cleans up any resources or states related to the end of this stage.
 
-        This method is called at the end of the concurrency exploration stage to finalize operations.
+        This method is called at the end of the concurrency exploration stage to finalize stages.
         """
         super().end_stage()
 

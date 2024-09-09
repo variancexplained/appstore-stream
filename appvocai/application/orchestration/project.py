@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday August 28th 2024 01:30:04 am                                              #
-# Modified   : Friday September 6th 2024 07:16:13 pm                                               #
+# Modified   : Sunday September 8th 2024 08:57:40 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,10 @@ from typing import Optional
 
 from appvocai.core.data import DataClass
 from appvocai.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
-from appvocai.infra.identity.passport import ProjectPassport
+from appvocai.infra.identity.idxgen import IDXGen
+
+# ------------------------------------------------------------------------------------------------ #
+idxgen = IDXGen()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -48,9 +51,9 @@ class Project(DataClass):
         status (ProjectStatus): Current status of the project, defaulting to IDLE.
     """
 
+    project_id: str
     category: Category  # Category of the project, defined in the Category enum.
     data_type: DataType  # Type of data being scraped, defined in DataType enum.
-    passport: Optional[ProjectPassport] = None
     frequency: ProjectFrequency = (
         ProjectFrequency.WEEKLY
     )  # Frequency of scraping jobs; defaults to WEEKLY.
@@ -60,14 +63,13 @@ class Project(DataClass):
     last_page_processed: int = (
         0  # Last page processed; will be the starting page for resume jobs.
     )
-    last_job_executed: Optional[datetime] = (
+    dt_last_job_executed: Optional[datetime] = (
         None  # UTC Timestamp of the last executed job; None if never executed.
     )
-    next_scheduled_job: Optional[datetime] = (
+    dt_next_scheduled_job: Optional[datetime] = (
         None  # Timestamp of the next scheduled job; None if not scheduled.
     )
     job_count: int = 0  # Total number of jobs created; starts at 0.
-    job_successes: int = 0  # Number of successful jobs; starts at 0.
     status: ProjectStatus = ProjectStatus.IDLE  # Project status; defaults to IDLE.
 
     def __post_init__(self) -> None:
@@ -77,23 +79,6 @@ class Project(DataClass):
         This method is called automatically after the object is created, ensuring that
         the project has a unique identifier for tracking purposes.
         """
-        if not self.passport:
-            self.passport = ProjectPassport(
-                self, category=self.category, data_type=self.data_type
-            )
-
-    @property
-    def success_rate(self) -> float:
-        """
-        Computes the success rate for the project.
-
-        Returns:
-            float: The success rate as a percentage. Returns 0.0 if no jobs have been created.
-        """
-        if self.job_count:
-            return self.job_successes / self.job_count * 100
-        else:
-            return 0.0
 
     def job_started(self) -> None:
         """
@@ -126,14 +111,7 @@ class Project(DataClass):
         This method should be called when a scraping job has been completed successfully.
         It also sets the last_job_executed to the current UTC time to reflect when the job completed.
         """
-        self.job_successes += 1
         self.last_job_executed = (
             datetime.now()
         )  # Set the last executed time to now in UTC
         self.status = ProjectStatus.IDLE
-
-
-# ------------------------------------------------------------------------------------------------ #
-# Usage
-project = Project(category=Category.BOOKS, data_type=DataType.APPREVIEW)
-print(project.passport)

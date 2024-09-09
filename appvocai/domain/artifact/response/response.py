@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 10:27:49 am                                                #
-# Modified   : Saturday September 7th 2024 07:40:55 pm                                             #
+# Modified   : Sunday September 8th 2024 08:50:16 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,9 +26,10 @@ from typing import Any, Dict, List, Optional, Union
 from aiohttp import ClientResponse, ClientResponseError
 from pympler import asizeof
 
+from appvocai.application.orchestration.context import JobContext
 from appvocai.core.data import DataClass
 from appvocai.domain.artifact.base import Artifact
-from appvocai.infra.identity.passport import OperationPassport
+from appvocai.infra.base.config import Config
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -40,62 +41,98 @@ class AsyncResponse(Artifact):
     """
     A collection of Request/Response objects resulting from an asynchronous request.
 
-    This class holds the results of an asynchronous operation, specifically a list of response objects
+    This class holds the results of an asynchronous stage, specifically a list of response objects
     generated from the requests made. It keeps track of the total number of responses and allows adding
-    new responses to the collection.
+    new responses to the collection. Additionally, it provides a method to check if the extraction process
+    is complete based on a threshold of 404 responses.
 
     Attributes:
     -----------
     response_count : int
-        The total number of responses collected from the asynchronous operation. Default is 0.
+        The total number of responses collected from the asynchronous stage. Default is 0.
     responses : List[Response]
         A list of `Response` objects, each representing the result of an individual request in the asynchronous
-        operation. Initialized as an empty list by default.
+        stage. Initialized as an empty list by default.
+    _config : Config
+        A configuration object that holds settings related to the threshold of 404 responses.
+    _404_threshold : float
+        The threshold percentage of 404 responses to mark the extraction as complete.
 
     Methods:
     --------
-    __init__(operation_passport: OperationPassport) -> None
-        Initializes the `AsyncResponse` object with an `OperationPassport`, inherited from the `Artifact` class.
+    __init__(context: JobContext, config_cls=type[Config]) -> None
+        Initializes the `AsyncResponse` object with a `JobContext` and configuration class.
 
     add_responses(responses: List[Response]) -> None
         Adds a list of `Response` objects to the `AsyncResponse` and updates the `response_count` accordingly.
 
+    extract_complete -> bool
+        Returns `True` if the percentage of 404 responses exceeds the configured threshold, otherwise `False`.
+
     Parameters:
     -----------
-    operation_passport : OperationPassport
-        An object representing the passport of the operation, which contains metadata about the operation, task,
-        and project related to the responses.
+    context : JobContext
+        The context of the job, providing metadata about the job, stage, and related project.
+    config_cls : Type[Config], optional
+        A configuration class used to retrieve the threshold for the percentage of 404 responses. Default is `Config`.
     """
 
     response_count: int = 0
     responses: List[Response] = field(default_factory=list)
 
-    def __init__(self, operation_passport: OperationPassport) -> None:
+    def __init__(self, context: JobContext, config_cls=type[Config]) -> None:
         """
-        Initializes the `AsyncResponse` with an `OperationPassport`, which provides the context for the
-        asynchronous operation.
+        Initializes the `AsyncResponse` object with a given `JobContext` and a configuration class.
+
+        The `JobContext` provides the metadata related to the job, and the configuration class
+        holds the threshold percentage for 404 responses to determine completion.
 
         Parameters:
         -----------
-        operation_passport : OperationPassport
-            Metadata related to the operation that generated the responses, including task and project IDs,
-            data type, and category.
+        context : JobContext
+            The context object that encapsulates the job's metadata and progress.
+        config_cls : Type[Config], optional
+            The configuration class used to fetch the threshold for 404 responses. Defaults to `Config`.
         """
-        super().__init__(operation_passport=operation_passport)
+        super().__init__(context=context)
+        self._config = config_cls()
+        self._404_threshold = self._config.extract.threshold_404
 
     def add_responses(self, responses: List[Response]) -> None:
         """
-        Adds a list of `Response` objects to the `AsyncResponse` collection and updates the response count.
+        Adds a list of `Response` objects to the collection and updates the `response_count`.
 
         Parameters:
         -----------
         responses : List[Response]
-            A list of `Response` objects to be added to the collection.
+            A list of `Response` objects representing the results of the asynchronous requests.
 
-        The `response_count` is updated to reflect the number of responses added.
+        The `response_count` is set to the length of the provided list of responses.
         """
         self.response_count = len(responses)
-        self.responses: List[Response] = responses
+        self.responses = responses
+
+    @property
+    def extract_complete(self) -> bool:
+        """
+        Determines whether the extraction process is considered complete based on the
+        percentage of 404 responses.
+
+        Returns:
+        --------
+        bool
+            `True` if the percentage of 404 responses exceeds the configured threshold, `False` otherwise.
+
+        The threshold is fetched from the configuration and compared to the ratio of 404
+        responses in the total response set.
+        """
+        if len(self.responses) == 0:
+            return False
+        else:
+            n_404s = sum(
+                1 for response in self.responses if response.headers.status == 404
+            )
+            return (n_404s / self.response_count) >= self._404_threshold
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -258,8 +295,8 @@ class Response(Artifact):
 
     Methods:
     --------
-    __init__(operation_passport: OperationPassport) -> None
-        Initializes the `Response` object and links it to the given `OperationPassport`, inheriting from `Artifact`.
+    __init__(stage_passport: StagePassport) -> None
+        Initializes the `Response` object and links it to the given `StagePassport`, inheriting from `Artifact`.
 
     async parse_response(response: ClientResponse) -> None
         Asynchronously parses both the headers and content of the `ClientResponse` and updates the `Response` object.
@@ -273,23 +310,23 @@ class Response(Artifact):
 
     Parameters:
     -----------
-    operation_passport : OperationPassport
-        The passport that contains metadata related to the operation, such as task and project information.
+    stage_passport : StagePassport
+        The passport that contains metadata related to the stage, such as task and project information.
     """
 
     headers: ResponseHeaders
     content: Union[List[Dict[str, Any]], Dict[str, Any]]
 
-    def __init__(self, operation_passport: OperationPassport) -> None:
+    def __init__(self, context: JobContext) -> None:
         """
-        Initializes the `Response` object with an `OperationPassport`, setting up the metadata context.
+        Initializes the `Response` object with an `StagePassport`, setting up the metadata context.
 
         Parameters:
         -----------
-        operation_passport : OperationPassport
-            Metadata related to the operation, which includes information such as task ID, job ID, and category.
+        stage_passport : StagePassport
+            Metadata related to the stage, which includes information such as task ID, job ID, and category.
         """
-        super().__init__(operation_passport=operation_passport)
+        super().__init__(context=context)
 
     async def parse_response(self, response: ClientResponse) -> None:
         """
@@ -303,7 +340,10 @@ class Response(Artifact):
         This method first parses the headers, then asynchronously parses the content of the response.
         """
         self.headers = self._parse_header(response=response)
-        self.content = await self._parse_content(response=response)
+        if self.headers.status == 200:
+            self.content = await self._parse_content(response=response)
+        else:
+            self.content = {}
 
     def _parse_header(self, response: ClientResponse) -> ResponseHeaders:
         """

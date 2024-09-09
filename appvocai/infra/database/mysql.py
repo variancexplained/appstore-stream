@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 19th 2024 07:14:52 am                                                   #
-# Modified   : Saturday August 31st 2024 04:43:13 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:46 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,12 +25,16 @@ import os
 import re
 import subprocess
 from time import sleep
-from typing import Any, Dict, List, Type
+from typing import Dict, List, Type
 
 import sqlalchemy
 from dotenv import load_dotenv
-from sqlalchemy.exc import (IntegrityError, OperationalError, ProgrammingError,
-                            SQLAlchemyError)
+from sqlalchemy.exc import (
+    IntegrityError,
+    ProgrammingError,
+    SQLAlchemyError,
+    StagealError,
+)
 
 from appvocai.core.data import NestedNamespace
 from appvocai.infra.base.config import Config
@@ -131,13 +135,19 @@ class MySQLDatabase(Database):
             - The method will log attempts to connect and any errors encountered.
         """
         attempts = 0
-        retries = self._config.database.retries if isinstance(self._config.database, NestedNamespace) else self._config.database['retries']
+        retries = (
+            self._config.database.retries
+            if isinstance(self._config.database, NestedNamespace)
+            else self._config.database["retries"]
+        )
 
         while attempts < retries:
             attempts += 1
             try:
                 if self._engine is None:
-                    self._logger.debug(f"Creating engine for connection string: {self._connection_string}")
+                    self._logger.debug(
+                        f"Creating engine for connection string: {self._connection_string}"
+                    )
                     self._engine = sqlalchemy.create_engine(self._connection_string)
                 if self._connection is None:
                     self._logger.debug("Attempting to connect to the database.")
@@ -152,9 +162,13 @@ class MySQLDatabase(Database):
                 return self
 
             except SQLAlchemyError as e:
-                self._logger.warning(f"Attempt {attempts} to connect to the database failed.")
+                self._logger.warning(
+                    f"Attempt {attempts} to connect to the database failed."
+                )
                 if attempts < retries:
-                    self._logger.info("Attempting to start database and retry connection.")
+                    self._logger.info(
+                        "Attempting to start database and retry connection."
+                    )
                     self._start_db()
                     sleep(3)
                 else:
@@ -164,8 +178,6 @@ class MySQLDatabase(Database):
         msg = f"Database connection failed after multiple attempts."
         self._logger.exception(msg)
         raise
-
-
 
     def _get_connection_string(self) -> str:
         """
@@ -188,10 +200,17 @@ class MySQLDatabase(Database):
             MySQL database.
             - The database is assumed to be hosted locally (localhost).
         """
-        username = self._mysql_credentials.username if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["username"]
-        password = self._mysql_credentials.password if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["password"]
+        username = (
+            self._mysql_credentials.username
+            if isinstance(self._mysql_credentials, NestedNamespace)
+            else self._mysql_credentials["username"]
+        )
+        password = (
+            self._mysql_credentials.password
+            if isinstance(self._mysql_credentials, NestedNamespace)
+            else self._mysql_credentials["password"]
+        )
         return f"mysql+pymysql://{username}:{password}@localhost/{self._dbname}"
-
 
     def _start_db(self) -> None:
         """
@@ -213,7 +232,11 @@ class MySQLDatabase(Database):
             database configuration to determine how to start the
             database.
         """
-        start = self._config.database.start if isinstance(self._config.database, NestedNamespace) else self._config.database["start"]
+        start = (
+            self._config.database.start
+            if isinstance(self._config.database, NestedNamespace)
+            else self._config.database["start"]
+        )
 
         subprocess.run([start], shell=True)
 
@@ -238,7 +261,7 @@ class MySQLDatabase(Database):
         Example:
             db = MySQLDatabase()
             db.connect()
-            # Perform database operations
+            # Perform database stages
             db.close()
         """
         if self._connection is not None:
@@ -249,12 +272,12 @@ class MySQLDatabase(Database):
             self._engine = None
 
 
-
 # ------------------------------------------------------------------------------------------------ #
 #                         MYSQL DATABASE ADMIN - FEYNMAN                                           #
 # ------------------------------------------------------------------------------------------------ #
 FOREIGN_KEY_CHECKS_OFF = "FOREIGN_KEY_CHECKS = 0"
 FOREIGN_KEY_CHECKS_ON = "FOREIGN_KEY_CHECKS = 1"
+
 
 class Feynman(DBA):
     """ "Abstract base class for building databases from DDL"""
@@ -262,7 +285,6 @@ class Feynman(DBA):
     def __init__(self, database: MySQLDatabase) -> None:
         self._database = database
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
-
 
     def create_table(self, table_name: str, ddl: str, force: bool = False) -> None:
         """
@@ -285,11 +307,13 @@ class Feynman(DBA):
                     self._drop_table(table_name=table_name)
                     self._create_table(table_name=table_name, ddl=ddl)
                 else:
-                    self._logger.info(f"Table {table_name} was not created. It already exists.")
+                    self._logger.info(
+                        f"Table {table_name} was not created. It already exists."
+                    )
         else:
             self._create_table(table_name=table_name, ddl=ddl)
 
-    def create_tables(self, schema: Dict[str,str], force: bool = False) -> None:
+    def create_tables(self, schema: Dict[str, str], force: bool = False) -> None:
         """
         Creates tables from all DDL files in a directory.
 
@@ -303,7 +327,6 @@ class Feynman(DBA):
 
         for table_name, ddl in schema.items():
             self.create_table(table_name=table_name, ddl=ddl, force=force)
-
 
     def table_exists(self, table_name: str) -> bool:
         """
@@ -334,11 +357,14 @@ class Feynman(DBA):
             if self._user_approves(table_name=table_name, message=message):
                 self._drop_table(table_name=table_name)
             else:
-                self._logger.info(f"Table {table_name} was not dropped from the {self._database.name} database.")
+                self._logger.info(
+                    f"Table {table_name} was not dropped from the {self._database.name} database."
+                )
         else:
             self._drop_table(table_name=table_name)
-            self._logger.info(f"Table {table_name} was dropped from the {self._database.name} database.")
-
+            self._logger.info(
+                f"Table {table_name} was dropped from the {self._database.name} database."
+            )
 
     def _user_approves(self, table_name: str, message: str) -> bool:
         message = message + " To continue enter the table name."
@@ -352,8 +378,10 @@ class Feynman(DBA):
                 db.execute(FOREIGN_KEY_CHECKS_OFF)
                 db.execute(query=query)
                 db.execute(FOREIGN_KEY_CHECKS_ON)
-            self._logger.info(f"Table {table_name} was dropped from the {self._database.name} database.")
-        except OperationalError as e:
+            self._logger.info(
+                f"Table {table_name} was dropped from the {self._database.name} database."
+            )
+        except StagealError as e:
             self._logger.exception(e)
         except IntegrityError as e:
             self._logger.exception(e)
@@ -365,7 +393,7 @@ class Feynman(DBA):
     def _data_exists(self, table_name: str) -> bool:
         with self._database as db:
             count = db.count(table_name=table_name)
-        if isinstance(count,int):
+        if isinstance(count, int):
             return count > 0
         else:
             return False
@@ -374,8 +402,10 @@ class Feynman(DBA):
         try:
             with self._database as db:
                 db.execute(query=ddl)
-                self._logger.info(f"Created table {table_name} in {self._database.name} database.")
-        except OperationalError as e:
+                self._logger.info(
+                    f"Created table {table_name} in {self._database.name} database."
+                )
+        except StagealError as e:
             self._logger.exception(e)
         except IntegrityError as e:
             self._logger.exception(e)
@@ -383,7 +413,6 @@ class Feynman(DBA):
             self._logger.exception(e)
         except ProgrammingError as e:
             self._logger.exception(e)
-
 
     def create_database(self, dbname: str) -> None:
         """
@@ -393,7 +422,6 @@ class Feynman(DBA):
             dbname (str): The name of the database to create.
         """
         pass
-
 
     def drop_database(self, dbname: str) -> None:
         """
@@ -417,13 +445,10 @@ class Feynman(DBA):
         raise NotImplementedError
 
 
-
-
-
 # ------------------------------------------------------------------------------------------------ #
 class Shannon(DBA):
     """
-    A class to handle various database operations for a MySQL database.
+    A class to handle various database stages for a MySQL database.
 
     This class can execute DDL files, check for the existence of databases and tables,
     and manage user passwords using the MySQL command line tool.
@@ -496,7 +521,7 @@ class Shannon(DBA):
                 self._execute_command(command, f"Dropping database {dbname}")
                 self._logger.info(f"Dropped database: {dbname}.")
             else:
-                print("Operation cancelled by user.")
+                print("Stage cancelled by user.")
         else:
             print(f"Database name '{full_dbname}' does not match expected '{dbname}'.")
 
@@ -589,8 +614,16 @@ class Shannon(DBA):
         Returns:
             list[str]: The command and arguments to execute.
         """
-        host = self._mysql_credentials.host if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["host"]
-        username = self._mysql_credentials.username if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["username"]
+        host = (
+            self._mysql_credentials.host
+            if isinstance(self._mysql_credentials, NestedNamespace)
+            else self._mysql_credentials["host"]
+        )
+        username = (
+            self._mysql_credentials.username
+            if isinstance(self._mysql_credentials, NestedNamespace)
+            else self._mysql_credentials["username"]
+        )
         command = [
             "mysql",
             "-h",
@@ -600,7 +633,11 @@ class Shannon(DBA):
             "-e",
             query,
         ]
-        password = self._mysql_credentials.password if isinstance(self._mysql_credentials, NestedNamespace) else self._mysql_credentials["password"]
+        password = (
+            self._mysql_credentials.password
+            if isinstance(self._mysql_credentials, NestedNamespace)
+            else self._mysql_credentials["password"]
+        )
         command.insert(3, f"-p{password}")
 
         return command
@@ -671,11 +708,10 @@ class Shannon(DBA):
     def _format_dbname(self, dbname: str) -> str:
         return f"{dbname}_{self._env}"
 
-
     def _parse_table_name(self, filepath: str) -> List[str]:
-        table_name_pattern = re.compile(r'CREATE TABLE\s+(\w+)', re.IGNORECASE)
+        table_name_pattern = re.compile(r"CREATE TABLE\s+(\w+)", re.IGNORECASE)
 
-        with open(filepath, 'r') as file:
+        with open(filepath, "r") as file:
             sql_content = file.read()
 
         matches = table_name_pattern.findall(sql_content)
@@ -683,4 +719,3 @@ class Shannon(DBA):
         if matches:
             return matches
         return []
-

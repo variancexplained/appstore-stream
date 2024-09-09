@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/infra/repo/review.py                                                      #
+# Filename   : /appvocai/infra/repo/content/review.py                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Saturday August 31st 2024 07:05:02 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -31,10 +31,10 @@ from appvocai.infra.exceptions.database import DatabaseError
 
 # ------------------------------------------------------------------------------------------------ #
 class ReviewRepo(Repo):
-    """Repository class for handling operations on the 'review' table.
+    """Repository class for handling stages on the 'review' table.
 
     Args:
-        database (MySQLDatabase): The database instance used for operations.
+        database (MySQLDatabase): The database instance used for stages.
     """
 
     __table_name = "review"
@@ -73,8 +73,12 @@ class ReviewRepo(Repo):
             return AppReview.create(appreview_row=appreview_dict)
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to delete reviews for app_id '{id_value}': {e}")
-            raise DatabaseError(f"An error occurred while deleting reviews for app_id '{id_value}'") from e
+            self._logger.exception(
+                f"Failed to delete reviews for app_id '{id_value}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while deleting reviews for app_id '{id_value}'"
+            ) from e
 
     def get_by_category_id(self, category: Category) -> pd.DataFrame:
         """
@@ -108,8 +112,12 @@ class ReviewRepo(Repo):
                 return db.query(query=query, params=params)
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to read reviews for category '{category.name}': {e}")
-            raise DatabaseError(f"An error occurred while reading reviews for category '{category.name}'") from e
+            self._logger.exception(
+                f"Failed to read reviews for category '{category.name}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while reading reviews for category '{category.name}'"
+            ) from e
 
     def add(self, data: pd.DataFrame) -> int:
         """
@@ -119,9 +127,9 @@ class ReviewRepo(Repo):
             data (pd.DataFrame): DataFrame containing the data to upsert.
 
         Returns:
-            int: Number of rows affected by the upsert operation.
+            int: Number of rows affected by the upsert stage.
         """
-        # Convert DataFrame to a list of dictionaries for the upsert operation
+        # Convert DataFrame to a list of dictionaries for the upsert stage
         data_dict = data.to_dict(orient="records")
 
         # Construct the upsert SQL query
@@ -180,9 +188,11 @@ class ReviewRepo(Repo):
             with self._database as db:
                 upsert_count = 0
                 for record in data_dict:
-                    params = cast(Dict[str,Any], record)
+                    params = cast(Dict[str, Any], record)
                     result = db.execute(query=query, params=params)
-                    upsert_count += result.rowcount if hasattr(result, 'rowcount') else 0
+                    upsert_count += (
+                        result.rowcount if hasattr(result, "rowcount") else 0
+                    )
                 return upsert_count
 
         except Exception as e:
@@ -203,7 +213,7 @@ class ReviewRepo(Repo):
             id_value (int): The `app_id` value to filter the reviews by.
 
         Returns:
-            int: The number of rows affected by the delete operation.
+            int: The number of rows affected by the delete stage.
 
         Example:
             deleted_count = repository.remove(123456)
@@ -228,8 +238,12 @@ class ReviewRepo(Repo):
                 return count
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to delete reviews for app_id '{id_value}': {e}")
-            raise DatabaseError(f"An error occurred while deleting reviews for app_id '{id_value}'") from e
+            self._logger.exception(
+                f"Failed to delete reviews for app_id '{id_value}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while deleting reviews for app_id '{id_value}'"
+            ) from e
 
     def remove_by_category(self, category: Category) -> int:
         """
@@ -244,10 +258,10 @@ class ReviewRepo(Repo):
                                 to filter the reviews by.
 
         Returns:
-            int: The number of rows affected by the delete operation.
+            int: The number of rows affected by the delete stage.
 
         Raises:
-            DatabaseError: If an error occurs during the database operation.
+            DatabaseError: If an error occurs during the database stage.
 
         Example:
             deleted_count = repository.remove_by_category(Category.GAMES)
@@ -261,20 +275,26 @@ class ReviewRepo(Repo):
         """
         params = {"category_id": category.value}
 
-            # Use the database connection to execute the delete query
+        # Use the database connection to execute the delete query
         try:
             with self._database as db:
                 result = db.execute(query=query, params=params)
                 if hasattr(result, "rowcount"):
                     if isinstance(result.rowcount, int):
                         count = result.rowcount
-                        self._logger.info(f"Removed {count} rows from the reviews table.")
+                        self._logger.info(
+                            f"Removed {count} rows from the reviews table."
+                        )
                 return count
 
         except Exception as e:
             # Log the exception and raise a custom DatabaseError
-            self._logger.exception(f"Failed to delete reviews for category '{category.name}': {e}")
-            raise DatabaseError(f"An error occurred while deleting reviews for category '{category.name}'") from e
+            self._logger.exception(
+                f"Failed to delete reviews for category '{category.name}': {e}"
+            )
+            raise DatabaseError(
+                f"An error occurred while deleting reviews for category '{category.name}'"
+            ) from e
 
     def remove_all(self) -> int:
         """
@@ -284,20 +304,22 @@ class ReviewRepo(Repo):
         If the user confirms, it will delete all reviews and return the number of rows affected.
 
         Returns:
-            int: The number of rows affected by the delete operation.
+            int: The number of rows affected by the delete stage.
 
         Raises:
-            DatabaseError: If an error occurs during the database operation.
+            DatabaseError: If an error occurs during the database stage.
 
         Example:
             deleted_count = repository.remove_all_reviews()
             # deleted_count will contain the number of reviews removed.
         """
         # Ask for user confirmation
-        confirmation = input("Are you sure you want to delete all reviews? This action cannot be undone. (yes/no): ")
+        confirmation = input(
+            "Are you sure you want to delete all reviews? This action cannot be undone. (yes/no): "
+        )
 
-        if confirmation.lower() != 'yes':
-            print("Operation cancelled.")
+        if confirmation.lower() != "yes":
+            print("Stage cancelled.")
             return 0
 
         try:
@@ -307,10 +329,12 @@ class ReviewRepo(Repo):
             # Execute the delete query
             with self._database as db:
                 result = db.execute(query=query)
-                if hasattr(result, 'rowcount'):
+                if hasattr(result, "rowcount"):
                     if isinstance(result.rowcount, int):
                         count = result.rowcount
-                        self._logger.info(f"Removed {count} rows from the reviews table.")
+                        self._logger.info(
+                            f"Removed {count} rows from the reviews table."
+                        )
                 return count
 
         except Exception as e:

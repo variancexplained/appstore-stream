@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 07:42:43 am                                               #
-# Modified   : Friday September 6th 2024 11:29:26 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,7 +23,7 @@ from typing import Any, Dict
 
 import pandas as pd
 
-from appvocai.core.enum import DataType, OperationType
+from appvocai.core.enum import DataType, StageType
 from appvocai.domain.monitor.x4mload import X4MLoadMetrics
 from appvocai.domain.repo.base import Repo
 from appvocai.infra.database.mysql import MySQLDatabase
@@ -38,7 +38,7 @@ class X4MLoadMetricsRepo(Repo):
     Repository class for managing X4MLoadMetrics data in the 'metrics' table.
 
     This class provides methods for adding metrics, retrieving specific metrics by job, task, data type, and task type,
-    and querying the entire metrics table. It interacts with a MySQL database to perform these operations.
+    and querying the entire metrics table. It interacts with a MySQL database to perform these stages.
 
     Attributes:
     ----------
@@ -66,8 +66,8 @@ class X4MLoadMetricsRepo(Repo):
     get_data_type_metrics(data_type: DataType) -> pd.DataFrame
         Retrieves metrics based on the `data_type` and returns them as a Pandas DataFrame.
 
-    get_operation_type_metrics(operation_type: OperationType) -> pd.DataFrame
-        Retrieves metrics based on the `operation_type` and returns them as a Pandas DataFrame.
+    get_stage_type_metrics(stage_type: StageType) -> pd.DataFrame
+        Retrieves metrics based on the `stage_type` and returns them as a Pandas DataFrame.
 
     getall() -> pd.DataFrame
         Retrieves all records from the 'metrics' table and returns them as a Pandas DataFrame.
@@ -111,11 +111,11 @@ class X4MLoadMetricsRepo(Repo):
         """
         query = """
                 INSERT INTO metrics (
-                    project_id, job_id,  task_id, data_type, operation_type, dt_started, dt_ended, duration, instances,
+                    project_id, job_id,  task_id, data_type, stage_type, dt_started, dt_ended, duration, instances,
                     latency_min, latency_average, latency_median, latency_max, latency_std,
                     throughput_min, throughput_average, throughput_median, throughput_max, throughput_std
                 ) VALUES (
-                    :project_id, :job_id, :task_id, :data_type, :operation_type, :dt_started, :dt_ended, :duration, :instances,
+                    :project_id, :job_id, :task_id, :data_type, :stage_type, :dt_started, :dt_ended, :duration, :instances,
                     :latency_min, :latency_average, :latency_median, :latency_max, :latency_std,
                     :throughput_min, :throughput_average, :throughput_median, :throughput_max, :throughput_std
                 );"""
@@ -146,7 +146,7 @@ class X4MLoadMetricsRepo(Repo):
                 job_id,
                 task_id,
                 data_type,
-                operation_type,
+                stage_type,
                 dt_started,
                 dt_ended,
                 duration,
@@ -187,7 +187,7 @@ class X4MLoadMetricsRepo(Repo):
                 job_id,
                 task_id,
                 data_type,
-                operation_type,
+                stage_type,
                 dt_started,
                 dt_ended,
                 duration,
@@ -229,7 +229,7 @@ class X4MLoadMetricsRepo(Repo):
                 job_id,
                 task_id,
                 data_type,
-                operation_type,
+                stage_type,
                 dt_started,
                 dt_ended,
                 duration,
@@ -271,7 +271,7 @@ class X4MLoadMetricsRepo(Repo):
                 job_id,
                 task_id,
                 data_type,
-                operation_type,
+                stage_type,
                 dt_started,
                 dt_ended,
                 duration,
@@ -294,13 +294,13 @@ class X4MLoadMetricsRepo(Repo):
         with self._database as db:
             return db.query(query=query, params=params)
 
-    def get_operation_type_metrics(self, operation_type: OperationType) -> pd.DataFrame:
+    def get_stage_type_metrics(self, stage_type: StageType) -> pd.DataFrame:
         """
         Retrieves metrics based on the specified task type.
 
         Parameters:
         ----------
-        operation_type : OperationType
+        stage_type : StageType
             The type of task for which to retrieve metrics (e.g., Review, Load).
 
         Returns:
@@ -313,7 +313,7 @@ class X4MLoadMetricsRepo(Repo):
                 job_id,
                 task_id,
                 data_type,
-                operation_type,
+                stage_type,
                 dt_started,
                 dt_ended,
                 duration,
@@ -329,9 +329,9 @@ class X4MLoadMetricsRepo(Repo):
                 throughput_max,
                 throughput_std
             FROM metrics;
-        WHERE operation_type = :operation_type;
+        WHERE stage_type = :stage_type;
         """
-        params = {"operation_type": operation_type.value}
+        params = {"stage_type": stage_type.value}
 
         with self._database as db:
             return db.query(query=query, params=params)
@@ -350,7 +350,7 @@ class X4MLoadMetricsRepo(Repo):
                 job_id,
                 task_id,
                 data_type,
-                operation_type,
+                stage_type,
                 dt_started,
                 dt_ended,
                 duration,

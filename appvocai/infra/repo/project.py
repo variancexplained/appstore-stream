@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 12:53:41 pm                                                   #
-# Modified   : Thursday September 5th 2024 06:58:08 am                                             #
+# Modified   : Saturday September 7th 2024 11:10:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -33,10 +33,10 @@ from appvocai.infra.database.mysql import MySQLDatabase
 
 
 class ProjectRepo(AppLayerRepo):
-    """Repository class for handling operations on the 'project' table.
+    """Repository class for handling stages on the 'project' table.
 
     Args:
-        database (MySQLDatabase): The database instance used for operations.
+        database (MySQLDatabase): The database instance used for stages.
     """
 
     __table_name = "project"

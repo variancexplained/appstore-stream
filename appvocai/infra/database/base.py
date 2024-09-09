@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday July 24th 2024 11:20:33 pm                                                #
-# Modified   : Friday August 30th 2024 08:06:00 am                                                 #
+# Modified   : Saturday September 7th 2024 11:10:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -34,6 +34,7 @@ from sqlalchemy.exc import SQLAlchemyError
 #                                     DATABASE                                                     #
 # ------------------------------------------------------------------------------------------------ #
 
+
 class Database(ABC):
     """Base class for databases with connection pooling, transaction management, and DataFrame handling."""
 
@@ -43,19 +44,24 @@ class Database(ABC):
         Args:
             connection_string (str): Database connection string.
         """
-        self._engine: Optional[Engine] = create_engine(connection_string, pool_size=5, max_overflow=10)  # Connection pooling
+        self._engine: Optional[Engine] = create_engine(
+            connection_string, pool_size=5, max_overflow=10
+        )  # Connection pooling
         self._connection: Optional[Connection] = None
         self._transaction: Optional[RootTransaction] = None
         self._logger = logging.getLogger(f"{self.__class__.__name__}")
 
     def __enter__(self) -> Database:
-        """Enter a transaction block, allowing multiple database operations to be performed as a unit."""
+        """Enter a transaction block, allowing multiple database stages to be performed as a unit."""
         self.begin()
         return self
 
-
-
-    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: Optional[traceback.TracebackType]) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: Optional[traceback.TracebackType],
+    ) -> None:
         """Special method takes care of properly releasing the object's resources to the operating system."""
         if exc_type is not None:
             try:
@@ -72,7 +78,6 @@ class Database(ABC):
         else:
             self.commit()
         self.close()
-
 
     @abstractmethod
     def connect(self, autocommit: bool = False) -> Database:
@@ -101,7 +106,7 @@ class Database(ABC):
                 self._transaction = self._connection.begin()
 
     def commit(self) -> None:
-        """Save pending database operations to the database."""
+        """Save pending database stages to the database."""
         try:
             if self._transaction:
                 self._transaction.commit()
@@ -150,8 +155,8 @@ class Database(ABC):
         self,
         data: pd.DataFrame,
         table_name: str,
-        dtype: Optional[Dict[str,Any]] = None,
-        if_exists: Literal['fail', 'replace', 'append'] = "append",
+        dtype: Optional[Dict[str, Any]] = None,
+        if_exists: Literal["fail", "replace", "append"] = "append",
     ) -> int:
         """Insert data in pandas DataFrame format into the designated table.
 
@@ -194,9 +199,9 @@ class Database(ABC):
     def query(
         self,
         query: str,
-        params: Optional[Dict[str,Any]] = None,
-        dtypes: Optional[Dict[str,Any]] = None,
-        parse_dates: Optional[Dict[str,Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
+        dtypes: Optional[Dict[str, Any]] = None,
+        parse_dates: Optional[Dict[str, Any]] = None,
     ) -> pd.DataFrame:
         """Fetch the results of a query and return a DataFrame.
 
@@ -221,7 +226,9 @@ class Database(ABC):
             parse_dates=parse_dates,
         )
 
-    def execute(self, query: str, params: Optional[Dict[str,Any]] = None) -> sqlalchemy.engine.Result:
+    def execute(
+        self, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> sqlalchemy.engine.Result:
         """Execute a SQL command reserved primarily for updates and deletes.
 
         Args:
@@ -241,20 +248,16 @@ class Database(ABC):
         if not params and self._requires_parameters(query):
             raise ValueError("Parameters are required for this query.")
 
+        return self._connection.execute(statement=text(query), parameters=params)
 
-        return self._connection.execute(
-            statement=text(query), parameters=params
-        )
-
-    def execute_many(self, query: str, param_list: List[Dict[str,Any]]) -> None:
+    def execute_many(self, query: str, param_list: List[Dict[str, Any]]) -> None:
         """Execute a query with a list of parameters."""
         if self._connection is None:
             raise ValueError("Database connection is not established.")
 
         with self._connection.begin():  # Use transaction
             self._connection.execute(
-                text(query),
-                *param_list  # Pass the parameter list unpacked
+                text(query), *param_list  # Pass the parameter list unpacked
             )
 
     def count(self, table_name: str) -> int:
@@ -264,10 +267,10 @@ class Database(ABC):
             table_name (str): Table name
         """
         try:
-            query = F"SELECT COUNT(*) FROM {table_name};"
+            query = f"SELECT COUNT(*) FROM {table_name};"
             result = self.execute(query=query)
             count = result.scalar()
-            if isinstance(count,int):
+            if isinstance(count, int):
                 return count
             else:
                 return 0
@@ -286,6 +289,7 @@ class Database(ABC):
             bool: True if parameters are required, False otherwise.
         """
         return ":" in query or "?" in query  # Adjust based on your parameter style
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                DATABASE ADMIN                                                    #
@@ -334,7 +338,7 @@ class DBA(ABC):
         """
 
     @abstractmethod
-    def create_tables(self,*args: Any, **kwargs: Any) -> None:
+    def create_tables(self, *args: Any, **kwargs: Any) -> None:
         """
         Creates tables from all DDL files in a directory.
 
@@ -344,7 +348,7 @@ class DBA(ABC):
         """
 
     @abstractmethod
-    def table_exists(self, *args: Any, **kwargs:Any) -> bool:
+    def table_exists(self, *args: Any, **kwargs: Any) -> bool:
         """
         Checks if a specific table exists in the specified database.
 

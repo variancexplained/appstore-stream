@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday August 27th 2024 12:26:33 am                                                #
-# Modified   : Friday September 6th 2024 10:18:43 pm                                               #
+# Modified   : Sunday September 8th 2024 12:09:33 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,9 +22,9 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Collection, Dict, Union
 
+from appvocai.application.orchestration.job import Context
 from appvocai.core.enum import DataType
 from appvocai.domain.artifact.request.base import AsyncRequest, Request, RequestGen
-from appvocai.infra.identity.passport import TaskPassport
 from appvocai.infra.web.header import STOREFRONT
 
 # ------------------------------------------------------------------------------------------------ #
@@ -74,16 +74,16 @@ class AppReviewRequest(Request):
     def data_type(self) -> DataType:
         return DataType.APPREVIEW
 
-    def __init__(self, task_passport: TaskPassport) -> None:
-        super().__init__(task_passport=task_passport)
+    def __init__(self) -> None:
+        super().__init__()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class AsyncAppReviewRequest(AsyncRequest[AppReviewRequest]):
 
-    def __init__(self, task_passport: TaskPassport) -> None:
-        super().__init__(task_passport=task_passport)
+    def __init__(self) -> None:
+        super().__init__()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -101,16 +101,17 @@ class AppReviewRequestGen(RequestGen[AsyncRequest[AppReviewRequest]]):
 
     def __init__(
         self,
+        context: Context,
         app_id: int,
-        task_passport: TaskPassport,
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
         start_page: int = 0,
         limit: int = 400,
         request_cls: type[AppReviewRequest] = AppReviewRequest,
     ) -> None:
+        self._context = context
         self._app_id = app_id
-        self._task_passport = task_passport
+
         self._max_requests = max_requests
         self._batch_size = batch_size
         self._start_page = start_page
@@ -163,11 +164,11 @@ class AppReviewRequestGen(RequestGen[AsyncRequest[AppReviewRequest]]):
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
         async_request: AsyncAppReviewRequest = AsyncAppReviewRequest(
-            task_passport=self._task_passport
+            context=self._context
         )
 
         for page in range(batch_start_page, batch_stop_page):
-            request = AppReviewRequest(task_passport=self._task_passport)
+            request = AppReviewRequest(context=self._context)
             request.page = page
             request.limit = self._limit
             async_request.add_request(request=request)

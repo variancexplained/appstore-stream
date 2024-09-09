@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 08:46:38 pm                                               #
-# Modified   : Friday September 6th 2024 10:53:24 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:33 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,7 +25,7 @@ from dependency_injector.wiring import Provide, inject
 from pydantic import ValidationError
 
 from appvocai.application.observer.transform import ObserverTransformMetrics
-from appvocai.application.operation.base import Task
+from appvocai.application.stage.base import Task
 from appvocai.container import AppVoCAIContainer
 from appvocai.domain.content.appdata import AppData, RawAppData
 from appvocai.domain.content.base import Entity
@@ -37,7 +37,7 @@ T = TypeVar("T", bound="Entity")
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TransformOperation(Task, Generic[T]):
+class TransformStage(Task, Generic[T]):
     """
     A base class for executing asynchronous transform tasks.
 
@@ -95,7 +95,7 @@ class TransformOperation(Task, Generic[T]):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TransformOperationAppData(TaskTransform[AppData]):
+class TransformStageAppData(TaskTransform[AppData]):
     """
     A specialized TaskTransform class for handling AsyncRequestAppData types.
 
@@ -209,7 +209,7 @@ class TransformOperationAppData(TaskTransform[AppData]):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class TransformOperationAppReview(TaskTransform):
+class TransformStageAppReview(TaskTransform):
     """
     A specialized TaskTransform class for handling AsyncAppReviewRequest types.
 

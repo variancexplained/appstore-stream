@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:35:55 pm                                                 #
-# Modified   : Friday September 6th 2024 08:17:43 pm                                               #
+# Modified   : Sunday September 8th 2024 12:09:33 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,9 +23,9 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Collection, Dict, Union
 
+from appvocai.application.orchestration.job import Context
 from appvocai.core.enum import DataType
 from appvocai.domain.artifact.request.base import AsyncRequest, Request, RequestGen
-from appvocai.infra.identity.passport import TaskPassport
 from appvocai.infra.web.header import BrowserHeaders
 
 # ------------------------------------------------------------------------------------------------ #
@@ -38,9 +38,6 @@ headers = BrowserHeaders()
 @dataclass
 class RequestAppData(Request):
     """Represents a request for AppData.
-
-    Args:
-        task_passport (TaskPassport): Class encapsulating identity for the Task.
 
     Attributes:
         baseurl (str): The base URL for the request.
@@ -94,16 +91,8 @@ class RequestAppData(Request):
         }
         return params
 
-    def __init__(self, task_passport: TaskPassport) -> None:
-        super().__init__(task_passport=task_passport)
-
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class AsyncRequestAppData(AsyncRequest[RequestAppData]):
-
-    def __init__(self, task_passport: TaskPassport) -> None:
-        super().__init__(task_passport=task_passport)
+    def __init__(self) -> None:
+        super().__init__()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -122,20 +111,22 @@ class RequestAppDataGen(RequestGen[AsyncRequest[RequestAppData]]):
 
     def __init__(
         self,
-        task_passport: TaskPassport,
+        context: Context,
         max_requests: int = sys.maxsize,
         batch_size: int = 100,
         start_page: int = 0,
         limit: int = 200,
         request_cls: type[RequestAppData] = RequestAppData,
     ) -> None:
-        super().__init__(task_passport=task_passport)
-        self._category_id = task_passport.category.value
+        super().__init__()
+        self._context = context
         self._max_requests = max_requests
         self._batch_size = batch_size
         self._start_page = start_page
         self._page = start_page
         self._limit = limit
+
+        self._category_id = self._context.category.value
 
         self._request_cls = request_cls
 
@@ -182,12 +173,10 @@ class RequestAppDataGen(RequestGen[AsyncRequest[RequestAppData]]):
         batch_start_page = self._page
         batch_stop_page = batch_start_page + current_batch_size
         # Formulate list of requests
-        async_request: AsyncRequestAppData = AsyncRequestAppData(
-            task_passport=self._task_passport
-        )
+        async_request: AsyncRequest = AsyncRequest(context=self._context)
 
         for page in range(batch_start_page, batch_stop_page):
-            request = RequestAppData(task_passport=self._task_passport)
+            request = RequestAppData(context=self._context)
             request.genreId = self._category_id
             request.page = page
             request.limit = self._limit

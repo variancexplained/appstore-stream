@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday August 30th 2024 02:42:23 am                                                 #
-# Modified   : Saturday September 7th 2024 05:13:43 pm                                             #
+# Modified   : Saturday September 7th 2024 11:10:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -120,9 +120,9 @@ schema = {
             project_id VARCHAR(32) NOT NULL,
             job_id VARCHAR(32) NOT NULL,
             task_id VARCHAR(32) NOT NULL,
-            operation_id VARCHAR(32) NOT NULL,
+            stage_id VARCHAR(32) NOT NULL,
             data_type VARCHAR(255) NOT NULL,
-            operation_type VARCHAR(255) NOT NULL,
+            stage_type VARCHAR(255) NOT NULL,
             instances INT NOT NULL,
             dt_started DATETIME NOT NULL,
             dt_ended DATETIME NOT NULL,
@@ -144,15 +144,15 @@ schema = {
             i2 INT,
             i3 INT,
             INDEX idx_data_type (data_type),
-            INDEX idx_operation_type (operation_type)
+            INDEX idx_stage_type (stage_type)
 );""",
     "error_log": """CREATE TABLE IF NOT EXISTS error_log (
             project_id VARCHAR(32) NOT NULL,              -- ID of the project
             job_id VARCHAR(32) NOT NULL,                  -- ID of the job
             task_id VARCHAR(32) NOT NULL,                 -- ID of the task
-            operation_id VARCHAR(32) NOT NULL,            -- ID of the operation
+            stage_id VARCHAR(32) NOT NULL,            -- ID of the stage
             data_type VARCHAR(100) NOT NULL,      -- The data type (e.g., appdata, reviews)
-            operation_type VARCHAR(100) NOT NULL, -- The type of operation (e.g., Extract, Transform, Load)
+            stage_type VARCHAR(100) NOT NULL, -- The type of stage (e.g., Extract, Transform, Load)
             error_type VARCHAR(255),              -- The type of error (e.g., network, validation)
             error_code INT,                       -- Specific error code (e.g., HTTP code, custom code)
             error_description TEXT,               -- Detailed description of the error

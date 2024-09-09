@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 03:13:34 pm                                               #
-# Modified   : Friday September 6th 2024 05:45:33 pm                                               #
+# Modified   : Sunday September 8th 2024 08:38:41 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -27,7 +27,7 @@ setup:
         filepath: data/base/categories.csv
 
 # ------------------------------------------------------------------------------------------------ #
-#                               EXTRACTOR CONFIG SECTION                                           #
+#                            ASYNC SESSION CONFIG SECTION                                          #
 # ------------------------------------------------------------------------------------------------ #
 async_session:
   session_request_limit: 2000  # Maximum number of requests per session. Fixed for sessions
@@ -46,7 +46,6 @@ async_session:
     force_close: True  # Close underlying sockets after connection releasing
     happy_eyeballs_delay: None # Seeconds to wait for a connection attempt to complete, before starting the next attempt in parallel
   session: # Config for aiohttp.ClientSession
-
     auto_decompress: True # Automatically decompress response body
     connector_owner: False  # Whether the session is responsible for closing the connector when the session itself is closed.
     trust_env: False # Whether to obtain proxy, ssl, and other config from environment variables.
@@ -54,5 +53,7 @@ async_session:
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                  TASK CONFIG SECTION                                             #
+#                                     STAGE CONFIG                                                 #
 # ------------------------------------------------------------------------------------------------ #
+extract:
+  threshold_404: .8 # The proportion of async responses that have a 404 return code.

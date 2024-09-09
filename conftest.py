@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Friday September 6th 2024 07:22:44 pm                                               #
+# Modified   : Sunday September 8th 2024 12:06:43 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -26,6 +26,7 @@ from dependency_injector.containers import Container
 from appvocai.application.orchestration.project import Project
 from appvocai.container import AppVoCAIContainer
 from appvocai.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
+from appvocai.domain.artifact.request.appdata import RequestAppDataGen
 from appvocai.infra.base.config import Config
 
 # ------------------------------------------------------------------------------------------------ #
@@ -79,4 +80,18 @@ def project() -> Project:
         data_type=DataType.APPDATA,
         frequency=ProjectFrequency.DAILY,
         status=ProjectStatus.IDLE,
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                  REQUEST GENERATOR                                               #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="session", autouse=False)
+def rgen_appdata(request) -> RequestAppDataGen:
+    return RequestAppDataGen(
+        context=request.params.get("context"),
+        max_requests=request.params.get("max_requests"),
+        batch_size=request.params.get("batch_size"),
+        start_page=request.params.get("start_page"),
+        limit=request.params.get("limit"),
     )

@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday July 26th 2024 01:28:02 am                                                   #
-# Modified   : Friday September 6th 2024 05:45:34 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -30,10 +30,10 @@ from appvocai.infra.database.mysql import MySQLDatabase
 
 
 class JobRepo(AppLayerRepo):
-    """Repository class for handling operations on the 'job' table.
+    """Repository class for handling stages on the 'job' table.
 
     Args:
-        database (MySQLDatabase): The database instance used for operations.
+        database (MySQLDatabase): The database instance used for stages.
     """
 
     __table_name = "job"

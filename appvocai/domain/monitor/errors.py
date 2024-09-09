@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 10:48:51 pm                                               #
-# Modified   : Friday September 6th 2024 10:51:38 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from appvocai.core.data import DataClass
-from appvocai.core.enum import DataType, OperationType
+from appvocai.core.enum import DataType, StageType
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -32,7 +32,7 @@ class ErrorLog(DataClass):
     job_id: int
     task_id: int
     data_type: DataType
-    operation_type: OperationType
+    stage_type: StageType
     error_type: str
     error_code: int
     error_description: str

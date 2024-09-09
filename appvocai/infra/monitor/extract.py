@@ -4,14 +4,14 @@
 # Project    : AppVoCAI-Acquire                                                                    #
 # Version    : 0.2.0                                                                               #
 # Python     : 3.10.14                                                                             #
-# Filename   : /appvocai/application/monitor/extract.py                                            #
+# Filename   : /appvocai/infra/monitor/extract.py                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john@variancexplained.com                                                           #
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 03:51:20 pm                                               #
-# Modified   : Saturday September 7th 2024 12:39:27 am                                             #
+# Modified   : Saturday September 7th 2024 11:10:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -29,12 +29,12 @@ from appvocai.domain.monitor.extract import ExtractMetrics
 from appvocai.infra.repo.monitor.extract import ExtractMetricsRepo
 
 # ------------------------------------------------------------------------------------------------ #
-R = TypeVar("R")  # Return type of the operation
+R = TypeVar("R")  # Return type of the stage
 E = TypeVar("E")  # Return type of the event
 
 # For a general callable, you might not know the argument types upfront, so you can use Any or specific types
-# Example for the operation and event callable signatures
-OperationCallable = Callable[..., Awaitable[R]]  # Callable for operation
+# Example for the stage and event callable signatures
+StageCallable = Callable[..., Awaitable[R]]  # Callable for stage
 EventCallable = Callable[..., Awaitable[E]]  # Callable for event
 
 
@@ -106,10 +106,10 @@ class ExtractMonitorDecorator:
         else:
             raise RuntimeError("Metrics could not be computed for this operator.")
 
-    def operation(self, func: OperationCallable[R]) -> OperationCallable[R]:
+    def stage(self, func: StageCallable[R]) -> StageCallable[R]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Dict[str, Any]) -> R:
-            # Start of the outer operation
+            # Start of the outer stage
             if self.dt_started is None:
                 self.dt_started = datetime.now()
 
@@ -124,13 +124,13 @@ class ExtractMonitorDecorator:
                 job_id=passport.job_id,
                 task_id=passport.task_id,
                 data_type=passport.data_type,
-                operation_type=passport.operation_type,
+                stage_type=passport.stage_type,
                 dt_started=self.dt_started,
             )
 
-            result = await func(*args, **kwargs)  # Perform the outer operation
+            result = await func(*args, **kwargs)  # Perform the outer stage
 
-            # Compute and persist metrics after the operation ends
+            # Compute and persist metrics after the stage ends
             self.compute_metrics()
             return result
 
@@ -139,9 +139,9 @@ class ExtractMonitorDecorator:
     def event(self, func: EventCallable[E]) -> EventCallable[E]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Dict[str, Any]) -> E:
-            # Inner operation for each event instance
+            # Inner stage for each event instance
             start = time.time()
-            result = await func(*args, **kwargs)  # Perform the inner instance operation
+            result = await func(*args, **kwargs)  # Perform the inner instance stage
             latency = time.time() - start
 
             # Collect latencies

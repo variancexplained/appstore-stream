@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:17:11 am                                                 #
-# Modified   : Saturday September 7th 2024 08:51:28 pm                                             #
+# Modified   : Saturday September 7th 2024 09:03:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -65,7 +65,7 @@ class MonitorContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 #                                      DATABASE                                                    #
 # ------------------------------------------------------------------------------------------------ #
-class PersistenceContainer(containers.DeclarativeContainer):
+class DatabaseContainer(containers.DeclarativeContainer):
 
     mysql = providers.Singleton(MySQLDatabase)
 
@@ -130,6 +130,6 @@ class AppVoCAIContainer(containers.DeclarativeContainer):
 
     logs = providers.Container(LoggingContainer, config=config)
 
-    db = providers.Container(PersistenceContainer)
+    db = providers.Container(DatabaseContainer)
 
     monitor = providers.Container(MonitorContainer, db)

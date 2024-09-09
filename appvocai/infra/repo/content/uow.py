@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday July 28th 2024 08:58:35 pm                                                   #
-# Modified   : Friday September 6th 2024 08:48:12 am                                               #
+# Modified   : Saturday September 7th 2024 11:10:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -32,7 +32,7 @@ class UoW:
     """Unit of Work class encapsulating the repositories used in project objects and manages database transactions.
 
     This class provides a unified interface for interacting with multiple repositories and managing transactions.
-    It handles the lifecycle of a database connection and ensures that operations across repositories are coordinated.
+    It handles the lifecycle of a database connection and ensures that stages across repositories are coordinated.
     """
 
     def __init__(
@@ -115,7 +115,7 @@ class UoW:
         """
         Establishes a connection to the database.
 
-        This method must be called before performing any database operations.
+        This method must be called before performing any database stages.
         """
         self._database.connect()
 
@@ -147,6 +147,6 @@ class UoW:
         """
         Closes the database connection.
 
-        This method should be called when all database operations are complete to release resources.
+        This method should be called when all database stages are complete to release resources.
         """
         self._database.close()

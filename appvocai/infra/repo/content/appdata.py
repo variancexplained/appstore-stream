@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 10:27:12 pm                                                 #
-# Modified   : Friday September 6th 2024 08:48:02 am                                               #
+# Modified   : Saturday September 7th 2024 11:10:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -37,7 +37,7 @@ class AppDataRepo(Repo):
 
     Attributes:
         database (MySQLDatabase): The database connection instance.
-        logger (logging.Logger): Logger for recording operational messages.
+        logger (logging.Logger): Logger for recording stageal messages.
     """
 
     def _init_(self, database: MySQLDatabase) -> None:
@@ -65,7 +65,7 @@ class AppDataRepo(Repo):
                             or an empty dictionary if no matching record is found.
 
         Raises:
-            DatabaseError: If an error occurs during the database operation.
+            DatabaseError: If an error occurs during the database stage.
 
         Example:
             app_data = repository.get_appdata_by_id(123456)
@@ -107,7 +107,7 @@ class AppDataRepo(Repo):
             List[int]: A list of category IDs associated with the specified `app_id`.
 
         Raises:
-            DatabaseError: If an error occurs during the database operation.
+            DatabaseError: If an error occurs during the database stage.
 
         Example:
             category_ids = repository.get_category_ids_by_app_id(123456)
@@ -172,7 +172,7 @@ class AppDataRepo(Repo):
             pd.DataFrame: A DataFrame containing app data for the specified category.
 
         Raises:
-            DatabaseError: If an error occurs during the database operation.
+            DatabaseError: If an error occurs during the database stage.
         """
         # Define the raw SQL query to filter appdata by category_id
         query = """
@@ -199,10 +199,10 @@ class AppDataRepo(Repo):
         Batch upsert multiple app data records into the database.
 
         This method takes a list of AppData objects and performs an
-        upsert operation, which inserts new records or updates
+        upsert stage, which inserts new records or updates
         existing ones based on their unique identifiers.
         If the provided list is empty, the method will return
-        without making any database operations.
+        without making any database stages.
 
         Args:
             app_data_list (List[AppData]): A list of AppData objects
@@ -213,7 +213,7 @@ class AppDataRepo(Repo):
             None: This method does not return a value.
 
         Raises:
-            Exception: May raise exceptions related to database operations,
+            Exception: May raise exceptions related to database stages,
                     such as connection errors or integrity constraint violations.
 
         Example:
@@ -351,7 +351,7 @@ class AppDataRepo(Repo):
         Upsert categories associated with the specified app.
 
         This method takes an app ID and a list of category IDs,
-        and performs an upsert operation to associate the
+        and performs an upsert stage to associate the
         provided categories with the app. If the categories list
         is empty, the method will return without making any changes.
 
@@ -366,7 +366,7 @@ class AppDataRepo(Repo):
 
         Raises:
             ValueError: If the app_id is invalid or if there are
-                        issues with the database operation.
+                        issues with the database stage.
 
         Example:
             app_id = 12345
@@ -415,7 +415,7 @@ class AppDataRepo(Repo):
             app_id (int): The ID of the app to delete from the appdata table.
 
         Raises:
-            Exception: If the delete operation fails due to a database error.
+            Exception: If the delete stage fails due to a database error.
         """
         query = "DELETE FROM appdata WHERE app_id = :app_id"
         params = {"app_id": id_value}
@@ -435,7 +435,7 @@ class AppDataRepo(Repo):
             app_id (int): The ID of the app to delete from the appdata table.
 
         Raises:
-            Exception: If the delete operation fails due to a database error.
+            Exception: If the delete stage fails due to a database error.
         """
         query = "DELETE FROM category_app WHERE app_id = :app_id"
         params = {"app_id": id_value}
@@ -461,7 +461,7 @@ class AppDataRepo(Repo):
             category_id (int): The ID of the category to delete from the appdata table.
 
         Raises:
-            Exception: If the delete operation fails due to a database error.
+            Exception: If the delete stage fails due to a database error.
         """
         query = "DELETE FROM appdata WHERE category_id = :category_id;"
         params = {"category_id": category_id}
@@ -483,7 +483,7 @@ class AppDataRepo(Repo):
             category_id (int): The ID of the category to delete from the appdata table.
 
         Raises:
-            Exception: If the delete operation fails due to a database error.
+            Exception: If the delete stage fails due to a database error.
         """
         query = "DELETE FROM category_app WHERE category_id = :category_id;"
         params = {"category_id": category_id}
@@ -502,7 +502,7 @@ class AppDataRepo(Repo):
         Prompts the user for confirmation before deleting all entries from the appdata tables.
 
         The method asks the user to confirm the deletion of all entries from the appdata tables.
-        If the user confirms by typing 'yes', the deletion is carried out; otherwise, the operation is canceled.
+        If the user confirms by typing 'yes', the deletion is carried out; otherwise, the stage is canceled.
 
         Returns:
             None
@@ -524,7 +524,7 @@ class AppDataRepo(Repo):
         It should be called only after user confirmation through the `remove_all` method.
 
         Raises:
-            Exception: If the delete operation fails due to a database error.
+            Exception: If the delete stage fails due to a database error.
 
         Returns:
             None
@@ -544,10 +544,10 @@ class AppDataRepo(Repo):
         Deletes all entries from the category_app table.
 
         This method deletes all records from the category_app table in the database.
-        It is meant to be used for operations where all category-specific app data needs to be purged.
+        It is meant to be used for stages where all category-specific app data needs to be purged.
 
         Raises:
-            Exception: If the delete operation fails due to a database error.
+            Exception: If the delete stage fails due to a database error.
 
         Returns:
             None

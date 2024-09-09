@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday August 26th 2024 10:17:42 pm                                                 #
-# Modified   : Thursday September 5th 2024 06:46:12 am                                             #
+# Modified   : Sunday September 8th 2024 06:17:37 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -120,7 +120,10 @@ class DataClass(ABC):  # noqa
         elif hasattr(v, "as_dict"):
             return v.as_dict()
         elif isinstance(v, Enum):
-            return v.value
+            if hasattr(v, "description"):
+                return v.description
+            else:
+                return v.value
         elif isinstance(v, datetime):
             return v.isoformat()
         else:

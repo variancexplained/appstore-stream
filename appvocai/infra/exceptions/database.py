@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday August 31st 2024 06:39:15 pm                                               #
-# Modified   : Saturday August 31st 2024 06:40:26 pm                                               #
+# Modified   : Saturday September 7th 2024 11:10:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -25,9 +25,9 @@ class DatabaseError(Exception):
     """
     Custom exception for database-related errors.
 
-    This exception is raised when an error occurs during a database operation, such as a failed
+    This exception is raised when an error occurs during a database stage, such as a failed
     query, connection issues, or data integrity problems. It allows for more specific exception
-    handling in the application, particularly for operations involving database interactions.
+    handling in the application, particularly for stages involving database interactions.
 
     Args:
         message (str): A descriptive message explaining the error.
@@ -35,7 +35,9 @@ class DatabaseError(Exception):
                                                            if applicable. Defaults to None.
     """
 
-    def __init__(self, message: str, original_exception: Optional[Exception] = None) -> None:
+    def __init__(
+        self, message: str, original_exception: Optional[Exception] = None
+    ) -> None:
         super().__init__(message)
         self.original_exception: Optional[Exception] = original_exception
 
