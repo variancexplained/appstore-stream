@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday September 4th 2024 11:50:48 pm                                            #
-# Modified   : Friday September 6th 2024 07:20:56 pm                                               #
+# Modified   : Monday September 9th 2024 04:57:55 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,7 +22,7 @@ from datetime import datetime
 
 import pytest
 
-from appvocai.domain.artifact.request.appdata import (
+from acquire.domain.artifact.request.appdata import (
     AsyncRequestAppData,
     RequestAppData,
     RequestAppDataGen,

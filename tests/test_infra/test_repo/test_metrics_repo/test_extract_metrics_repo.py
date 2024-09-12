@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday September 6th 2024 08:33:31 am                                               #
-# Modified   : Saturday September 7th 2024 11:10:51 pm                                             #
+# Modified   : Monday September 9th 2024 04:57:55 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -24,9 +24,9 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytest
 
-from appvocai.core.enum import DataType, StageType
-from appvocai.domain.monitor.extract import ExtractMetrics
-from appvocai.infra.repo.monitor.extract import ExtractMetricsRepo
+from acquire.core.enum import DataType, StageType
+from acquire.domain.monitor.extract import ExtractMetrics
+from acquire.infra.repo.monitor.extract import ExtractMetricsRepo
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long

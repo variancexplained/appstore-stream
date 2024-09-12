@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday September 7th 2024 09:22:36 pm                                             #
-# Modified   : Sunday September 8th 2024 12:23:35 am                                               #
+# Modified   : Monday September 9th 2024 04:57:55 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -22,9 +22,9 @@ from datetime import datetime
 
 import pytest
 
-from appvocai.application.orchestration.job import Context
-from appvocai.core.enum import Category, DataType, StageType
-from appvocai.domain.artifact.request.base import AsyncRequest, Request
+from acquire.application.orchestration.job import Context
+from acquire.core.enum import Category, DataType, StageType
+from acquire.domain.artifact.request.base import AsyncRequest, Request
 
 # ------------------------------------------------------------------------------------------------ #
 # pylint: disable=missing-class-docstring, line-too-long

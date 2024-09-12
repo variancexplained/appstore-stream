@@ -11,7 +11,7 @@
 # URL        : https://github.com/variancexplained/appvocai-acquire                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday July 25th 2024 04:11:44 pm                                                 #
-# Modified   : Sunday September 8th 2024 12:06:43 am                                               #
+# Modified   : Monday September 9th 2024 04:57:55 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2024 John James                                                                 #
@@ -23,11 +23,11 @@ from typing import Any, Generator
 import pytest
 from dependency_injector.containers import Container
 
-from appvocai.application.orchestration.project import Project
-from appvocai.container import AppVoCAIContainer
-from appvocai.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
-from appvocai.domain.artifact.request.appdata import RequestAppDataGen
-from appvocai.infra.base.config import Config
+from acquire.application.orchestration.project import Project
+from acquire.container import AppVoCAIContainer
+from acquire.core.enum import Category, DataType, ProjectFrequency, ProjectStatus
+from acquire.domain.artifact.request.appdata import RequestAppDataGen
+from acquire.infra.base.config import Config
 
 # ------------------------------------------------------------------------------------------------ #
 collect_ignore = [
